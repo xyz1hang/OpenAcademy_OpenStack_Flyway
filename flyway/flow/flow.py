@@ -31,7 +31,7 @@ flow = lf.Flow('main_flow').add(
         TenantMigrationTask('tenant_migration_task')
     ),
     RoleMigrationTask('role_migration_task')
-    # TODO: Add other tasks to the flow
+    # TODO: Add other tasks to the flow e.g migrate image, private key etc.
 )
 
 

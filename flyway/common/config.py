@@ -24,7 +24,8 @@ from oslo.config import cfg
 LOG = logging.getLogger(__name__)
 
 opts = [
-    cfg.StrOpt('os_auth_url', default='0.0.0.0'),
+    cfg.StrOpt('os_auth_url', default = None),
+    cfg.StrOpt('os_bypass_url', default = None),
     cfg.StrOpt('os_tenant_id'),
     cfg.StrOpt('os_tenant_name', default='admin'),
     cfg.StrOpt('os_username', default='admin'),
