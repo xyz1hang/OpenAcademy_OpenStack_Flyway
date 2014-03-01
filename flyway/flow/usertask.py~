@@ -47,8 +47,7 @@ class UserMigrationTask(task.Task):
 	"""	
 	auth_token = ks_source.auth_ref['token']['id']
 	tenant_id = ks_source.auth_ref['token']['tenant']['id']
-	print 'token: ',auth_token
-	print 'tenant_id:',tenant_id
+	print auth_token, tenant_id
 	"""
         for user in ks_source.users.list():
             LOG.debug(user)

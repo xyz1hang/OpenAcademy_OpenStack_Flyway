@@ -21,7 +21,6 @@ from taskflow.patterns import unordered_flow as uf
 from usertask import UserMigrationTask
 from tenanttask import TenantMigrationTask
 from roletask import RoleMigrationTask
-from imagetask import ImageMigrationTask
 
 
 flow = lf.Flow('main_flow').add(

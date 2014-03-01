@@ -5,7 +5,7 @@ os_tenant_id = 242852e883dd4c70aec46142a273e049
 os_tenant_name = admin
 os_username = admin
 os_password = openstack
-os_endpoint = http://172.16.45.136:9292
+os_endpoint = http://172.16.45.165:9292
 
 [TARGET]
 os_auth_url = http://172.16.45.165:5000/v2.0/
