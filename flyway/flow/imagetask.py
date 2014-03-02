@@ -44,7 +44,7 @@ class ImageMigrationTask(task.Task):
 	source_tenant_id = ks_source.auth_ref['token']['tenant']['id']
 	print 'source_token: ',source_auth_token
 	print 'source_tenant_id:',source_tenant_id
-
+	
 	#Connect to target cloud keystone
 	ks_target = ksclient.Client(username=cfg.CONF.TARGET.os_username,
                                     password=cfg.CONF.TARGET.os_password,
@@ -87,5 +87,5 @@ class ImageMigrationTask(task.Task):
 	
         for image in gl_target.images.list():
             LOG.debug(image)
-           
+        
 	
