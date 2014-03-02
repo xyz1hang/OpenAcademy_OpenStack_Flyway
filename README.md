@@ -3,7 +3,7 @@ Flyway
 
 Forklift Resources from One Cloud to Another
 
-1-Users and their respective roles in projects\n
+1-Users and their respective roles in projects
 2-Projects with related metadata
 3-Project quotas
 4-Private Keys
