@@ -22,6 +22,7 @@ from usertask import UserMigrationTask
 from tenanttask import TenantMigrationTask
 from roletask import RoleMigrationTask
 from imagetask import ImageMigrationTask
+from keypairtask import KeypairMigrationTask
 
 
 flow = lf.Flow('main_flow').add(
@@ -33,7 +34,8 @@ flow = lf.Flow('main_flow').add(
     ),
     #RoleMigrationTask('role_migration_task')
     # TODO: Add other tasks to the flow e.g migrate image, private key etc.
-    ImageMigrationTask('image_migration_task')
+    ImageMigrationTask('image_migration_task'),
+    KeypairMigrationTask('keypairs_migration_task')
 )
 
 

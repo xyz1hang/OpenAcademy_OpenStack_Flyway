@@ -28,11 +28,11 @@ LOG = logging.getLogger(__name__)
 
 class ImageMigrationTask(task.Task):
     """
-    Task to migrate all user info from the source cloud to the target cloud.
+    Task to migrate all images from the source cloud to the target cloud.
     """
-
+    
     def execute(self):
-        LOG.info('Migrating all users ...')
+        LOG.info('Migrating all private keys ...')
 	
 	#Connect to source cloud keystone
 	ks_source = ksclient.Client(username=cfg.CONF.SOURCE.os_username,
@@ -70,20 +70,22 @@ class ImageMigrationTask(task.Task):
 		target_imageNames.append(image.name)
 	print target_imageNames
 
-	#Migrate source images that doe not exist in target cloud
-	source_imagesDir = '/opt/stack/data/glance/images/'
-	
+	'''
+	Find out whether the source cloud image exist in target cloud
+	If not, migrate it to target cloud  
+	'''
+	SOURCE_IMAGESDIR = '/opt/stack/data/glance/images/'
 	for source_image in gl_source.images.list():
 		if source_image.name not in target_imageNames:
 			image = gl_target.images.create(name=source_image.name,
 			        			disk_format='qcow2',
 			        			container_format='bare',
 			        			is_public='True',
-			        			data=open(source_imagesDir+source_image.id,'rb'))
+			        			data=open(SOURCE_IMAGESDIR+source_image.id,'rb'))
 			print 'ImageMigration is done!'
 			print 'ImageStatus: ' + source_image.name + ' is ' + source_image.status
-	"""
-        for user in ks_source.users.list():
-            LOG.debug(user)
-            # TODO: use ks_target to create the user info in the target cloud
-	"""
+	
+        for image in gl_target.images.list():
+            LOG.debug(image)
+           
+	
