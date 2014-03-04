@@ -17,13 +17,10 @@
 import logging
 
 from taskflow import task
-
 from common import config as cfg
-import novaclient.v1_1.client as nvclient
-
+from utils import *
 
 LOG = logging.getLogger(__name__)
-
 
 class KeypairMigrationTask(task.Task):
     """
@@ -33,17 +30,11 @@ class KeypairMigrationTask(task.Task):
     def execute(self):
         LOG.info('Migrating all keypairs ...')
 	
-	#Connect to source cloud nova
-	nv_source = nvclient.Client(auth_url=cfg.CONF.SOURCE.os_auth_url,
-		                    username=cfg.CONF.SOURCE.os_username,
-                       	            api_key=cfg.CONF.SOURCE.os_password,
-		                    project_id=cfg.CONF.SOURCE.os_tenant_name)
-
-	#Connect to target cloud nova
-	nv_target = nvclient.Client(auth_url=cfg.CONF.TARGET.os_auth_url,
-		                    username=cfg.CONF.TARGET.os_username,
-                       	            api_key=cfg.CONF.TARGET.os_password,
-		                    project_id=cfg.CONF.TARGET.os_tenant_name)
+	nv_source_credentials = getSourceNovaCredentials()
+	nv_target_credentials = getTargetNovaCredentials()
+	
+	nv_source = getNovaClient(**nv_source_credentials)
+	nv_target = getNovaClient(**nv_target_credentials)
 	
 	'''
 	Find out whether the source cloud keypair exist in target cloud
@@ -58,6 +49,5 @@ class KeypairMigrationTask(task.Task):
 			nv_target.keypairs.create(keypair.name, public_key=keypair.public_key)
 			
 	for keypair in nv_target.keypairs.list():
-	    print keypair.public_key
-            LOG.debug(keypair)
+	    LOG.debug(keypair)
 	

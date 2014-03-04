@@ -17,14 +17,10 @@
 import logging
 
 from taskflow import task
-import keystoneclient.v2_0.client as ksclient
-from glanceclient import Client
-
 from common import config as cfg
-
+from utils import *
 
 LOG = logging.getLogger(__name__)
-
 
 class ImageMigrationTask(task.Task):
     """
@@ -32,44 +28,35 @@ class ImageMigrationTask(task.Task):
     """
     
     def execute(self):
-        LOG.info('Migrating all private keys ...')
+        LOG.info('Migrating all images ...')
 	
-	#Connect to source cloud keystone
-	ks_source = ksclient.Client(username=cfg.CONF.SOURCE.os_username,
-                                    password=cfg.CONF.SOURCE.os_password,
-                                    auth_url=cfg.CONF.SOURCE.os_auth_url,
-                                    tenant_name=cfg.CONF.SOURCE.os_tenant_name)
+	ks_source_credentials = getSourceKeystoneCredentials()
+	ks_target_credentials = getTargetKeystoneCredentials()
 	
-	source_auth_token = ks_source.auth_ref['token']['id']
-	source_tenant_id = ks_source.auth_ref['token']['tenant']['id']
-	print 'source_token: ',source_auth_token
-	print 'source_tenant_id:',source_tenant_id
+	ks_source = getKeystoneClient(**ks_source_credentials)
+	ks_target = getKeystoneClient(**ks_target_credentials)
 	
-	#Connect to target cloud keystone
-	ks_target = ksclient.Client(username=cfg.CONF.TARGET.os_username,
-                                    password=cfg.CONF.TARGET.os_password,
-                                    auth_url=cfg.CONF.TARGET.os_auth_url,
-                                    tenant_name=cfg.CONF.TARGET.os_tenant_name)
-		
-	target_auth_token = ks_target.auth_ref['token']['id']
-	target_tenant_id = ks_target.auth_ref['token']['tenant']['id']
-	print 'target_token: ',target_auth_token
-	print 'target_tenant_id:',target_tenant_id
+	ks_source_auth = getAuthenticationRef(ks_source_credentials)
+	ks_source_token = getToken(ks_source_auth)
+	ks_source_token_id = getTokenId(ks_source_token)
+	ks_source_tenant_id = getTenantId(ks_source_token)
+
+	ks_target_auth = getAuthenticationRef(ks_target_credentials)
+	ks_target_token = getToken(ks_target_auth)
+	ks_target_token_id = getTokenId(ks_target_token)
+	ks_target_tenant_id = getTenantId(ks_target_token)
 	
-	#Connect to source cloud glance
-	gl_source = Client('1',
-			   endpoint=cfg.CONF.SOURCE.os_endpoint,
-		           token=source_auth_token)
+	gl_source_credentials = getSourceGlanceCredentials(ks_source_token_id)
+	gl_target_credentials = getTargetGlanceCredentials(ks_target_token_id)
+
+	gl_source = getGlanceClient(**gl_source_credentials)	
+	gl_target = getGlanceClient(**gl_target_credentials)
 	
-	#Connect to target cloud glance
-	gl_target = Client('1', 
-			   endpoint=cfg.CONF.TARGET.os_endpoint, 
-			   token=target_auth_token)
 	target_imageNames = []
 	for image in gl_target.images.list():
 		target_imageNames.append(image.name)
 	print target_imageNames
-
+	
 	'''
 	Find out whether the source cloud image exist in target cloud
 	If not, migrate it to target cloud  
@@ -82,10 +69,8 @@ class ImageMigrationTask(task.Task):
 			        			container_format='bare',
 			        			is_public='True',
 			        			data=open(SOURCE_IMAGESDIR+source_image.id,'rb'))
-			print 'ImageMigration is done!'
-			print 'ImageStatus: ' + source_image.name + ' is ' + source_image.status
-	
-        for image in gl_target.images.list():
+			
+	for image in gl_target.images.list():
             LOG.debug(image)
         
 	

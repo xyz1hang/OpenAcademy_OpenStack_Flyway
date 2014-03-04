@@ -17,14 +17,10 @@
 import logging
 
 from taskflow import task
-
 from common import config as cfg
-import novaclient.v1_1.client as nvclient
-import keystoneclient.v2_0.client as ksclient
-
+from utils import *
 
 LOG = logging.getLogger(__name__)
-
 
 class InstanceMigrationTask(task.Task):
     """
@@ -34,36 +30,25 @@ class InstanceMigrationTask(task.Task):
     def execute(self):
         LOG.info('Migrating all instances ...')
 	
-	#Connect to source cloud keystone
-	ks_source = ksclient.Client(username=cfg.CONF.SOURCE.os_username,
-                                    password=cfg.CONF.SOURCE.os_password,
-                                    auth_url=cfg.CONF.SOURCE.os_auth_url,
-                                    tenant_name=cfg.CONF.SOURCE.os_tenant_name)
+	ks_source_credentials = getSourceKeystoneCredentials()
+	ks_target_credentials = getTargetKeystoneCredentials()
 	
-	#Connect to target cloud keystone
-	ks_target = ksclient.Client(username=cfg.CONF.TARGET.os_username,
-                                    password=cfg.CONF.TARGET.os_password,
-                                    auth_url=cfg.CONF.TARGET.os_auth_url,
-                                    tenant_name=cfg.CONF.TARGET.os_tenant_name)
-	
+	ks_source = getKeystoneClient(**ks_source_credentials)
+	ks_target = getKeystoneClient(**ks_target_credentials)
+
 	#Connect to source cloud nova
 	invisible_tenantNames = ['invisible_to_admin',
 				 'alt_demo',
-				 'service'
-				 ]
+				 'service']
 	
 	for tenant in ks_source.tenants.list():
 		if tenant.name not in invisible_tenantNames:
-			#Connect to source cloud nova
-			nv_source = nvclient.Client(auth_url=cfg.CONF.SOURCE.os_auth_url,
-						    username=cfg.CONF.SOURCE.os_username,
-				       	            api_key=cfg.CONF.SOURCE.os_password,
-						    project_id=tenant.name)
-			#Connect to target cloud nova
-			nv_target = nvclient.Client(auth_url=cfg.CONF.TARGET.os_auth_url,
-						    username=cfg.CONF.TARGET.os_username,
-					       	    api_key=cfg.CONF.TARGET.os_password,
-						    project_id=tenant.name)
+			nv_source_credentials = getSourceNovaCredentials()
+			nv_target_credentials = getTargetNovaCredentials()
+	
+			nv_source = getNovaClient(**nv_source_credentials)
+			nv_target = getNovaClient(**nv_target_credentials)
+	
 			#Obtain all instances names per tenant in target cloud 			
 			target_instanceNames = []			
 			for instance in nv_target.servers.list():
@@ -85,6 +70,5 @@ class InstanceMigrationTask(task.Task):
 							    	 security_groups=['default']) #use the security_groups 'default' 
 			
 	for instance in nv_target.servers.list():
-	    print instance
-            LOG.debug(instance)
+		LOG.debug(instance)
 	
