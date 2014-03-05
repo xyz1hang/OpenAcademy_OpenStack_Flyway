@@ -19,6 +19,7 @@ import logging
 from taskflow import task
 from common import config as cfg
 from utils import *
+import paramiko
 
 LOG = logging.getLogger(__name__)
 
@@ -61,15 +62,22 @@ class ImageMigrationTask(task.Task):
 	Find out whether the source cloud image exist in target cloud
 	If not, migrate it to target cloud  
 	'''
+
+	host = "172.16.45.169"
+	ssh = paramiko.SSHClient()
+	ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+	ssh.connect(host, username="openstack2", password="openstack", allow_agent = False)
 	SOURCE_IMAGESDIR = '/opt/stack/data/glance/images/'
+	ftp = ssh.open_sftp()
+	
 	for source_image in gl_source.images.list():
 		if source_image.name not in target_imageNames:
 			image = gl_target.images.create(name=source_image.name,
 			        			disk_format='qcow2',
 			        			container_format='bare',
 			        			is_public='True',
-			        			data=open(SOURCE_IMAGESDIR+source_image.id,'rb'))
-			
+			        			#data=open(SOURCE_IMAGESDIR+source_image.id,'rb'))
+							data=ftp.file(SOURCE_IMAGEDIR+source_image.id,'rb'))
 	for image in gl_target.images.list():
             LOG.debug(image)
         
