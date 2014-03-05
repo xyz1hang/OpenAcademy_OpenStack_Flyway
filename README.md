@@ -17,6 +17,12 @@ Usage
 
 Execute the command below in the root directory of project:
     
+    python flyway.py --src sourcecloudname --dst targetcloudname
+
+which retrieves the corresponding cloud infos from DNS database.
+    
+If sourcecloudname or targetcloudname does not exist in the DNS database, please configure new clouds in the flyway.conf file and execute the command below, the new clouds will be automatically stored in DNS database for future migration.
+    
     python flyway.py --config-file ./etc/flyway.conf
 
 Note: 
