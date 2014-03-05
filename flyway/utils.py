@@ -24,14 +24,14 @@ from common import config as cfg
 
 LOG = logging.getLogger(__name__)
 
-def getKeystoneClient(username=None, password=None, auth_url=None, tenant_name=None):
+def getKeystoneClient(username=None, password=None, auth_url=None, tenant_name=None, **kwargs):
 	return ksclient.Client(username=username, password=password,
                                auth_url=auth_url, tenant_name=tenant_name)
 
-def getGlanceClient(version='1', endpoint=None, token=None):
+def getGlanceClient(version='1', endpoint=None, token=None, **kwargs):
 	return glclient(version=version, endpoint=endpoint, token=token)
 
-def getNovaClient(username=None,api_key=None, auth_url=None, project_id=None):
+def getNovaClient(username=None,api_key=None, auth_url=None, project_id=None, **kwargs):
 	return nvclient.Client(username=username, api_key=api_key,
 			auth_url=auth_url, project_id=project_id)
 

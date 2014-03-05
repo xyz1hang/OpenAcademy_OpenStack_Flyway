@@ -29,7 +29,7 @@ class ImageMigrationTask(task.Task):
     
     def execute(self):
         LOG.info('Migrating all images ...')
-	
+
 	ks_source_credentials = getSourceKeystoneCredentials()
 	ks_target_credentials = getTargetKeystoneCredentials()
 	
