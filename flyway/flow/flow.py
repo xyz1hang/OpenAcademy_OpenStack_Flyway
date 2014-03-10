@@ -37,7 +37,7 @@ flow = lf.Flow('main_flow').add(
     # TODO: Add other tasks to the flow e.g migrate image, private key etc.
     ImageMigrationTask('image_migration_task'),
     KeypairMigrationTask('keypairs_migration_task'),
-    InstanceMigrationTask('instances_migration_task')
+    #InstanceMigrationTask('instances_migration_task')
 )
 
 
