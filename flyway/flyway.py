@@ -22,7 +22,7 @@ from common import config
 from flow import flow
 from dns import * 
 
-DNScredentials = {'host': '172.16.45.169',
+DNScredentials = {'host': '172.16.45.180',
 		  'user': 'root',
 		  'passwd': 'openstack',
 	          'db': 'keystone'}
@@ -34,7 +34,6 @@ def main():
         args.append(sys.argv[2])
     	config.parse(args)
     	config.setup_logging()
-	print 'hahhahahahahah:',cfg.CONF.config_file
 	if not cfg.CONF.config_file:
 		sys.exit("ERROR: Unable to find configuration file via the "
 		         "'--config-file' option!")

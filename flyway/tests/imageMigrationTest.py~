@@ -1,0 +1,90 @@
+import unittest
+import sys
+sys.path.append('../flow')
+sys.path.append('../common')
+
+#from config import * 
+from imagetask import ImageMigrationTask
+#from keypairtask import *
+from utils import **
+
+cfg.CONF.SOURCE.os_username = "admin"
+cfg.CONF.SOURCE.os_password = "openstack"
+cfg.CONF.SOURCE.os_auth_url = "http://172.16.45.169:5000/v2.0/"
+cfg.CONF.SOURCE.os_tenant_name = "admin"
+cfg.CONF.SOURCE.os_endpoint = "http://172.16.45.169:9292"
+
+cfg.CONF.TARGET.os_username = "admin"
+cfg.CONF.TARGET.os_password = "openstack"
+cfg.CONF.TARGET.os_auth_url = "http://172.16.45.174:5000/v2.0/"
+cfg.CONF.TARGET.os_tenant_name = "admin"
+cfg.CONF.TARGET.os_endpoint = "http://172.16.45.174:9292"
+
+class TestImageMigration(unittest.TestCase):
+	
+	#Setup
+	def setUp(self):
+		ks_source_credentials = getSourceKeystoneCredentials()
+		ks_target_credentials = getTargetKeystoneCredentials()
+	
+		ks_source = getKeystoneClient(**ks_source_credentials)
+		ks_target = getKeystoneClient(**ks_target_credentials)
+	
+		ks_source_auth = getAuthenticationRef(ks_source_credentials)
+		ks_source_token = getToken(ks_source_auth)
+		ks_source_token_id = getTokenId(ks_source_token)
+		ks_source_tenant_id = getTenantId(ks_source_token)
+
+		ks_target_auth = getAuthenticationRef(ks_target_credentials)
+		ks_target_token = getToken(ks_target_auth)
+		ks_target_token_id = getTokenId(ks_target_token)
+		ks_target_tenant_id = getTenantId(ks_target_token)
+	
+		gl_source_credentials = getSourceGlanceCredentials(ks_source_token_id)
+		gl_target_credentials = getTargetGlanceCredentials(ks_target_token_id)
+
+		gl_source = getGlanceClient(**gl_source_credentials)	
+		gl_target = getGlanceClient(**gl_target_credentials)
+		
+		#Get source cloud images list
+		self.source_images = {}
+		for image in self.gl_source.images.list():
+			self.source_images['checksum'] = image.checksum
+			
+		self.target_images = {}
+	
+	def test_migration_succeed(self):
+		"""
+		ImageMigration succeeds after execution of ImageMigrationTask
+		"""	
+		#Migrate images
+		ImageMigrationTask('image_migration_task').execute()
+		
+		#Get target cloud images list
+		for image in self.gl_target.images.list():
+			self.target_images['checksum'] = image.checksum
+			
+		#Test should succeed by comparing the source and target images
+		self.failUnless(self.source_images==self.target_images)
+	
+	def test_migration_fail(self):
+		"""
+		ImageMigration fails after deleting all the images
+		"""	
+		#Migrate images
+		ImageMigrationTask('Image_migration_task').execute()
+		
+		#Delete all images
+		for image in self.gl_target.images.list():
+			self.gl_target.images.delete(image.id)
+		
+		#Get target cloud images
+		for image in self.gl_target.images.list():
+			self.target_images['checksum'] = image.checksum
+			
+		#The test should fail by comparing the source and target images	
+		self.failIf(self.source_images==self.target_images)
+
+ 
+if __name__ == '__main__':
+    unittest.main()

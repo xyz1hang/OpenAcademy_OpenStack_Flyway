@@ -2,7 +2,6 @@ import unittest
 import sys
 sys.path.append('../flow')
 
-from common import config as cfg
 #from imagetask import *
 from keypairtask import *
 

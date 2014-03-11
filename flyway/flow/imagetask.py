@@ -19,7 +19,7 @@ import logging
 from taskflow import task
 from common import config as cfg
 from utils import *
-import paramiko
+import os
 
 LOG = logging.getLogger(__name__)
 
@@ -53,32 +53,40 @@ class ImageMigrationTask(task.Task):
 	gl_source = getGlanceClient(**gl_source_credentials)	
 	gl_target = getGlanceClient(**gl_target_credentials)
 	
-	target_imageNames = []
-	for image in gl_target.images.list():
-		target_imageNames.append(image.name)
-	print target_imageNames
+	target_imageChecksums = []
+	for target_image in gl_target.images.list():
+		 target_imageChecksums.append(target_image.checksum)
 	
 	'''
 	Find out whether the source cloud image exist in target cloud
 	If not, migrate it to target cloud  
 	'''
-
-	host = "172.16.45.169"
-	ssh = paramiko.SSHClient()
-	ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-	ssh.connect(host, username="openstack2", password="openstack", allow_agent = False)
-	SOURCE_IMAGESDIR = '/opt/stack/data/glance/images/'
-	ftp = ssh.open_sftp()
+	path = os.getcwd()
+	imagedatadir = path+'/.imagedata/'
+	if not os.path.exists(imagedatadir):
+		os.makedirs(imagedatadir)
 	
 	for source_image in gl_source.images.list():
-		if source_image.name not in target_imageNames:
+		if source_image.checksum not in target_imageChecksums:
+			
+			image_data = gl_source.images.data(image=source_image.id, do_checksum=True)
+						
+			with open(imagedatadir+source_image.id,'wb') as f:
+				for i in image_data:
+					f.write(i)
+			
 			image = gl_target.images.create(name=source_image.name,
 			        			disk_format='qcow2',
 			        			container_format='bare',
 			        			is_public='True',
-			        			#data=open(SOURCE_IMAGESDIR+source_image.id,'rb'))
-							data=ftp.file(SOURCE_IMAGEDIR+source_image.id,'rb'))
+							checksum=source_image.checksum,
+			        			data=open(imagedatadir+source_image.id,'rb'))
+			os.remove(imagedatadir+source_image.id)
+			
 	for image in gl_target.images.list():
-            LOG.debug(image)
+            print 'target:',image.checksum
+
+	for image in gl_source.images.list():
+            print 'source:',image.checksum
         
 	
