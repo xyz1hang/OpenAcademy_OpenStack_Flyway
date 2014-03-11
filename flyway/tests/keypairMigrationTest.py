@@ -2,21 +2,8 @@ import unittest
 import sys
 sys.path.append('../flow')
 
-from common import config as cfg
-#from imagetask import *
 from keypairtask import *
-
-cfg.CONF.SOURCE.os_username = "admin"
-cfg.CONF.SOURCE.os_password = "openstack"
-cfg.CONF.SOURCE.os_auth_url = "http://172.16.45.169:5000/v2.0/"
-cfg.CONF.SOURCE.os_tenant_name = "admin"
-cfg.CONF.SOURCE.os_endpoint = "http://172.16.45.169:9292"
-
-cfg.CONF.TARGET.os_username = "admin"
-cfg.CONF.TARGET.os_password = "openstack"
-cfg.CONF.TARGET.os_auth_url = "http://172.16.45.174:5000/v2.0/"
-cfg.CONF.TARGET.os_tenant_name = "admin"
-cfg.CONF.TARGET.os_endpoint = "http://172.16.45.174:9292"
+from utils import *
 
 class TestKeypairMigration(unittest.TestCase):
 	
@@ -29,12 +16,11 @@ class TestKeypairMigration(unittest.TestCase):
 		self.nv_target = getNovaClient(**self.nv_target_credentials)
 		
 		#Get source cloud keypairs list
-		self.source_keypairs = {}
+		self.source_keypairs = []
 		for keypair in self.nv_source.keypairs.list():
-			self.source_keypairs['name'] = keypair.name
-			self.source_keypairs['pub_key'] = keypair.public_key
+			self.source_keypairs.append(keypair.public_key)
 		
-		self.target_keypairs = {}
+		self.target_keypairs = []
 	
 	def test_migration_succeed(self):
 		"""
@@ -45,12 +31,11 @@ class TestKeypairMigration(unittest.TestCase):
 		
 		#Get target cloud keypairs list
 		for keypair in self.nv_target.keypairs.list():
-			self.target_keypairs['name'] = keypair.name
-			self.target_keypairs['pub_key'] = keypair.public_key
+			self.target_keypairs.append(keypair.public_key)
 		
 		#Test should succeed by comparing the source and target keypairs
-		self.failUnless(self.source_keypairs==self.target_keypairs)
-	
+		self.failUnless(set(self.source_keypairs).intersection(self.target_keypairs))
+		
 	def test_migration_fail(self):
 		"""
 		KeypairMigration fails after deleting all the keypairs
@@ -60,16 +45,18 @@ class TestKeypairMigration(unittest.TestCase):
 		
 		#Delete all keypairs
 		for keypair in self.nv_target.keypairs.list():
-			self.nv_target.keypairs.delete(keypair)
+			self.nv_target.keypairs.delete(keypair.id)
+
+		print self.source_keypairs
+		print self.target_keypairs	
 		
 		#Get target cloud keypairs
 		for keypair in self.nv_target.keypairs.list():
-			self.target_keypairs['name'] = keypair.name
-			self.target_keypairs['pub_key'] = keypair.public_key
+			self.target_keypairs.append(keypair.public_key)
 		
 		#The test should fail by comparing the source and target keypairs	
-		self.failIf(self.source_keypairs==self.target_keypairs)
-
+		self.failIf(set(self.source_keypairs).intersection(self.target_keypairs))
+	
  
 if __name__ == '__main__':
     unittest.main()

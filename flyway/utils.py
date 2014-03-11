@@ -24,6 +24,18 @@ from common import config as cfg
 
 LOG = logging.getLogger(__name__)
 
+'''cfg.CONF.SOURCE.os_username = "admin"
+cfg.CONF.SOURCE.os_password = "openstack"
+cfg.CONF.SOURCE.os_auth_url = "http://172.16.45.180:5000/v2.0/"
+cfg.CONF.SOURCE.os_tenant_name = "admin"
+cfg.CONF.SOURCE.os_endpoint = "http://172.16.45.180:9292"
+
+cfg.CONF.TARGET.os_username = "admin"
+cfg.CONF.TARGET.os_password = "openstack"
+cfg.CONF.TARGET.os_auth_url = "http://172.16.45.179:5000/v2.0/"
+cfg.CONF.TARGET.os_tenant_name = "admin"
+cfg.CONF.TARGET.os_endpoint = "http://172.16.45.179:9292"
+'''
 def getKeystoneClient(username=None, password=None, auth_url=None, tenant_name=None, **kwargs):
 	return ksclient.Client(username=username, password=password,
                                auth_url=auth_url, tenant_name=tenant_name)
@@ -93,8 +105,6 @@ def getTokenId(token):
 
 def getTenantId(token):
 	return token['tenant']['id']
-
-
 
 
 

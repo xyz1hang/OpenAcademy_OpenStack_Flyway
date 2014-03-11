@@ -15,9 +15,11 @@
 #    under the License.
 
 import logging
+import sys
+sys.path.append('../')
 
 from taskflow import task
-from common import config as cfg
+#from common import config as cfg
 from utils import *
 import os
 
@@ -82,11 +84,11 @@ class ImageMigrationTask(task.Task):
 							checksum=source_image.checksum,
 			        			data=open(imagedatadir+source_image.id,'rb'))
 			os.remove(imagedatadir+source_image.id)
-			
+	"""		
 	for image in gl_target.images.list():
             print 'target:',image.checksum
 
 	for image in gl_source.images.list():
             print 'source:',image.checksum
-        
+        """
 	
