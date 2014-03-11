@@ -38,7 +38,7 @@ class ImageMigrationTask(task.Task):
 	
 	ks_source = getKeystoneClient(**ks_source_credentials)
 	ks_target = getKeystoneClient(**ks_target_credentials)
-	
+
 	ks_source_auth = getAuthenticationRef(ks_source_credentials)
 	ks_source_token = getToken(ks_source_auth)
 	ks_source_token_id = getTokenId(ks_source_token)
@@ -84,6 +84,7 @@ class ImageMigrationTask(task.Task):
 							checksum=source_image.checksum,
 			        			data=open(imagedatadir+source_image.id,'rb'))
 			os.remove(imagedatadir+source_image.id)
+	
 	"""		
 	for image in gl_target.images.list():
             print 'target:',image.checksum

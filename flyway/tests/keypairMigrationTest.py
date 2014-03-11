@@ -23,9 +23,12 @@ class TestKeypairMigration(unittest.TestCase):
 		self.target_keypairs = []
 	
 	def test_migration_succeed(self):
-		"""
-		KeypairMigration succeeds after execution of KeypairMigrationTask
+		"""KeypairMigration succeeds after execution of KeypairMigrationTask
 		"""	
+		#Delete all keypairs
+		for keypair in self.nv_target.keypairs.list():
+			self.nv_target.keypairs.delete(keypair.id)
+
 		#Migrate keypairs
 		KeypairMigrationTask('keypair_migration_task').execute()
 		
@@ -34,28 +37,28 @@ class TestKeypairMigration(unittest.TestCase):
 			self.target_keypairs.append(keypair.public_key)
 		
 		#Test should succeed by comparing the source and target keypairs
-		self.failUnless(set(self.source_keypairs).intersection(self.target_keypairs))
+		self.failUnless(set(self.source_keypairs)==set(self.target_keypairs))
+	
 		
 	def test_migration_fail(self):
-		"""
-		KeypairMigration fails after deleting all the keypairs
+		"""Test there is no duplicates of keypairs
 		"""	
-		#Migrate keypairs
-		KeypairMigrationTask('keypair_migration_task').execute()
-		
 		#Delete all keypairs
 		for keypair in self.nv_target.keypairs.list():
 			self.nv_target.keypairs.delete(keypair.id)
 
-		print self.source_keypairs
-		print self.target_keypairs	
+		#Migrate keypairs
+		KeypairMigrationTask('keypair_migration_task').execute()
+
+		#Migrate keypairs
+		KeypairMigrationTask('keypair_migration_task').execute()
 		
 		#Get target cloud keypairs
 		for keypair in self.nv_target.keypairs.list():
 			self.target_keypairs.append(keypair.public_key)
 		
 		#The test should fail by comparing the source and target keypairs	
-		self.failIf(set(self.source_keypairs).intersection(self.target_keypairs))
+		self.failIf(set(self.source_keypairs)!=set(self.target_keypairs))
 	
  
 if __name__ == '__main__':

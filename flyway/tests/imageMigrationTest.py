@@ -9,8 +9,23 @@ class TestImageMigration(unittest.TestCase):
 	
 	#Setup
 	def setUp(self):
-		self.ks_source_credentials = getSourceKeystoneCredentials()
-		self.ks_target_credentials = getTargetKeystoneCredentials()
+		self.username = "admin"
+		self.password = "openstack"
+		self.source_auth_url = "http://172.16.45.181:5000/v2.0/"
+		self.target_auth_url = "http://172.16.45.182:5000/v2.0/"
+		self.tenant_name = "admin"
+		self.source_endpoint = "http://172.16.45.181:9292/"
+		self.target_endpoint = "http://172.16.45.182:9292/"
+
+		self.ks_source_credentials = {'username': self.username,
+			       		      'password': self.password,
+			       		      'auth_url': self.source_auth_url,
+			                      'tenant_name': self.tenant_name}	
+		
+		self.ks_target_credentials = {'username': self.username,
+			       		      'password': self.password,
+			       		      'auth_url': self.target_auth_url,
+			                      'tenant_name': self.tenant_name}	
 	
 		self.ks_source = getKeystoneClient(**self.ks_source_credentials)
 		self.ks_target = getKeystoneClient(**self.ks_target_credentials)
@@ -18,15 +33,18 @@ class TestImageMigration(unittest.TestCase):
 		self.ks_source_auth = getAuthenticationRef(self.ks_source_credentials)
 		self.ks_source_token = getToken(self.ks_source_auth)
 		self.ks_source_token_id = getTokenId(self.ks_source_token)
-		self.ks_source_tenant_id = getTenantId(self.ks_source_token)
-
+		
 		self.ks_target_auth = getAuthenticationRef(self.ks_target_credentials)
 		self.ks_target_token = getToken(self.ks_target_auth)
 		self.ks_target_token_id = getTokenId(self.ks_target_token)
-		self.ks_target_tenant_id = getTenantId(self.ks_target_token)
-	
-		self.gl_source_credentials = getSourceGlanceCredentials(self.ks_source_token_id)
-		self.gl_target_credentials = getTargetGlanceCredentials(self.ks_target_token_id)
+		
+		self.gl_source_credentials = {'version':'1',
+					      'endpoint': self.source_endpoint,
+					      'token': self.ks_source_token_id}
+
+		self.gl_target_credentials = {'version':'1',
+					      'endpoint': self.target_endpoint,
+					      'token': self.ks_target_token_id}
 
 		self.gl_source = getGlanceClient(**self.gl_source_credentials)	
 		self.gl_target = getGlanceClient(**self.gl_target_credentials)
@@ -41,7 +59,10 @@ class TestImageMigration(unittest.TestCase):
 	def test_migration_succeed(self):
 		"""ImageMigration succeeds after execution of ImageMigrationTask
 		"""	
-		self.target_images = []
+		#Delete all images
+		for image in self.gl_target.images.list():
+			self.gl_target.images.delete(image.id)
+
 		#Migrate images
 		ImageMigrationTask('image_migration_task').execute()
 		
@@ -50,27 +71,27 @@ class TestImageMigration(unittest.TestCase):
 			self.target_images.append(image.checksum)
 		
 		#Test should succeed by comparing the source and target images
-		self.failUnless(set(self.source_images).intersection(self.target_images))
+		self.failUnless(set(self.source_images)==set(self.target_images))
 		
 	def test_migration_fail(self):
-		"""ImageMigration fails after deleting all the images
+		"""Test there is no duplicates of images
 		"""
-		self.target_images = []	
-		#Migrate images
-		ImageMigrationTask('Image_migration_task').execute()
-		
 		#Delete all images
 		for image in self.gl_target.images.list():
 			self.gl_target.images.delete(image.id)
+
+		#Migrate images
+		ImageMigrationTask('image_migration_task').execute()
+
+		#Migrate images
+		ImageMigrationTask('image_migration_task').execute()
 		
-		#Get target cloud images
+		#Get target cloud images list
 		for image in self.gl_target.images.list():
 			self.target_images.append(image.checksum)
-		print self.source_images
-		print self.target_images
-		#The test should fail by comparing the source and target images	
-		self.failIf(set(self.source_images).intersection(self.target_images))
-
+		
+		#Test should succeed by comparing the source and target images
+		self.failIf(set(self.source_images)!=set(self.target_images))
  
 if __name__ == '__main__':
     unittest.main()

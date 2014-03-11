@@ -6,7 +6,7 @@ def connect(host=None, user="root", passwd=None, db=None):
 	db = MySQLdb.connect(host=host, 
                      	     user=user, 
                              passwd=passwd, 
-                             db=db) 
+                             db=db)
 	return db
 
 def getCursor(db):
