@@ -17,7 +17,7 @@ Usage
 
 Execute the command below in the root directory of project:
     
-    python flyway.py --src sourcecloudname --dst targetcloudname
+    python flyway.py -src sourcecloudname -dst targetcloudname
 
 which retrieves the corresponding cloud infos from DNS database.
     
