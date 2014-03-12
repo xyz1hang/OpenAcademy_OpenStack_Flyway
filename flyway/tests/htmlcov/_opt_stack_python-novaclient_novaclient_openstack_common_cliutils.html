@@ -5,7 +5,7 @@
     
     
     <meta http-equiv='X-UA-Compatible' content='IE=emulateIE7' />
-    <title>Coverage for /opt/stack/python-novaclient/novaclient/openstack/common/cliutils: 20%</title>
+    <title>Coverage for /opt/stack/python-novaclient/novaclient/openstack/common/cliutils: 24%</title>
     <link rel='stylesheet' href='style.css' type='text/css'>
     
     <script type='text/javascript' src='jquery.min.js'></script>
@@ -21,13 +21,13 @@
 <div id='header'>
     <div class='content'>
         <h1>Coverage for <b>/opt/stack/python-novaclient/novaclient/openstack/common/cliutils</b> :
-            <span class='pc_cov'>20%</span>
+            <span class='pc_cov'>24%</span>
         </h1>
         <img id='keyboard_icon' src='keybd_closed.png'>
         <h2 class='stats'>
             95 statements &nbsp;
-            <span class='run hide_run shortkey_r button_toggle_run'>19 run</span>
-            <span class='mis shortkey_m button_toggle_mis'>76 missing</span>
+            <span class='run hide_run shortkey_r button_toggle_run'>23 run</span>
+            <span class='mis shortkey_m button_toggle_mis'>72 missing</span>
             <span class='exc shortkey_x button_toggle_exc'>0 excluded</span>
             
         </h2>
@@ -146,11 +146,11 @@
 <p id='n83' class='pln'><a href='#n83'>83</a></p>
 <p id='n84' class='pln'><a href='#n84'>84</a></p>
 <p id='n85' class='pln'><a href='#n85'>85</a></p>
-<p id='n86' class='stm mis'><a href='#n86'>86</a></p>
-<p id='n87' class='stm mis'><a href='#n87'>87</a></p>
-<p id='n88' class='stm mis'><a href='#n88'>88</a></p>
+<p id='n86' class='stm run hide_run'><a href='#n86'>86</a></p>
+<p id='n87' class='stm run hide_run'><a href='#n87'>87</a></p>
+<p id='n88' class='stm run hide_run'><a href='#n88'>88</a></p>
 <p id='n89' class='stm mis'><a href='#n89'>89</a></p>
-<p id='n90' class='stm mis'><a href='#n90'>90</a></p>
+<p id='n90' class='stm run hide_run'><a href='#n90'>90</a></p>
 <p id='n91' class='pln'><a href='#n91'>91</a></p>
 <p id='n92' class='pln'><a href='#n92'>92</a></p>
 <p id='n93' class='stm run hide_run'><a href='#n93'>93</a></p>
@@ -362,11 +362,11 @@
 <p id='t83' class='pln'><span class='strut'>&nbsp;</span></p>
 <p id='t84' class='pln'><span class='str'>&nbsp; &nbsp; If all are empty, defaults to &#39;&#39; or keyword arg `default`.</span><span class='strut'>&nbsp;</span></p>
 <p id='t85' class='pln'><span class='str'>&nbsp; &nbsp; &quot;&quot;&quot;</span><span class='strut'>&nbsp;</span></p>
-<p id='t86' class='stm mis'>&nbsp; &nbsp; <span class='key'>for</span> <span class='nam'>arg</span> <span class='key'>in</span> <span class='nam'>args</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
-<p id='t87' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>value</span> <span class='op'>=</span> <span class='nam'>os</span><span class='op'>.</span><span class='nam'>environ</span><span class='op'>.</span><span class='nam'>get</span><span class='op'>(</span><span class='nam'>arg</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
-<p id='t88' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>if</span> <span class='nam'>value</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
+<p id='t86' class='stm run hide_run'>&nbsp; &nbsp; <span class='key'>for</span> <span class='nam'>arg</span> <span class='key'>in</span> <span class='nam'>args</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
+<p id='t87' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>value</span> <span class='op'>=</span> <span class='nam'>os</span><span class='op'>.</span><span class='nam'>environ</span><span class='op'>.</span><span class='nam'>get</span><span class='op'>(</span><span class='nam'>arg</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t88' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>if</span> <span class='nam'>value</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
 <p id='t89' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>return</span> <span class='nam'>value</span><span class='strut'>&nbsp;</span></p>
-<p id='t90' class='stm mis'>&nbsp; &nbsp; <span class='key'>return</span> <span class='nam'>kwargs</span><span class='op'>.</span><span class='nam'>get</span><span class='op'>(</span><span class='str'>&#39;default&#39;</span><span class='op'>,</span> <span class='str'>&#39;&#39;</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t90' class='stm run hide_run'>&nbsp; &nbsp; <span class='key'>return</span> <span class='nam'>kwargs</span><span class='op'>.</span><span class='nam'>get</span><span class='op'>(</span><span class='str'>&#39;default&#39;</span><span class='op'>,</span> <span class='str'>&#39;&#39;</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
 <p id='t91' class='pln'><span class='strut'>&nbsp;</span></p>
 <p id='t92' class='pln'><span class='strut'>&nbsp;</span></p>
 <p id='t93' class='stm run hide_run'><span class='key'>def</span> <span class='nam'>add_arg</span><span class='op'>(</span><span class='nam'>func</span><span class='op'>,</span> <span class='op'>*</span><span class='nam'>args</span><span class='op'>,</span> <span class='op'>**</span><span class='nam'>kwargs</span><span class='op'>)</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>

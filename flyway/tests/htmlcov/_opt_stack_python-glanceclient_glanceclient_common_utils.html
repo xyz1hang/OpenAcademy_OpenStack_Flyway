@@ -5,7 +5,7 @@
     
     
     <meta http-equiv='X-UA-Compatible' content='IE=emulateIE7' />
-    <title>Coverage for /opt/stack/python-glanceclient/glanceclient/common/utils: 23%</title>
+    <title>Coverage for /opt/stack/python-glanceclient/glanceclient/common/utils: 27%</title>
     <link rel='stylesheet' href='style.css' type='text/css'>
     
     <script type='text/javascript' src='jquery.min.js'></script>
@@ -21,13 +21,13 @@
 <div id='header'>
     <div class='content'>
         <h1>Coverage for <b>/opt/stack/python-glanceclient/glanceclient/common/utils</b> :
-            <span class='pc_cov'>23%</span>
+            <span class='pc_cov'>27%</span>
         </h1>
         <img id='keyboard_icon' src='keybd_closed.png'>
         <h2 class='stats'>
             173 statements &nbsp;
-            <span class='run hide_run shortkey_r button_toggle_run'>40 run</span>
-            <span class='mis shortkey_m button_toggle_mis'>133 missing</span>
+            <span class='run hide_run shortkey_r button_toggle_run'>47 run</span>
+            <span class='mis shortkey_m button_toggle_mis'>126 missing</span>
             <span class='exc shortkey_x button_toggle_exc'>0 excluded</span>
             
         </h2>
@@ -330,13 +330,13 @@
 <p id='n267' class='pln'><a href='#n267'>267</a></p>
 <p id='n268' class='pln'><a href='#n268'>268</a></p>
 <p id='n269' class='pln'><a href='#n269'>269</a></p>
-<p id='n270' class='stm mis'><a href='#n270'>270</a></p>
-<p id='n271' class='stm mis'><a href='#n271'>271</a></p>
-<p id='n272' class='stm mis'><a href='#n272'>272</a></p>
-<p id='n273' class='stm mis'><a href='#n273'>273</a></p>
-<p id='n274' class='stm mis'><a href='#n274'>274</a></p>
-<p id='n275' class='stm mis'><a href='#n275'>275</a></p>
-<p id='n276' class='stm mis'><a href='#n276'>276</a></p>
+<p id='n270' class='stm run hide_run'><a href='#n270'>270</a></p>
+<p id='n271' class='stm run hide_run'><a href='#n271'>271</a></p>
+<p id='n272' class='stm run hide_run'><a href='#n272'>272</a></p>
+<p id='n273' class='stm run hide_run'><a href='#n273'>273</a></p>
+<p id='n274' class='stm run hide_run'><a href='#n274'>274</a></p>
+<p id='n275' class='stm run hide_run'><a href='#n275'>275</a></p>
+<p id='n276' class='stm run hide_run'><a href='#n276'>276</a></p>
 <p id='n277' class='stm mis'><a href='#n277'>277</a></p>
 <p id='n278' class='stm mis'><a href='#n278'>278</a></p>
 <p id='n279' class='pln'><a href='#n279'>279</a></p>
@@ -659,13 +659,13 @@
 <p id='t267' class='pln'><span class='str'>&nbsp; &nbsp; :param file_obj: file-like object.</span><span class='strut'>&nbsp;</span></p>
 <p id='t268' class='pln'><span class='str'>&nbsp; &nbsp; :retval The file&#39;s size or None if it cannot be determined.</span><span class='strut'>&nbsp;</span></p>
 <p id='t269' class='pln'><span class='str'>&nbsp; &nbsp; &quot;&quot;&quot;</span><span class='strut'>&nbsp;</span></p>
-<p id='t270' class='stm mis'>&nbsp; &nbsp; <span class='key'>if</span> <span class='nam'>hasattr</span><span class='op'>(</span><span class='nam'>file_obj</span><span class='op'>,</span> <span class='str'>&#39;seek&#39;</span><span class='op'>)</span> <span class='key'>and</span> <span class='nam'>hasattr</span><span class='op'>(</span><span class='nam'>file_obj</span><span class='op'>,</span> <span class='str'>&#39;tell&#39;</span><span class='op'>)</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
-<p id='t271' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>try</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
-<p id='t272' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>curr</span> <span class='op'>=</span> <span class='nam'>file_obj</span><span class='op'>.</span><span class='nam'>tell</span><span class='op'>(</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
-<p id='t273' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>file_obj</span><span class='op'>.</span><span class='nam'>seek</span><span class='op'>(</span><span class='num'>0</span><span class='op'>,</span> <span class='nam'>os</span><span class='op'>.</span><span class='nam'>SEEK_END</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
-<p id='t274' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>size</span> <span class='op'>=</span> <span class='nam'>file_obj</span><span class='op'>.</span><span class='nam'>tell</span><span class='op'>(</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
-<p id='t275' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>file_obj</span><span class='op'>.</span><span class='nam'>seek</span><span class='op'>(</span><span class='nam'>curr</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
-<p id='t276' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>return</span> <span class='nam'>size</span><span class='strut'>&nbsp;</span></p>
+<p id='t270' class='stm run hide_run'>&nbsp; &nbsp; <span class='key'>if</span> <span class='nam'>hasattr</span><span class='op'>(</span><span class='nam'>file_obj</span><span class='op'>,</span> <span class='str'>&#39;seek&#39;</span><span class='op'>)</span> <span class='key'>and</span> <span class='nam'>hasattr</span><span class='op'>(</span><span class='nam'>file_obj</span><span class='op'>,</span> <span class='str'>&#39;tell&#39;</span><span class='op'>)</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
+<p id='t271' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>try</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
+<p id='t272' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>curr</span> <span class='op'>=</span> <span class='nam'>file_obj</span><span class='op'>.</span><span class='nam'>tell</span><span class='op'>(</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t273' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>file_obj</span><span class='op'>.</span><span class='nam'>seek</span><span class='op'>(</span><span class='num'>0</span><span class='op'>,</span> <span class='nam'>os</span><span class='op'>.</span><span class='nam'>SEEK_END</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t274' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>size</span> <span class='op'>=</span> <span class='nam'>file_obj</span><span class='op'>.</span><span class='nam'>tell</span><span class='op'>(</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t275' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>file_obj</span><span class='op'>.</span><span class='nam'>seek</span><span class='op'>(</span><span class='nam'>curr</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t276' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>return</span> <span class='nam'>size</span><span class='strut'>&nbsp;</span></p>
 <p id='t277' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>except</span> <span class='nam'>IOError</span> <span class='key'>as</span> <span class='nam'>e</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
 <p id='t278' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>if</span> <span class='nam'>e</span><span class='op'>.</span><span class='nam'>errno</span> <span class='op'>==</span> <span class='nam'>errno</span><span class='op'>.</span><span class='nam'>ESPIPE</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
 <p id='t279' class='pln'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='com'># Illegal seek. This means the file object</span><span class='strut'>&nbsp;</span></p>

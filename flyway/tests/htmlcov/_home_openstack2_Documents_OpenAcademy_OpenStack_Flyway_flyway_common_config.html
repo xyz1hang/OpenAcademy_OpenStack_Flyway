@@ -5,7 +5,7 @@
     
     
     <meta http-equiv='X-UA-Compatible' content='IE=emulateIE7' />
-    <title>Coverage for /home/openstack2/Documents/OpenAcademy_OpenStack_Flyway/flyway/common/config: 71%</title>
+    <title>Coverage for /home/openstack2/Documents/OpenAcademy_OpenStack_Flyway/flyway/common/config: 100%</title>
     <link rel='stylesheet' href='style.css' type='text/css'>
     
     <script type='text/javascript' src='jquery.min.js'></script>
@@ -21,13 +21,13 @@
 <div id='header'>
     <div class='content'>
         <h1>Coverage for <b>/home/openstack2/Documents/OpenAcademy_OpenStack_Flyway/flyway/common/config</b> :
-            <span class='pc_cov'>71%</span>
+            <span class='pc_cov'>100%</span>
         </h1>
         <img id='keyboard_icon' src='keybd_closed.png'>
         <h2 class='stats'>
             24 statements &nbsp;
-            <span class='run hide_run shortkey_r button_toggle_run'>17 run</span>
-            <span class='mis shortkey_m button_toggle_mis'>7 missing</span>
+            <span class='run hide_run shortkey_r button_toggle_run'>24 run</span>
+            <span class='mis shortkey_m button_toggle_mis'>0 missing</span>
             <span class='exc shortkey_x button_toggle_exc'>0 excluded</span>
             
         </h2>
@@ -117,16 +117,16 @@
 <p id='n54' class='pln'><a href='#n54'>54</a></p>
 <p id='n55' class='pln'><a href='#n55'>55</a></p>
 <p id='n56' class='stm run hide_run'><a href='#n56'>56</a></p>
-<p id='n57' class='stm mis'><a href='#n57'>57</a></p>
+<p id='n57' class='stm run hide_run'><a href='#n57'>57</a></p>
 <p id='n58' class='pln'><a href='#n58'>58</a></p>
 <p id='n59' class='pln'><a href='#n59'>59</a></p>
 <p id='n60' class='stm run hide_run'><a href='#n60'>60</a></p>
-<p id='n61' class='stm mis'><a href='#n61'>61</a></p>
-<p id='n62' class='stm mis'><a href='#n62'>62</a></p>
-<p id='n63' class='stm mis'><a href='#n63'>63</a></p>
-<p id='n64' class='stm mis'><a href='#n64'>64</a></p>
-<p id='n65' class='stm mis'><a href='#n65'>65</a></p>
-<p id='n66' class='stm mis'><a href='#n66'>66</a></p>
+<p id='n61' class='stm run hide_run'><a href='#n61'>61</a></p>
+<p id='n62' class='stm run hide_run'><a href='#n62'>62</a></p>
+<p id='n63' class='stm run hide_run'><a href='#n63'>63</a></p>
+<p id='n64' class='stm run hide_run'><a href='#n64'>64</a></p>
+<p id='n65' class='stm run hide_run'><a href='#n65'>65</a></p>
+<p id='n66' class='stm run hide_run'><a href='#n66'>66</a></p>
                 
             </td>
             <td class='text' valign='top'>
@@ -186,16 +186,16 @@
 <p id='t54' class='pln'><span class='strut'>&nbsp;</span></p>
 <p id='t55' class='pln'><span class='strut'>&nbsp;</span></p>
 <p id='t56' class='stm run hide_run'><span class='key'>def</span> <span class='nam'>parse</span><span class='op'>(</span><span class='nam'>args</span><span class='op'>)</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
-<p id='t57' class='stm mis'>&nbsp; &nbsp; <span class='nam'>cfg</span><span class='op'>.</span><span class='nam'>CONF</span><span class='op'>(</span><span class='nam'>args</span><span class='op'>=</span><span class='nam'>args</span><span class='op'>,</span> <span class='nam'>project</span><span class='op'>=</span><span class='str'>&#39;flyway&#39;</span><span class='op'>,</span> <span class='nam'>version</span><span class='op'>=</span><span class='str'>&#39;0.1&#39;</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t57' class='stm run hide_run'>&nbsp; &nbsp; <span class='nam'>cfg</span><span class='op'>.</span><span class='nam'>CONF</span><span class='op'>(</span><span class='nam'>args</span><span class='op'>=</span><span class='nam'>args</span><span class='op'>,</span> <span class='nam'>project</span><span class='op'>=</span><span class='str'>&#39;flyway&#39;</span><span class='op'>,</span> <span class='nam'>version</span><span class='op'>=</span><span class='str'>&#39;0.1&#39;</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
 <p id='t58' class='pln'><span class='strut'>&nbsp;</span></p>
 <p id='t59' class='pln'><span class='strut'>&nbsp;</span></p>
 <p id='t60' class='stm run hide_run'><span class='key'>def</span> <span class='nam'>setup_logging</span><span class='op'>(</span><span class='op'>)</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
-<p id='t61' class='stm mis'>&nbsp; &nbsp; <span class='nam'>logging</span><span class='op'>.</span><span class='nam'>basicConfig</span><span class='op'>(</span><span class='nam'>level</span><span class='op'>=</span><span class='nam'>CONF</span><span class='op'>.</span><span class='nam'>loglevel</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
-<p id='t62' class='stm mis'>&nbsp; &nbsp; <span class='nam'>handler</span> <span class='op'>=</span> <span class='nam'>logging</span><span class='op'>.</span><span class='nam'>handlers</span><span class='op'>.</span><span class='nam'>WatchedFileHandler</span><span class='op'>(</span><span class='nam'>CONF</span><span class='op'>.</span><span class='nam'>logfile</span><span class='op'>,</span> <span class='nam'>mode</span><span class='op'>=</span><span class='str'>&#39;a&#39;</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
-<p id='t63' class='stm mis'>&nbsp; &nbsp; <span class='nam'>formatter</span> <span class='op'>=</span> <span class='nam'>logging</span><span class='op'>.</span><span class='nam'>Formatter</span><span class='op'>(</span><span class='nam'>CONF</span><span class='op'>.</span><span class='nam'>logformat</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
-<p id='t64' class='stm mis'>&nbsp; &nbsp; <span class='nam'>handler</span><span class='op'>.</span><span class='nam'>setFormatter</span><span class='op'>(</span><span class='nam'>formatter</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
-<p id='t65' class='stm mis'>&nbsp; &nbsp; <span class='nam'>logging</span><span class='op'>.</span><span class='nam'>root</span><span class='op'>.</span><span class='nam'>addHandler</span><span class='op'>(</span><span class='nam'>handler</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
-<p id='t66' class='stm mis'>&nbsp; &nbsp; <span class='nam'>LOG</span><span class='op'>.</span><span class='nam'>info</span><span class='op'>(</span><span class='str'>&quot;Logging enabled!&quot;</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t61' class='stm run hide_run'>&nbsp; &nbsp; <span class='nam'>logging</span><span class='op'>.</span><span class='nam'>basicConfig</span><span class='op'>(</span><span class='nam'>level</span><span class='op'>=</span><span class='nam'>CONF</span><span class='op'>.</span><span class='nam'>loglevel</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t62' class='stm run hide_run'>&nbsp; &nbsp; <span class='nam'>handler</span> <span class='op'>=</span> <span class='nam'>logging</span><span class='op'>.</span><span class='nam'>handlers</span><span class='op'>.</span><span class='nam'>WatchedFileHandler</span><span class='op'>(</span><span class='nam'>CONF</span><span class='op'>.</span><span class='nam'>logfile</span><span class='op'>,</span> <span class='nam'>mode</span><span class='op'>=</span><span class='str'>&#39;a&#39;</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t63' class='stm run hide_run'>&nbsp; &nbsp; <span class='nam'>formatter</span> <span class='op'>=</span> <span class='nam'>logging</span><span class='op'>.</span><span class='nam'>Formatter</span><span class='op'>(</span><span class='nam'>CONF</span><span class='op'>.</span><span class='nam'>logformat</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t64' class='stm run hide_run'>&nbsp; &nbsp; <span class='nam'>handler</span><span class='op'>.</span><span class='nam'>setFormatter</span><span class='op'>(</span><span class='nam'>formatter</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t65' class='stm run hide_run'>&nbsp; &nbsp; <span class='nam'>logging</span><span class='op'>.</span><span class='nam'>root</span><span class='op'>.</span><span class='nam'>addHandler</span><span class='op'>(</span><span class='nam'>handler</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t66' class='stm run hide_run'>&nbsp; &nbsp; <span class='nam'>LOG</span><span class='op'>.</span><span class='nam'>info</span><span class='op'>(</span><span class='str'>&quot;Logging enabled!&quot;</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
                 
             </td>
         </tr>

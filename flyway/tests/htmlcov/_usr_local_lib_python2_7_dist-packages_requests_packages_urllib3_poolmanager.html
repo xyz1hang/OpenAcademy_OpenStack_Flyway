@@ -5,7 +5,7 @@
     
     
     <meta http-equiv='X-UA-Compatible' content='IE=emulateIE7' />
-    <title>Coverage for /usr/local/lib/python2.7/dist-packages/requests/packages/urllib3/poolmanager: 51%</title>
+    <title>Coverage for /usr/local/lib/python2.7/dist-packages/requests/packages/urllib3/poolmanager: 52%</title>
     <link rel='stylesheet' href='style.css' type='text/css'>
     
     <script type='text/javascript' src='jquery.min.js'></script>
@@ -21,13 +21,13 @@
 <div id='header'>
     <div class='content'>
         <h1>Coverage for <b>/usr/local/lib/python2.7/dist-packages/requests/packages/urllib3/poolmanager</b> :
-            <span class='pc_cov'>51%</span>
+            <span class='pc_cov'>52%</span>
         </h1>
         <img id='keyboard_icon' src='keybd_closed.png'>
         <h2 class='stats'>
             97 statements &nbsp;
-            <span class='run hide_run shortkey_r button_toggle_run'>49 run</span>
-            <span class='mis shortkey_m button_toggle_mis'>48 missing</span>
+            <span class='run hide_run shortkey_r button_toggle_run'>50 run</span>
+            <span class='mis shortkey_m button_toggle_mis'>47 missing</span>
             <span class='exc shortkey_x button_toggle_exc'>0 excluded</span>
             
         </h2>
@@ -176,7 +176,7 @@
 <p id='n113' class='pln'><a href='#n113'>113</a></p>
 <p id='n114' class='stm run hide_run'><a href='#n114'>114</a></p>
 <p id='n115' class='stm run hide_run'><a href='#n115'>115</a></p>
-<p id='n116' class='stm mis'><a href='#n116'>116</a></p>
+<p id='n116' class='stm run hide_run'><a href='#n116'>116</a></p>
 <p id='n117' class='pln'><a href='#n117'>117</a></p>
 <p id='n118' class='pln'><a href='#n118'>118</a></p>
 <p id='n119' class='stm run hide_run'><a href='#n119'>119</a></p>
@@ -437,7 +437,7 @@
 <p id='t113' class='pln'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='com'># connections, open a new ConnectionPool.</span><span class='strut'>&nbsp;</span></p>
 <p id='t114' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>pool</span> <span class='op'>=</span> <span class='nam'>self</span><span class='op'>.</span><span class='nam'>pools</span><span class='op'>.</span><span class='nam'>get</span><span class='op'>(</span><span class='nam'>pool_key</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
 <p id='t115' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>if</span> <span class='nam'>pool</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
-<p id='t116' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>return</span> <span class='nam'>pool</span><span class='strut'>&nbsp;</span></p>
+<p id='t116' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>return</span> <span class='nam'>pool</span><span class='strut'>&nbsp;</span></p>
 <p id='t117' class='pln'><span class='strut'>&nbsp;</span></p>
 <p id='t118' class='pln'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='com'># Make a fresh ConnectionPool of the desired type</span><span class='strut'>&nbsp;</span></p>
 <p id='t119' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>pool</span> <span class='op'>=</span> <span class='nam'>self</span><span class='op'>.</span><span class='nam'>_new_pool</span><span class='op'>(</span><span class='nam'>scheme</span><span class='op'>,</span> <span class='nam'>host</span><span class='op'>,</span> <span class='nam'>port</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
