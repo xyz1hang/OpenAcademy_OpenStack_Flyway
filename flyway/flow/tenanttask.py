@@ -15,9 +15,12 @@
 #    under the License.
 
 import logging
+import sys
+sys.path.append('../')
 
 from taskflow import task
-
+#from common import config as cfg
+from utils import *
 
 LOG = logging.getLogger(__name__)
 
@@ -30,4 +33,25 @@ class TenantMigrationTask(task.Task):
 
     def execute(self):
         LOG.info('Migrating all tenants ...')
-        # TODO: Implement
+
+	ks_source_credentials = getSourceKeystoneCredentials()
+	ks_target_credentials = getTargetKeystoneCredentials()
+	
+	ks_source = getKeystoneClient(**ks_source_credentials)
+	ks_target = getKeystoneClient(**ks_target_credentials)
+
+	target_tenantNames = []
+	for tenant in ks_target.tenants.list():
+		target_tenantNames.append(tenant.name)
+
+	for source_tenant in ks_source.tenants.list():
+		if source_tenant.name not in target_tenantNames:
+			ks_target.tenants.create(tenant_name=source_tenant.name)
+
+
+
+
+
+
+        
+	

@@ -21,6 +21,8 @@ import keystoneclient.v2_0.client as ksclient
 from glanceclient import Client as glclient
 import novaclient.v1_1.client as nvclient
 from common import config as cfg
+import random
+import smtplib
 
 LOG = logging.getLogger(__name__)
 
@@ -144,6 +146,35 @@ def getTenantId(token):
 	:param token: dict
 	"""	
 	return token['tenant']['id']
+
+def generateNewPassword():
+	"""Generate a new password containing 10 letters
+	"""
+	letters = 'abcdegfhijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
+	password = ''
+	for i in range(10):	
+		ranNum = int(random.random() * len(letters))
+		password += letters[ranNum]
+	return password
+
+
+def sendemail(from_addr, to_addr_list, cc_addr_list, subject, message,
+              login, password, smtpserver='smtp.gmail.com:587'):
+	"""Send email using gmail
+	"""
+	header  = 'From: %s\n' % from_addr
+	header += 'To: %s\n' % ','.join(to_addr_list)
+	header += 'Cc: %s\n' % ','.join(cc_addr_list)
+	header += 'Subject: %s\n\n' % subject
+	message = header + message
+
+	server = smtplib.SMTP(smtpserver)
+	server.starttls()
+	server.login(login,password)
+	problems = server.sendmail(from_addr, to_addr_list, message)
+	server.quit()
+	
+	
 
 
 

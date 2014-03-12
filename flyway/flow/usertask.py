@@ -15,9 +15,12 @@
 #    under the License.
 
 import logging
+import sys
+sys.path.append('../')
 
 from taskflow import task
 import keystoneclient.v2_0.client as ksclient
+from utils import *
 
 from common import config as cfg
 
@@ -33,24 +36,39 @@ class UserMigrationTask(task.Task):
     def execute(self):
         LOG.info('Migrating all users ...')
 	
-        ks_source = ksclient.Client(username=cfg.CONF.SOURCE.os_username,
-                                    password=cfg.CONF.SOURCE.os_password,
-                                    auth_url=cfg.CONF.SOURCE.os_auth_url,
-                                    tenant_name=cfg.CONF.SOURCE.os_tenant_name)
-	"""
+	self.from_addr = ''
+	self.login = ''
+	self.password = ''
+	self.subject = 'Update Openstack Password'
+	self.message = 'Please update your openstack account password as soon as possible!\nHere is a temporary password!'
 	
+	ks_source_credentials = getSourceKeystoneCredentials()
+	ks_target_credentials = getTargetKeystoneCredentials()
+	
+	ks_source = getKeystoneClient(**ks_source_credentials)
+	ks_target = getKeystoneClient(**ks_target_credentials)
 
-	ks_target = ksclient.Client(username=cfg.CONF.TARGET.os_username,
-                                    password=cfg.CONF.TARGET.os_password,
-                                    auth_url=cfg.CONF.TARGET.os_auth_url,
-                                    tenant_name=cfg.CONF.TARGET.os_tenant_name)
-	"""	
-	auth_token = ks_source.auth_ref['token']['id']
-	tenant_id = ks_source.auth_ref['token']['tenant']['id']
-	print 'token: ',auth_token
-	print 'tenant_id:',tenant_id
-	"""
-        for user in ks_source.users.list():
+	target_userNames = {}
+	for target_user in ks_target.users.list():
+		target_userNames[target_user.name] = target_user.email
+		
+	for source_user in ks_source.users.list(): 
+		if source_user.name not in target_userNames.keys():
+			newPassword = generateNewPassword()
+			ks_target.users.create(name=source_user.name, 
+				               password=newPassword,
+					       email=source_user.email)
+			
+			#Send emails
+			sendemail(from_addr=self.from_addr , 
+			  	  to_addr_list=[source_user.email],
+				  cc_addr_list=[], 
+				  subject=self.subject, 
+				  message=self.message+'Password:\n   '+newPassword, 
+				  login=self.login, 
+				  password=self.password)
+
+	for user in ks_source.users.list():
             LOG.debug(user)
-            # TODO: use ks_target to create the user info in the target cloud
-	"""
+            
+	
