@@ -24,18 +24,6 @@ from common import config as cfg
 
 LOG = logging.getLogger(__name__)
 
-cfg.CONF.SOURCE.os_username = "admin"
-cfg.CONF.SOURCE.os_password = "openstack"
-cfg.CONF.SOURCE.os_auth_url = "http://172.16.45.181:5000/v2.0/"
-cfg.CONF.SOURCE.os_tenant_name = "admin"
-cfg.CONF.SOURCE.os_endpoint = "http://172.16.45.181:9292"
-
-cfg.CONF.TARGET.os_username = "admin"
-cfg.CONF.TARGET.os_password = "openstack"
-cfg.CONF.TARGET.os_auth_url = "http://172.16.45.182:5000/v2.0/"
-cfg.CONF.TARGET.os_tenant_name = "admin"
-cfg.CONF.TARGET.os_endpoint = "http://172.16.45.182:9292"
-
 def getKeystoneClient(username=None, password=None, auth_url=None, tenant_name=None, **kwargs):
 	"""Get keystone client
 	"""
