@@ -22,9 +22,6 @@ from taskflow import task
 import keystoneclient.v2_0.client as ksclient
 from utils import *
 
-from common import config as cfg
-
-
 LOG = logging.getLogger(__name__)
 
 

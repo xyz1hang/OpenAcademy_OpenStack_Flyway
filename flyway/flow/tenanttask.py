@@ -19,7 +19,6 @@ import sys
 sys.path.append('../')
 
 from taskflow import task
-#from common import config as cfg
 from utils import *
 
 LOG = logging.getLogger(__name__)
