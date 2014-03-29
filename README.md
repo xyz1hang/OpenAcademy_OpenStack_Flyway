@@ -10,12 +10,20 @@ Forklift Resources from One Cloud to Another which can be executed anywhere
     5 - Images/Snapshots and their metadata.
     6 - VMs
     7 - Flavor mappings
+    
+Configuration
+=============
+
+Configuration has to be made before using Flyway. Please execute the below command for implementing configurations in the 'preconfiguration' directory of project:
+    
+    1 - sh pythonutils.sh
+    2 - sudo pip install -r openstack_requirements.txt
 
 
 Usage
 =====
 
-Execute the command below in the root directory of project:
+Execute the command below in the 'flyway' directory of project:
     
     python flyway.py -src sourcecloudname -dst targetcloudname
 
