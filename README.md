@@ -16,7 +16,7 @@ Configuration
 
 Configuration has to be made before using Flyway. Please execute the below command for implementing configurations in the 'preconfiguration' directory of project:
     
-    1 - sh pythonutils.sh
+    1 - sudo sh pythonutils.sh
     2 - sudo pip install -r openstack_requirements.txt
 
 
