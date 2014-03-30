@@ -1,7 +1,7 @@
 Flyway
 ======
 
-Forklift Resources from One Cloud to Another which can be executed anywhere
+Forklift Resources from One Cloud to Another which can be executed in Ubuntu, Debian operating systems
 
     1 - Users and their respective roles in projects
     2 - Projects with related metadata
