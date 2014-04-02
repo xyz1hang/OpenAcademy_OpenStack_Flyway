@@ -11,8 +11,15 @@ Forklift Resources from One Cloud to Another which can be executed in Ubuntu, De
     6 - VMs
     7 - Flavor mappings
     
-Configuration
-=============
+This project includes two interfaces:
+
+    1 - Command Line Interface
+    2 - Graphical User Interface
+
+CLI
+===
+    Configuration
+    =============
 
 Configuration has to be made before using Flyway. Please execute the below command for implementing configurations in the 'preconfiguration' directory of project:
     
@@ -20,8 +27,8 @@ Configuration has to be made before using Flyway. Please execute the below comma
     2 - sudo pip install -r openstack_requirements.txt
 
 
-Usage
-=====
+    Usage
+    =====
 
 Execute the command below in the 'flyway' directory of project:
     
