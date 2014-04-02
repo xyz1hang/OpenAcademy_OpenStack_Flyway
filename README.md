@@ -18,17 +18,18 @@ This project includes two interfaces:
 
 CLI
 ===
-    Configuration
-    =============
 
-Configuration has to be made before using Flyway. Please execute the below command for implementing configurations in the 'preconfiguration' directory of project:
+1 - Configuration
+=================
+
+Configuration has to be made before using Flyway CLI. Please execute the below command for implementing configurations in the 'preconfiguration' directory of project:
     
     1 - sudo sh pythonutils.sh
     2 - sudo pip install -r openstack_requirements.txt
 
 
-    Usage
-    =====
+2 - Usage
+=========
 
 Execute the command below in the 'flyway' directory of project:
     
@@ -42,3 +43,21 @@ If sourcecloudname or targetcloudname does not exist in the DNS database, please
 
 Note: 
     If vagrant is used as the host of openstack, please configure 'os_bypass_url' in the flyway.conf file and add 'bypass_url' parameter to each nova instantiation
+    
+    
+GUI
+===
+
+1 - Configuration
+=================
+Configuration has to be made before using Flyway GUI. Please execute the below command for implementing configurations in the 'GUI' directory of project:
+    
+    sudo sh configuration.sh
+
+2 - Usage
+=========
+
+Execute command:
+    
+    python gui.py
+
