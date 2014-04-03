@@ -19,6 +19,8 @@ import sys
 sys.path.append('../')
 
 import logging
+import sys
+sys.path.append('../')
 
 from taskflow import task
 import keystoneclient.v2_0.client as ksclient
