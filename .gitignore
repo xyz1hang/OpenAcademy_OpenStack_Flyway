@@ -34,3 +34,9 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+flyway/etc/flyway.conf
+
+.idea/*
+
+*.iml
