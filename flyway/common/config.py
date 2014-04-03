@@ -31,7 +31,7 @@ opts = [
     cfg.StrOpt('os_tenant_name', default='admin'),
     cfg.StrOpt('os_username', default='admin'),
     cfg.StrOpt('os_password'),
-    cfg.StrOpt('os_keystone_endpoint')
+    cfg.StrOpt('os_keystone_endpoint'),
     cfg.StrOpt('os_cloudname')
 ]
 

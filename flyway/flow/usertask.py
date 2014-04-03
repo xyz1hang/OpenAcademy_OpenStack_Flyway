@@ -90,3 +90,4 @@ class UserMigrationTask(task.Task):
             if not found:
                 moved_users.append(self.immigrate_user(user))
         return moved_users
+
