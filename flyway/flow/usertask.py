@@ -60,13 +60,13 @@ class UserMigrationTask(task.Task):
 
         source_users = find_all_users_in(self.ks_source)
 
-        moved_users = self.immigrate_users_to_target(source_users)
+        moved_users = self.migrate_users_to_target(source_users)
 
         LOG.info("User immigration is finished")
 
         return moved_users
 
-    def immigrate_user(self, source_user):
+    def migrate_user(self, source_user):
         # TODO: Generate random pwd and email to the user
         target_user = self.ks_target.users.create(source_user.name, '123',
                                                   source_user.email,
@@ -78,7 +78,7 @@ class UserMigrationTask(task.Task):
 
         return target_user
 
-    def immigrate_users_to_target(self, source_users):
+    def migrate_users_to_target(self, source_users):
         target_users = find_all_users_in(self.ks_target)
         moved_users = []
         # I have no idea how to rewrite the __eq__ in ksclient.users.User,
@@ -90,6 +90,6 @@ class UserMigrationTask(task.Task):
                     found = True
                     break
             if not found:
-                moved_users.append(self.immigrate_user(user))
+                moved_users.append(self.migrate_user(user))
         return moved_users
 

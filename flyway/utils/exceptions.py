@@ -11,7 +11,7 @@ class ResourceNotFoundException(Exception):
         self.cloud = cloud
 
     def __str__(self):
-        return "{0:s} not found. [id: {1:s}] [cloud {2:s}]".format(
+        return "{0:s} not found. [id: {1:s}] [cloud: {2:s}]".format(
             self.resource_type,
             self.resource_id or "?",
             self.cloud or "?")

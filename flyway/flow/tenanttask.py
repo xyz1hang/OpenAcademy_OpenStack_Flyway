@@ -19,12 +19,10 @@ sys.path.append('../')
 
 from taskflow import task
 from flyway.utils.db_handler import update_tenant_table
-from flyway.utils.db_base import delete_all_data
 from flyway.utils import db_handler
 from flyway.utils import exceptions
 from flyway.utils.helper import *
 from flyway.utils.resourcetype import ResourceType
-from novaclient import exceptions as nova_exceptions
 from keystoneclient import exceptions as keystone_exceptions
 
 LOG = logging.getLogger(__name__)
@@ -36,15 +34,16 @@ class TenantMigrationTask(task.Task):
     target cloud.
     """
 
-    def __init__(self, **kwargs):
-        super(TenantMigrationTask, self).__init__(**kwargs)
+    def __init__(self, name, *args, **kwargs):
+        super(TenantMigrationTask, self).__init__(name, **kwargs)
         self.ks_source = None
         self.ks_target = None
+        self.tenants_to_move = args
 
     def migrate_one_tenant(self, tenant_name):
         try:
             s_tenant = self.ks_source.tenants.find(name=tenant_name)
-        except nova_exceptions.NotFound:
+        except keystone_exceptions.NotFound:
             raise exceptions.ResourceNotFoundException(
                 ResourceType.tenant, tenant_name,
                 cfg.CONF.SOURCE.os_cloud_name)
@@ -105,7 +104,7 @@ class TenantMigrationTask(task.Task):
 
             db_handler.record_tenant_migrated(**tenant_data)
 
-    def execute(self, tenants_to_move=None):
+    def execute(self):
 
         """execute the tenant migration task
 
@@ -119,18 +118,17 @@ class TenantMigrationTask(task.Task):
         self.ks_source = clients.get_source()
         self.ks_target = clients.get_destination()
 
-        #delete_all_data("tenant")
         update_tenant_table()
 
-        if not tenants_to_move or len(tenants_to_move) == 0:
+        if not self.tenants_to_move or len(self.tenants_to_move) == 0:
             LOG.info('Migrating all tenants ...')
             tenants_to_move = []
             for tenant in self.ks_source.tenants.list():
                 tenants_to_move.append(tenant.name)
         else:
             LOG.info('Migrating given tenants of size {0} ...\n'
-                     .format(len(tenants_to_move)))
+                     .format(len(self.tenants_to_move)))
 
-        for source_tenant in tenants_to_move:
+        for source_tenant in self.tenants_to_move:
             LOG.info('Migrating tenant {0}\n'.format(source_tenant))
             self.migrate_one_tenant(source_tenant)
