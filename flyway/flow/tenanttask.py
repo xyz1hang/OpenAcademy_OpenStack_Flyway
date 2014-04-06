@@ -15,13 +15,14 @@
 #    under the License.
 
 import sys
-from taskflow import task
-
 sys.path.append('../')
 
+from taskflow import task
+from flyway.utils.db_handler import update_tenant_table
+from flyway.utils.db_base import delete_all_data
 from flyway.utils import db_handler
 from flyway.utils import exceptions
-from flyway.utils.utils import *
+from flyway.utils.helper import *
 from flyway.utils.resourcetype import ResourceType
 from novaclient import exceptions as nova_exceptions
 from keystoneclient import exceptions as keystone_exceptions
@@ -35,13 +36,10 @@ class TenantMigrationTask(task.Task):
     target cloud.
     """
 
-    def __init__(self):
-        super(TenantMigrationTask, self).__init__()
-        self.ks_source_credentials = get_source_keystone_credentials()
-        ks_target_credentials = get_target_keystone_credentials()
-
-        self.ks_source = get_keystone_client(**self.ks_source_credentials)
-        self.ks_target = get_keystone_client(**ks_target_credentials)
+    def __init__(self, **kwargs):
+        super(TenantMigrationTask, self).__init__(**kwargs)
+        self.ks_source = None
+        self.ks_target = None
 
     def migrate_one_tenant(self, tenant_name):
         try:
@@ -59,20 +57,20 @@ class TenantMigrationTask(task.Task):
         m_tenant = db_handler.get_migrated_tenant(values)
 
         if m_tenant is not None:
-            print("tenant \'%s\' in cloud %s has already been migrated"
+            print("tenant {0} in cloud {1} has already been migrated"
                   .format(m_tenant["project_name"], s_cloud_name))
 
         elif m_tenant is None:
             # check for tenant name duplication
-            new_tenant_name = m_tenant.name
+            new_tenant_name = s_tenant.name
             migrated_tenant = s_tenant
             try:
                 found = self.ks_target.tenants.find(name=s_tenant.name)
                 print 'found: ' + str(found)
                 if found:
                     user_input = \
-                        raw_input("duplicated tenant (%s) found on "
-                                  "cloud %s\n Please type in a new name or "
+                        raw_input("duplicated tenant {0} found on "+
+                                  "cloud {1}\nPlease type in a new name or "+
                                   "'abort':".format(found.name, t_cloud_name))
                     if user_input is "abort":
                         # TODO: implement cleaning up and proper exit
@@ -80,11 +78,11 @@ class TenantMigrationTask(task.Task):
                     elif user_input:
                         new_tenant_name = user_input
                         migrated_tenant = self.ks_target.tenants.create(
-                            self, new_tenant_name, s_tenant.description, True)
+                            new_tenant_name, s_tenant.description, True)
             except keystone_exceptions.NotFound:
                 # create a new tenant
                 migrated_tenant = self.ks_target.tenants.create(
-                    self, new_tenant_name, s_tenant.description, True)
+                    new_tenant_name, s_tenant.description, True)
 
             # add the "admin" as the default user - admin - of
             # the tenant migrated.
@@ -115,13 +113,24 @@ class TenantMigrationTask(task.Task):
         or length equals to 0 all tenant will be migrated, otherwise only
         specified tenant will be migrated
         """
-        if not tenants_to_move | len(tenants_to_move) == 0:
+        # initialise python clients(e.g keystone) after
+        # execution begin i.e after config is ready
+        clients = get_clients()
+        self.ks_source = clients.get_source()
+        self.ks_target = clients.get_destination()
+
+        #delete_all_data("tenant")
+        update_tenant_table()
+
+        if not tenants_to_move or len(tenants_to_move) == 0:
             LOG.info('Migrating all tenants ...')
-            for tenant in self.ks_target.tenants.list():
+            tenants_to_move = []
+            for tenant in self.ks_source.tenants.list():
                 tenants_to_move.append(tenant.name)
         else:
-            LOG.info('Migrating given tenants of size %s ...'
+            LOG.info('Migrating given tenants of size {0} ...\n'
                      .format(len(tenants_to_move)))
 
         for source_tenant in tenants_to_move:
+            LOG.info('Migrating tenant {0}\n'.format(source_tenant))
             self.migrate_one_tenant(source_tenant)

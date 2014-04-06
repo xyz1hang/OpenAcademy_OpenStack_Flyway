@@ -49,7 +49,7 @@ def get_nova_client(username=None, api_key=None, auth_url=None, project_id=None,
                            auth_url=auth_url, project_id=project_id)
 
 
-def get_source_keystone_credentials():
+def get_source_credentials():
     """Get source cloud keystone credentials
     :rtype dict
     """
@@ -60,7 +60,7 @@ def get_source_keystone_credentials():
     return credentials
 
 
-def get_target_keystone_credentials():
+def get_target_credentials():
     """Get target cloud keystone credentials
     :rtype dict
     """
@@ -76,7 +76,8 @@ def get_source_glance_credentials(token):
     :param token: token id
     :rtype dict
     """
-    credentials = {'version': "1", 'endpoint': cfg.CONF.SOURCE.os_endpoint,
+    credentials = {'version': "1",
+                   'endpoint': cfg.CONF.SOURCE.os_glance_endpoint,
                    'token': token}
     return credentials
 
@@ -86,33 +87,43 @@ def get_target_glance_credentials(token):
     :param token: token id
     :rtype dict
     """
-    credentials = {'version': "1", 'endpoint': cfg.CONF.TARGET.os_endpoint,
+    credentials = {'version': "1",
+                   'endpoint': cfg.CONF.TARGET.os_glance_endpoint,
                    'token': token}
     return credentials
 
 
-def get_source_nova_credentials():
-    """Get source nova credentials
-    :rtype dict
+class Clients:
+    #TODO: attempt to create clients from one place...
+    def __init__(self):
+        ks_source_credentials = get_source_credentials()
+        ks_target_credentials = get_target_credentials()
+        ks_source = get_keystone_client(**ks_source_credentials)
+        ks_target = get_keystone_client(**ks_target_credentials)
+
+        self.ks_client_source = ksclient.Client(
+            token=ks_source.auth_token,
+            endpoint=cfg.CONF.SOURCE.os_keystone_endpoint)
+        self.ks_client_target = ksclient.Client(
+            token=ks_target.auth_token,
+            endpoint=cfg.CONF.TARGET.os_keystone_endpoint)
+
+    def get_source(self):
+        return self.ks_client_source
+
+    def get_destination(self):
+        return self.ks_client_target
+
+
+def get_clients():
+    """function to get a new client for accessing service and
+    review token upon expire
     """
-    credentials = {'username': cfg.CONF.SOURCE.os_username,
-                   'api_key': cfg.CONF.SOURCE.os_password,
-                   'auth_url': cfg.CONF.SOURCE.os_auth_url,
-                   'project_id': cfg.CONF.SOURCE.os_tenant_name}
-    return credentials
+    return Clients()
 
 
-def get_target_nova_credentials():
-    """Get target nova credentials
-    :rtype dict
-    """
-    credentials = {'username': cfg.CONF.TARGET.os_username,
-                   'api_key': cfg.CONF.TARGET.os_password,
-                   'auth_url': cfg.CONF.TARGET.os_auth_url,
-                   'project_id': cfg.CONF.TARGET.os_tenant_name}
-    return credentials
-
-
+#TODO: Do we actually need this function if we have the
+#TODO: keystone client object already
 def get_authentication_ref(credentials):
     """Get auth ref
     :param credentials: dict
@@ -154,7 +165,7 @@ def generate_new_password():
 
 
 def send_email(from_addr, to_addr_list, cc_addr_list, subject, message,
-              login, password, smtpserver='smtp.gmail.com:587'):
+               login, password, smtpserver='smtp.gmail.com:587'):
     """Send email using gmail
     """
     header = 'From: %s\n' % from_addr

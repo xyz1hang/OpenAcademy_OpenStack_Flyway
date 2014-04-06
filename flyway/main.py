@@ -20,7 +20,7 @@ from oslo.config import cfg
 
 from common import config
 from flow import flow
-from flyway.utils import db_handler
+from utils import db_handler
 
 
 def main():
@@ -37,9 +37,9 @@ def main():
 
         # store cloud "environment" (connection details) into database
         try:
-            db_handler.create_environment()
+            db_handler.update_environment()
         except db_handler.MySQLdb.Error, e:
-            print 'Unable to connect to mysql database. \n ' \
+            print 'MySQL Error\n' \
                   'Details: ' + str(e)
 
     elif len(sys.argv) > 4 and sys.argv[1] == '-src' and sys.argv[3] == '-dst':
@@ -55,7 +55,7 @@ def main():
                      ' does not exist in the database, '
                      'please configure flyway.conf!')
 
-        # TODO: We've already used database and yet
+        # TODO: We've used database here and yet
         # TODO: need to write to file again ?
         # TODO: Is there a way to load those connection details read from
         # TODO: database directly into the CONF (or use them directly)?

@@ -1,24 +1,9 @@
-# -*- coding: utf-8 -*-
-
-#    Copyright (C) 2012 eBay, Inc. All Rights Reserved.
-#
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#    License for the specific language governing permissions and limitations
-#    under the License.
-
 import sys
+from taskflow import task
 
 sys.path.append('../')
 
-from flyway.utils.utils import *
+from flyway.utils.helper import *
 import os
 
 LOG = logging.getLogger(__name__)
@@ -30,14 +15,14 @@ class ImageMigrationTask(task.Task):
     """
 
     def execute(self):
-        '''
+        """
         Find out whether the source cloud image exist in target cloud
         If not, migrate it to target cloud
-        '''
+        """
         LOG.info('Migrating all images ...')
 
-        ks_source_credentials = get_source_keystone_credentials()
-        ks_target_credentials = get_target_keystone_credentials()
+        ks_source_credentials = get_source_credentials()
+        ks_target_credentials = get_target_credentials()
 
         ks_source = get_keystone_client(**ks_source_credentials)
         ks_target = get_keystone_client(**ks_target_credentials)
@@ -87,10 +72,7 @@ class ImageMigrationTask(task.Task):
                                                     'rb'))
                 os.remove(imagedatadir + source_image.id)
 
-        """
-	for image in gl_target.images.list():
-            print 'target:',image.checksum
-
-	for image in gl_source.images.list():
-            print 'source:',image.checksum
-        """
+        """for image in gl_target.images.list():
+                print 'target:',image.checksum
+           for image in gl_source.images.list():
+                print 'source:',image.checksum"""

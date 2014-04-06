@@ -17,6 +17,7 @@
 import taskflow.engines
 from taskflow.patterns import linear_flow as lf
 from taskflow.patterns import unordered_flow as uf
+from flyway.utils.helper import *
 
 from usertask import UserMigrationTask
 from tenanttask import TenantMigrationTask
@@ -31,12 +32,12 @@ flow = lf.Flow('main_flow').add(
         # Note that creating users and tenants can happen in parallel and
         # hence it is part of unordered flow
         #UserMigrationTask('user_migration_task'),
-        TenantMigrationTask('tenant_migration_task')
+        TenantMigrationTask(name='tenant_migration_task')
     ),
-    #RoleMigrationTask('role_migration_task')
     # TODO: Add other tasks to the flow e.g migrate image, private key etc.
-    ImageMigrationTask('image_migration_task'),
-    KeypairMigrationTask('keypairs_migration_task'),
+    #RoleMigrationTask('role_migration_task'),
+    #ImageMigrationTask('image_migration_task'),
+    #KeypairMigrationTask('keypairs_migration_task'),
     #InstanceMigrationTask('instances_migration_task')
 )
 

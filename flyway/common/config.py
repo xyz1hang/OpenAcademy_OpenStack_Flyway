@@ -24,13 +24,15 @@ from oslo.config import cfg
 LOG = logging.getLogger(__name__)
 
 opts = [
-    cfg.StrOpt('os_auth_url', default = None),
-    cfg.StrOpt('os_bypass_url', default = None),
+    cfg.StrOpt('os_auth_url', default=None),
+    cfg.StrOpt('os_bypass_url', default=None),
     cfg.StrOpt('os_endpoint'),
     cfg.StrOpt('os_tenant_id'),
     cfg.StrOpt('os_tenant_name', default='admin'),
     cfg.StrOpt('os_username', default='admin'),
     cfg.StrOpt('os_password'),
+    cfg.StrOpt('os_keystone_endpoint'),
+    cfg.StrOpt('os_glance_endpoint'),
     cfg.StrOpt('os_cloud_name')
 ]
 

@@ -1,3 +1,4 @@
+#!/bin/sh
 sudo wget https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py -O - | python
 sudo apt-get install unzip
 sudo unzip setuptools*.zip
