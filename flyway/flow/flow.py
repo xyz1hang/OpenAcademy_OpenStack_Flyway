@@ -31,7 +31,7 @@ flow = lf.Flow('main_flow').add(
         # Note that creating users and tenants can happen in parallel and
         # hence it is part of unordered flow
         #UserMigrationTask('user_migration_task'),
-        #TenantMigrationTask('tenant_migration_task')
+        TenantMigrationTask('tenant_migration_task')
     ),
     #RoleMigrationTask('role_migration_task')
     # TODO: Add other tasks to the flow e.g migrate image, private key etc.

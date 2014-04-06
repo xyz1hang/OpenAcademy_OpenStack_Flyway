@@ -20,72 +20,57 @@ from oslo.config import cfg
 
 from common import config
 from flow import flow
-from dns import * 
-import getpass
-import re
+from flyway.utils import db_handler
+
 
 def main():
-	# the configuration will be read into the cfg.CONF global data structure
-	args = ['--config-file']
-	if len(sys.argv) > 2 and sys.argv[1] == '--config-file':
-		args.append(sys.argv[2])
-	    	config.parse(args)
-	    	config.setup_logging()
-		if not cfg.CONF.config_file:
-			sys.exit("ERROR: Unable to find configuration file via the '--config-file' option!")
-		
-		#Interaction with database and store cloud credentials into source cloud database
-		while True:
-			passwd = getpass.getpass('The source cloud credentials will be stored into mysql database, please type in source cloud mysql database password. If password is equal to admin password, type in Enter directly!\nPassword:\n')
-			if passwd is not '':
-				password = passwd
-			else:
-				password = cfg.CONF.SOURCE.os_password
-			print password
-			ip = re.search('http://(.+?):', cfg.CONF.SOURCE.os_auth_url)
+    # the configuration will be read into the cfg.CONF global data structure
+    args = ['--config-file']
+    if len(sys.argv) > 2 and sys.argv[1] == '--config-file':
+        args.append(sys.argv[2])
+        config.parse(args)
+        config.setup_logging()
+        if not cfg.CONF.config_file:
+            sys.exit(
+                "ERROR: Unable to find configuration file via the "
+                "'--config-file' option!")
 
-			DNScredentials = {'host': ip.group(1),
-			  		  'user': 'root',
-			  		  'passwd':password,
-			  		  'db': 'keystone'}
-			db = None
-			try:				
-				db = connect(**DNScredentials)
-				cursor = getCursor(db)
-				createDNS(db, cursor)
-				insertTargetDNS(db, cursor)
-				insertSourceDNS(db, cursor)
-				db.close()	
-				break
-			except:
-				print 'Unable to connect to mysql database!'
-				continue
-		
-	elif len(sys.argv) > 4 and sys.argv[1] == '-src' and sys.argv[3] == '-dst':
-		db = connect(**DNScredentials)
-		cursor = getCursor(db)
-		srcConfig = readDNS(db, cursor, sys.argv[2])
-		if not srcConfig:
-			print "Cloud " + sys.argv[2] + ' does not exist in the database, please configure flyway.conf!'
-	
-		dstConfig = readDNS(db, cursor, sys.argv[4])
-		if not dstConfig:
-			sys.exit("Cloud " + sys.argv[4] + ' does not exist in the database, please configure flyway.conf!')
-	
-		writeToFile('etc/flyway.conf', configContent(srcConfig, dstConfig))
-		args.append('./etc/flyway.conf')
-		config.parse(args)
-	    	config.setup_logging()
-		db.close()
-    	
-	try:
-		flow.execute()
-	except RuntimeError, e:
-		sys.exit("ERROR: %s" % e)
-    	
+        # store cloud "environment" (connection details) into database
+        try:
+            db_handler.create_environment()
+        except db_handler.MySQLdb.Error, e:
+            print 'Unable to connect to mysql database. \n ' \
+                  'Details: ' + str(e)
+
+    elif len(sys.argv) > 4 and sys.argv[1] == '-src' and sys.argv[3] == '-dst':
+        src_config = db_handler.read_environment(sys.argv[2])
+        if not src_config:
+            print "Cloud " + sys.argv[2] + \
+                  ' does not exist in the database, ' \
+                  'please configure flyway.conf!'
+
+        dst_config = db_handler.read_environment(sys.argv[4])
+        if not dst_config:
+            sys.exit("Cloud " + sys.argv[4] +
+                     ' does not exist in the database, '
+                     'please configure flyway.conf!')
+
+        # TODO: We've already used database and yet
+        # TODO: need to write to file again ?
+        # TODO: Is there a way to load those connection details read from
+        # TODO: database directly into the CONF (or use them directly)?
+        db_handler.write_to_file('etc/flyway.conf',
+                                 db_handler.config_content(src_config,
+                                                           dst_config))
+        args.append('./etc/flyway.conf')
+        config.parse(args)
+        config.setup_logging()
+
+    try:
+        flow.execute()
+    except RuntimeError, e:
+        sys.exit("ERROR: %s" % e)
+
+
 if __name__ == "__main__":
-	main()
-
-
-
-
+    main()
