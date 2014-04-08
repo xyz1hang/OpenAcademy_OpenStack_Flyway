@@ -16,6 +16,7 @@
 
 import logging
 import sys
+from flyway.utils.helper import get_clients
 
 sys.path.append('../')
 
@@ -39,24 +40,16 @@ class UserMigrationTask(task.Task):
     """
 
     def __init__(self, **kwargs):
-        super(UserMigrationTask, self).__init__(kwargs)
-        ks_source = ksclient.Client(username=cfg.CONF.SOURCE.os_username,
-                                    password=cfg.CONF.SOURCE.os_password,
-                                    auth_url=cfg.CONF.SOURCE.os_auth_url,
-                                    tenant_name=cfg.CONF.SOURCE.os_tenant_name)
-        ks_target = ksclient.Client(username=cfg.CONF.TARGET.os_username,
-                                    password=cfg.CONF.TARGET.os_password,
-                                    auth_url=cfg.CONF.TARGET.os_auth_url,
-                                    tenant_name=cfg.CONF.TARGET.os_tenant_name)
-        self.ks_source = ksclient.Client(
-            endpoint=cfg.CONF.SOURCE.os_keystone_endpoint,
-            token=ks_source.auth_token)
-        self.ks_target = ksclient.Client(
-            endpoint=cfg.CONF.TARGET.os_keystone_endpoint,
-            token=ks_target.auth_token)
+        super(UserMigrationTask, self).__init__(**kwargs)
+        self.ks_source = None
+        self.ks_target = None
 
     def execute(self):  # TODO: How to deal with the token expiration?
         LOG.info('Migrating all users ...')
+
+        clients = get_clients()
+        self.ks_source = clients.get_source()
+        self.ks_target = clients.get_destination()
 
         source_users = find_all_users_in(self.ks_source)
 

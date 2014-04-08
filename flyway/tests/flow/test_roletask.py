@@ -2,6 +2,8 @@ from testtools import TestCase
 import mox
 import sys
 import os
+from flyway.utils.helper import get_clients
+
 sys.path.append('../..')
 from flyway.flow.roletask import RoleMigrationTask
 from flyway.common import config
@@ -14,6 +16,11 @@ class RoleTaskTest(TestCase):
         super(RoleTaskTest, self).__init__(*args, **kwargs)
         config.parse(['--config-file', '../../etc/flyway.conf'])
         self.migration_task = RoleMigrationTask()
+
+        clients = get_clients()
+        self.migration_task.ks_source = clients.get_source()
+        self.migration_task.ks_target = clients.get_destination()
+
         self.mox_factory = mox.Mox()
 
     def test_execute(self):
