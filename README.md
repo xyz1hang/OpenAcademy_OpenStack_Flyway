@@ -31,7 +31,7 @@ which retrieves the corresponding cloud infos from DNS database.
     
 If sourcecloudname or targetcloudname does not exist in the DNS database, please configure new clouds in the flyway.conf file and execute the command below, the new clouds will be automatically stored in DNS database for future migration.
     
-    python flyway.py --config-file ./etc/flyway.conf
+    python main.py --config-file ./etc/flyway.conf
 
 Note: 
     If vagrant is used as the host of openstack, please configure 'os_bypass_url' in the flyway.conf file and add 'bypass_url' parameter to each nova instantiation
