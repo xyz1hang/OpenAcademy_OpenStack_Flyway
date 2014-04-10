@@ -68,7 +68,7 @@ CONF.register_opts(db_opts, db_group)
 
 def parse(args):
     cfg.CONF(args=args, project='flyway', version='0.1')
-
+    
 
 def setup_logging():
     logging.basicConfig(level=CONF.log_level)

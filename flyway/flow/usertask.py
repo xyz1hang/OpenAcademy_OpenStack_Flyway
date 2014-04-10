@@ -16,22 +16,18 @@
 
 import logging
 import sys
-from flyway.utils.helper import get_clients
-
 sys.path.append('../')
 
-from taskflow import task
-import keystoneclient.v2_0.client as ksclient
+from utils.helper import *
+from utils.db_base import *
+import time
+import random
+import smtplib
 
-from flyway.common import config as cfg
+from taskflow import task
 
 LOG = logging.getLogger(__name__)
 
-
-def find_all_users_in(keystone_client, tenant_id=None, limit=None, marker=None):
-    LOG.info('Get all users in ')
-    LOG.info(keystone_client)
-    return keystone_client.users.list(tenant_id, limit, marker)
 
 
 class UserMigrationTask(task.Task):
@@ -39,50 +35,106 @@ class UserMigrationTask(task.Task):
     Task to migrate all user info from the source cloud to the target cloud.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(UserMigrationTask, self).__init__(**kwargs)
-        self.ks_source = None
-        self.ks_target = None
+        clients = Clients()
+        self.ks_source = clients.get_keystone_source()
+        self.ks_target = clients.get_keystone_target()
 
-    def execute(self):  # TODO: How to deal with the token expiration?
-        LOG.info('Migrating all users ...')
+        self.target_user_names = []
+        for user in self.ks_target.users.list():
+            self.target_user_names.append(user.name)
+        print self.target_user_names
 
-        clients = get_clients()
-        self.ks_source = clients.get_source()
-        self.ks_target = clients.get_destination()
+        self.initialise_db()
 
-        source_users = find_all_users_in(self.ks_source)
 
-        moved_users = self.migrate_users_to_target(source_users)
+    def migrate_one_user(self, user):
 
-        LOG.info("User immigration is finished")
+        if user.name not in self.target_user_names:
+            password = self.generate_new_password()
 
-        return moved_users
+            self.ks_target.users.create(user.name,
+                                        password,
+                                        user.email,
+                                        enabled=True)
 
-    def migrate_user(self, source_user):
-        # TODO: Generate random pwd and email to the user
-        target_user = self.ks_target.users.create(source_user.name, '123',
-                                                  source_user.email,
-                                                  enabled=True)
-        #TODO Add Roles to user
+            set_dict = {'completed':'YES'}
+            where_dict = {'name': user.name}
+            start = time.time()
+            while True:
+                if time.time() - start > 10:
+                    print 'Fail!!!'
+                    break
+                elif self.migration_succeed(user):
+                    update_table('users', set_dict, where_dict, False)
+                    break
+
+    #TODO Add Roles to user
         """roles = self.ks_source.roles.roles_for_user(source_user)
         self.ks_target.roles.add_user_role(target_user, roles)"""
         #TODO Assign user to the typical project
 
-        return target_user
 
-    def migrate_users_to_target(self, source_users):
-        target_users = find_all_users_in(self.ks_target)
-        moved_users = []
-        # I have no idea how to rewrite the __eq__ in ksclient.users.User,
-        # which could make this code simpler...
-        for user in source_users:
-            found = False
-            for t_user in target_users:
-                if user.name == t_user.name:
-                    found = True
-                    break
-            if not found:
-                moved_users.append(self.migrate_user(user))
-        return moved_users
+    def migration_succeed(self, user):
+        for target_user in self.ks_target.users.list():
+            if user.name == target_user.name:
+                return True
 
+        return False
+
+
+    def execute(self):
+        LOG.info('Migrating all keypairs ...')
+
+        for user in self.ks_source.users.list():
+            self.migrate_one_user(user)
+
+
+    def initialise_db(self):
+
+        table_columns = '''id INT NOT NULL AUTO_INCREMENT,
+                           name VARCHAR(64) NOT NULL,
+                           email VARCHAR(64) NOT NULL,
+                           completed VARCHAR(10) NOT NULL,
+                           PRIMARY KEY(id),
+                           UNIQUE (name)
+                        '''
+
+        if not check_table_exist('users'):
+            create_table('users', table_columns, False)
+
+        values = []
+        for user in self.ks_source.users.list():
+            if user.name not in self.target_user_names:
+                values.append("null, '{0}', '{1}', 'NO'".format(user.name, user.email))
+
+        insert_record('users', values, False)
+
+
+    def generate_new_password(self):
+        """Generate a new password containing 10 letters
+        """
+        letters = 'abcdegfhijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
+        password = ''
+        for i in range(10):
+            ranNum = int(random.random() * len(letters))
+            password += letters[ranNum]
+        return password
+
+
+    def send_email(self, from_addr, to_addr_list, cc_addr_list, subject, message,
+                   login, password, smtpserver='smtp.gmail.com:587'):
+        """Send email using gmail
+        """
+        header = 'From: %s\n' % from_addr
+        header += 'To: %s\n' % ','.join(to_addr_list)
+        header += 'Cc: %s\n' % ','.join(cc_addr_list)
+        header += 'Subject: %s\n\n' % subject
+        message = header + message
+
+        server = smtplib.SMTP(smtpserver)
+        server.starttls()
+        server.login(login, password)
+        problems = server.sendmail(from_addr, to_addr_list, message)
+        server.quit()

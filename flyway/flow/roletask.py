@@ -16,9 +16,11 @@
 
 import logging
 import sys
-from flyway.utils.helper import get_clients
-
 sys.path.append('../')
+
+from utils.helper import *
+
+
 
 from taskflow import task
 import keystoneclient.v2_0.client as ksclient

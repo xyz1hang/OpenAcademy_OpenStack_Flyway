@@ -14,17 +14,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
 import sys
 sys.path.append('../')
 
 from taskflow import task
-from flyway.utils.db_handler import update_tenant_table
-from flyway.utils import db_handler
-from flyway.utils import exceptions
-from flyway.utils.helper import *
-from flyway.utils.resourcetype import ResourceType
+from utils.db_handler import update_tenant_table
+from utils import db_handler
+#from utils import exceptions
+from utils.helper import Clients
+#from utils.resourcetype import ResourceType
 from keystoneclient import exceptions as keystone_exceptions
-
+import os
 LOG = logging.getLogger(__name__)
 
 
@@ -41,12 +42,9 @@ class TenantMigrationTask(task.Task):
         self.tenants_to_move = args
 
     def migrate_one_tenant(self, tenant_name):
-        try:
-            s_tenant = self.ks_source.tenants.find(name=tenant_name)
-        except keystone_exceptions.NotFound:
-            raise exceptions.ResourceNotFoundException(
-                ResourceType.tenant, tenant_name,
-                cfg.CONF.SOURCE.os_cloud_name)
+       
+        s_tenant = self.ks_source.tenants.find(name=tenant_name)
+       
 
         s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
         t_cloud_name = cfg.CONF.TARGET.os_cloud_name
@@ -114,11 +112,13 @@ class TenantMigrationTask(task.Task):
         """
         # initialise python clients(e.g keystone) after
         # execution begin i.e after config is ready
-        clients = get_clients()
-        self.ks_source = clients.get_source()
-        self.ks_target = clients.get_destination()
+        clients = Clients()
 
-        update_tenant_table()
+        self.ks_source = clients.get_keystone_source()
+        self.ks_target = clients.get_keystone_target()
+	
+		
+        #update_tenant_table()
 
         if not self.tenants_to_move or len(self.tenants_to_move) == 0:
             LOG.info('Migrating all tenants ...')
@@ -132,3 +132,4 @@ class TenantMigrationTask(task.Task):
         for source_tenant in self.tenants_to_move:
             LOG.info('Migrating tenant {0}\n'.format(source_tenant))
             self.migrate_one_tenant(source_tenant)
+        

@@ -17,7 +17,7 @@
 import taskflow.engines
 from taskflow.patterns import linear_flow as lf
 from taskflow.patterns import unordered_flow as uf
-from flyway.utils.helper import *
+#from flyway.utils.helper import *
 
 from usertask import UserMigrationTask
 from tenanttask import TenantMigrationTask
@@ -26,22 +26,25 @@ from imagetask import ImageMigrationTask
 from keypairtask import KeypairMigrationTask
 from instancetask import InstanceMigrationTask
 
-
-flow = lf.Flow('main_flow').add(
-    uf.Flow('user_tenant_migration_flow').add(
-        # Note that creating users and tenants can happen in parallel and
-        # hence it is part of unordered flow
-        #UserMigrationTask('user_migration_task'),
-        TenantMigrationTask('tenant_migration_task', 'Migrate')
-    ),
-    # TODO: Add other tasks to the flow e.g migrate image, private key etc.
-    #RoleMigrationTask('role_migration_task'),
-    #ImageMigrationTask('image_migration_task'),
-    #KeypairMigrationTask('keypairs_migration_task'),
-    #InstanceMigrationTask('instances_migration_task')
-)
+def get_flow():
+        flow = lf.Flow('main_flow').add(
+            uf.Flow('user_tenant_migration_flow').add(
+                # Note that creating users and tenants can happen in parallel and
+                # hence it is part of unordered flow
+                #UserMigrationTask('user_migration_task'),
+                #TenantMigrationTask('tenant_migration_task', 'Migrate')
+            ),
+            # TODO: Add other tasks to the flow e.g migrate image, private key etc.
+            #RoleMigrationTask('role_migration_task'),
+            ImageMigrationTask('image_migration_task'),
+            #KeypairMigrationTask('keypairs_migration_task')
+            #InstanceMigrationTask('instances_migration_task')
+        )
+        
+        return flow
 
 
 def execute():
-    result = taskflow.engines.run(flow, engine_conf='parallel')
-    return result
+        flow = get_flow()
+        result = taskflow.engines.run(flow, engine_conf='parallel')
+        return result
