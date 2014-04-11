@@ -232,27 +232,3 @@ def add_quotes(string):
     return "'" + str(string) +  "'"
 
 
-if __name__ == '__main__':
-    create_database('flyway')
-    """columns = '''id INT NOT NULL AUTO_INCREMENT,
-                 name VARCHAR(10) NOT NULL,
-                 age INT NOT NULL,
-                 PRIMARY KEY(id)
-              '''
-    create_table('test1',columns, False)
-    """
-    values = [("null, 'wangnan', 26"),
-              ("null, 'fuchao',27")
-             ]
-    insert_record('test1', values, False)
-
-    """
-    sets = {'name':'hahaha','age':26}
-    filters = {'id':1}
-    update_table('test1',sets,filters, False)
-    """
-    columns = ['*']
-    wheres = {}
-    print read_record('test1', columns, wheres, False )
-
-    print check_record_exist("test1",{'name':'fuchqsdqsdao'})
