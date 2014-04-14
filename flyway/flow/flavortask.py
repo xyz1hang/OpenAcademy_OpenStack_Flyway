@@ -1,11 +1,14 @@
 import logging
+
 from taskflow import task
-from utils.db_handler import initialise_tenants_mapping
+from novaclient import exceptions as nova_exceptions
+
 from utils import db_handler
 from utils import exceptions
+from utils.db_handler import initialise_flavor_mapping
 from utils.helper import *
 from utils.resourcetype import ResourceType
-from novaclient import exceptions as nova_exceptions
+
 
 LOG = logging.getLogger(__name__)
 
@@ -37,7 +40,7 @@ class FlavorMigrationTask(task.Task):
 
         # check whether the tenant has been migrated
         values = [s_flavor, s_flavor.id, s_cloud_name]
-        m_flavor = db_handler.get_migrated_vm(values)
+        m_flavor = db_handler.get_migrated_flavor(values)
 
         if m_flavor is not None:
             print("flavor {0} in cloud {1} has already been migrated"
@@ -82,7 +85,7 @@ class FlavorMigrationTask(task.Task):
                                      'dst_uuid': migrated_flavor.id,
                                      'dst_cloud': t_cloud_name}
 
-            db_handler.record_tenant_migrated(**flavor_migration_data)
+            db_handler.record_flavor_migrated(**flavor_migration_data)
 
     def execute(self, flavors_to_migrate):
 
@@ -94,7 +97,7 @@ class FlavorMigrationTask(task.Task):
         """
 
         # create new table if not exists
-        initialise_tenants_mapping()
+        initialise_flavor_mapping()
 
         flavors_to_move = []
         if not flavors_to_migrate or len(list(flavors_to_migrate)) == 0:

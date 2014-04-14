@@ -17,6 +17,7 @@ from taskflow import engines
 from taskflow.patterns import linear_flow as lf
 from taskflow.patterns import unordered_flow as uf
 
+from flavortask import FlavorMigrationTask
 from usertask import UserMigrationTask
 from tenanttask import TenantMigrationTask
 from roletask import RoleMigrationTask
@@ -32,6 +33,7 @@ def get_flow():
             # hence it is part of unordered flow
             #UserMigrationTask('user_migration_task'),
             #TenantMigrationTask('tenant_migration_task')
+            #FlavorMigrationTask('flavor_migration_task')
         ),
         # TODO: Add other tasks to the flow e.g migrate image, private key etc.
         #RoleMigrationTask('role_migration_task'),
