@@ -15,17 +15,9 @@
 #    under the License.
 
 import logging
-import sys
-sys.path.append('../')
 
 from utils.helper import *
-
-
-
 from taskflow import task
-import keystoneclient.v2_0.client as ksclient
-
-from flyway.common import config as cfg
 
 LOG = logging.getLogger(__name__)
 
@@ -50,9 +42,8 @@ class RoleMigrationTask(task.Task):
     def execute(self):
         LOG.debug('Migrating roles...........')
 
-        clients = get_clients()
-        self.ks_source = clients.get_source()
-        self.ks_target = clients.get_destination()
+        self.ks_source = get_keystone_source()
+        self.ks_target = get_keystone_target()
 
         source_roles = find_all_roles_in(self.ks_source)
 

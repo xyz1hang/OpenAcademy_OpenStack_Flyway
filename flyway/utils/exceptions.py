@@ -1,4 +1,4 @@
-from flyway.utils.resourcetype import ResourceType
+from utils.resourcetype import ResourceType
 
 
 class ResourceNotFoundException(Exception):

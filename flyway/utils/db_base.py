@@ -1,4 +1,3 @@
-#import mysql.connector
 from oslo.config import cfg
 
 __author__ = 'hydezhang'
@@ -7,17 +6,26 @@ import MySQLdb
 import base64
 
 
-def connect():
+def connect(with_db, db_name=None):
     # preparing database credentials
+    """
 
+    :param with_db: flag to indicate whether to connect to
+    a particular database or not
+    """
     password = cfg.CONF.DATABASE.mysql_password
-    db = MySQLdb.connect(host=str(cfg.CONF.DATABASE.host),
-                         user=str(cfg.CONF.DATABASE.user),
-                         passwd=str(password),
-                         db=str(cfg.CONF.DATABASE.db_name))
+    password = base64.b64decode(password)
+    credentials = {'host': str(cfg.CONF.DATABASE.host),
+                   'user': str(cfg.CONF.DATABASE.user),
+                   'passwd': str(password)}
 
-   #password = cfg.CONF.DATABASE.mysql_password
-    #password = base64.b64decode(password)
+    if with_db:
+        if db_name is None:
+            credentials.update({'db': str(cfg.CONF.DATABASE.db_name)})
+        else:
+            credentials.update({'db': db_name})
+
+    db = MySQLdb.connect(**credentials)
 
     return db
 
@@ -27,15 +35,22 @@ def get_cursor(db):
 
 
 def create_database(db_name):
-
-    db = MySQLdb.connect(host=str(cfg.CONF.DATABASE.host),
-                         user=str(cfg.CONF.DATABASE.user),
-                         passwd=str(cfg.CONF.DATABASE.mysql_password))
-
+    # preparing database credentials
+    db = connect(False)
     cursor = get_cursor(db)
-    query = 'CREATE DATABASE IF NOT EXISTS {0} '.format(db_name)
+
+    table_name = add_quotes(db_name)
+    query_check = "SHOW DATABASES LIKE {}".format(table_name)
+    result = cursor.execute(query_check)
+
+    if result:
+        print("Database {} already exists".format(db_name))
+        db.close()
+        return
+
+    query_create = 'CREATE DATABASE IF NOT EXISTS {} '.format(db_name)
     try:
-        cursor.execute(query) 
+        cursor.execute(query_create)
         db.commit()
     except MySQLdb.Error, e:
         print("MySQL error: {}".format(e))
@@ -50,7 +65,7 @@ def create_table(table_name, columns, close):
     :param close: flag to indicate whether to close db connection
     """
     # establish connection
-    db = connect()
+    db = connect(True)
     cursor = get_cursor(db)
 
     query = "CREATE TABLE IF NOT EXISTS {0} ({1}) ".format(table_name, columns)
@@ -74,7 +89,7 @@ def insert_record(table_name, values, close):
     :param close: flag to indicate whether to close db connection
     """
     # establish connection
-    db = connect()
+    db = connect(True)
     cursor = get_cursor(db)
 
     for item in values:
@@ -100,24 +115,25 @@ def update_table(table_name, set_dict, where_dict, close):
     :param where_dict: where dictionary
     :param close: flag to indicate whether to close db connection
     """
-    db = connect()
+    db = connect(True)
     cursor = get_cursor(db)
 
     # building "SET" string
     set_str = ''
     for key in set_dict.keys():
-        if  key != set_dict.keys()[0]:
+        if key != set_dict.keys()[0]:
             set_str += ', '
         set_str += str(key) + " = '" + str(set_dict[key]) + "'"
 
     # build "WHERE" string
     filter_str = ''
     for key in where_dict.keys():
-        if  key != where_dict.keys()[0]:
+        if key != where_dict.keys()[0]:
             filter_str += ' AND '
         filter_str += str(key) + " = '" + str(where_dict[key]) + "'"
 
-    query = "UPDATE {0} SET {1} WHERE {2}".format(table_name, set_str,filter_str)
+    query = "UPDATE {0} SET {1} WHERE {2}" \
+        .format(table_name, set_str, filter_str)
 
     try:
         cursor.execute(query)
@@ -139,13 +155,13 @@ def read_record(table_name, columns, where_dict, close):
     :param where_dict: where dictionary
     """
     # establish connection
-    db = connect()
+    db = connect(True)
     cursor = get_cursor(db)
 
     # build "WHERE" string
     filter_str = ''
     for key in where_dict.keys():
-        if  key != where_dict.keys()[0]:
+        if key != where_dict.keys()[0]:
             filter_str += ' AND '
         filter_str += str(key) + " = '" + str(where_dict[key]) + "'"
 
@@ -153,17 +169,19 @@ def read_record(table_name, columns, where_dict, close):
     columns_str = ', '.join(columns)
 
     if len(where_dict.keys()) > 0:
-        query = "SELECT {0} FROM {1} WHERE {2}".format(columns_str, table_name, filter_str)
+        query = "SELECT {0} FROM {1} WHERE {2}".format(columns_str, table_name,
+                                                       filter_str)
     else:
         query = "SELECT {0} FROM {1} ".format(columns_str, table_name)
 
+    data = None
     try:
         cursor.execute(query)
         data = cursor.fetchall()
     except MySQLdb.Error, e:
         print("MySQL error: {}".format(e))
         db.rollback()
-        
+
     if close:
         db.close()
 
@@ -175,7 +193,7 @@ def delete_all_data(table_name):
     function that delete all data from a table
     """
     # establish connection
-    db = connect()
+    db = connect(True)
     cursor = get_cursor(db)
 
     query = "DELETE FROM {0}".format(table_name)
@@ -184,7 +202,7 @@ def delete_all_data(table_name):
     except MySQLdb.Error, e:
         print("MySQL error: {}".format(e))
         db.rollback()
-        
+
     db.close()
 
 
@@ -193,11 +211,11 @@ def check_table_exist(table_name):
     function that checks whether a table exists
     """
     # establish connection
-    db = connect()
+    db = connect(True)
     cursor = get_cursor(db)
 
     table_name = "'" + table_name + "'"
-    query = "SHOW TABLES LIKE {0}".format(table_name)
+    query = "SHOW TABLES LIKE {}".format(table_name)
     result = cursor.execute(query)
 
     db.close()
@@ -206,16 +224,16 @@ def check_table_exist(table_name):
 
     return False
 
+
 def check_record_exist(table_name, where_dict):
-    db = connect()
+    db = connect(True)
     cursor = get_cursor(db)
 
     filter_str = ''
     for key in where_dict.keys():
-        if  key != where_dict.keys()[0]:
+        if key != where_dict.keys()[0]:
             filter_str += ' AND '
         filter_str += str(key) + " = '" + str(where_dict[key]) + "'"
-
 
     query = "SELECT * FROM {0} WHERE {1}".format(table_name, filter_str)
 
@@ -229,6 +247,6 @@ def check_record_exist(table_name, where_dict):
 
 
 def add_quotes(string):
-    return "'" + str(string) +  "'"
+    return "'" + str(string) + "'"
 
 

@@ -18,13 +18,12 @@ class ImageMigrationTask(task.Task):
 
         def __init__(self, *args, **kwargs):
             super(ImageMigrationTask, self).__init__(**kwargs)
-            clients = Clients()
-            self.gl_source = clients.get_glance_source()
-            self.gl_target = clients.get_glance_target()
+            self.gl_source = get_glance_source()
+            self.gl_target = get_glance_target()
 
-            self.target_imageChecksums = []
+            self.target_image_checksums = []
             for target_image in self.gl_target.images.list():
-                    self.target_imageChecksums.append(target_image.checksum)
+                    self.target_image_checksums.append(target_image.checksum)
 
             path = os.getcwd()
             self.imagedatadir = path + '/.imagedata/'
@@ -34,7 +33,7 @@ class ImageMigrationTask(task.Task):
             self.initialise_db()
 
         def migrate_one_image(self, image):
-            if image.checksum not in self.target_imageChecksums:
+            if image.checksum not in self.target_image_checksums:
                 image_data = self.gl_source.images.data(image=image.id,
                                                         do_checksum=True)
 
@@ -82,11 +81,10 @@ class ImageMigrationTask(task.Task):
 
             values = []
             for image in self.gl_source.images.list():
-                if image.checksum not in self.target_imageChecksums:
+                if image.checksum not in self.target_image_checksums:
                     values.append("null, '{0}', '{1}', 'NO'".format(image.name, image.checksum))
 
             insert_record('images', values, False)
-
 
         def execute(self):
             """Find out whether the source cloud image exist in target cloud
@@ -96,6 +94,3 @@ class ImageMigrationTask(task.Task):
 
             for image in self.gl_source.images.list():
                     self.migrate_one_image(image)
-
-
-    

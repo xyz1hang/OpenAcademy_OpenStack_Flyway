@@ -15,19 +15,14 @@
 #    under the License.
 
 import logging
-import sys
-sys.path.append('../')
 
 from utils.helper import *
 from utils.db_base import *
 import time
-import random
-import smtplib
 
 from taskflow import task
 
 LOG = logging.getLogger(__name__)
-
 
 
 class UserMigrationTask(task.Task):
@@ -37,9 +32,8 @@ class UserMigrationTask(task.Task):
 
     def __init__(self, *args, **kwargs):
         super(UserMigrationTask, self).__init__(**kwargs)
-        clients = Clients()
-        self.ks_source = clients.get_keystone_source()
-        self.ks_target = clients.get_keystone_target()
+        self.ks_source = get_keystone_source()
+        self.ks_target = get_keystone_target()
 
         self.target_user_names = []
         for user in self.ks_target.users.list():
@@ -48,18 +42,17 @@ class UserMigrationTask(task.Task):
 
         self.initialise_db()
 
-
     def migrate_one_user(self, user):
 
         if user.name not in self.target_user_names:
-            password = self.generate_new_password()
+            password = generate_new_password()
 
             self.ks_target.users.create(user.name,
                                         password,
                                         user.email,
                                         enabled=True)
 
-            set_dict = {'completed':'YES'}
+            set_dict = {'completed': 'YES'}
             where_dict = {'name': user.name}
             start = time.time()
             while True:
@@ -70,12 +63,6 @@ class UserMigrationTask(task.Task):
                     update_table('users', set_dict, where_dict, False)
                     break
 
-    #TODO Add Roles to user
-        """roles = self.ks_source.roles.roles_for_user(source_user)
-        self.ks_target.roles.add_user_role(target_user, roles)"""
-        #TODO Assign user to the typical project
-
-
     def migration_succeed(self, user):
         for target_user in self.ks_target.users.list():
             if user.name == target_user.name:
@@ -83,13 +70,11 @@ class UserMigrationTask(task.Task):
 
         return False
 
-
     def execute(self):
-        LOG.info('Migrating all keypairs ...')
+        LOG.info('Migrating all users ...')
 
         for user in self.ks_source.users.list():
             self.migrate_one_user(user)
-
 
     def initialise_db(self):
 
@@ -107,34 +92,7 @@ class UserMigrationTask(task.Task):
         values = []
         for user in self.ks_source.users.list():
             if user.name not in self.target_user_names:
-                values.append("null, '{0}', '{1}', 'NO'".format(user.name, user.email))
+                values.append(
+                    "null, '{0}', '{1}', 'NO'".format(user.name, user.email))
 
         insert_record('users', values, False)
-
-
-    def generate_new_password(self):
-        """Generate a new password containing 10 letters
-        """
-        letters = 'abcdegfhijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
-        password = ''
-        for i in range(10):
-            ranNum = int(random.random() * len(letters))
-            password += letters[ranNum]
-        return password
-
-
-    def send_email(self, from_addr, to_addr_list, cc_addr_list, subject, message,
-                   login, password, smtpserver='smtp.gmail.com:587'):
-        """Send email using gmail
-        """
-        header = 'From: %s\n' % from_addr
-        header += 'To: %s\n' % ','.join(to_addr_list)
-        header += 'Cc: %s\n' % ','.join(cc_addr_list)
-        header += 'Subject: %s\n\n' % subject
-        message = header + message
-
-        server = smtplib.SMTP(smtpserver)
-        server.starttls()
-        server.login(login, password)
-        problems = server.sendmail(from_addr, to_addr_list, message)
-        server.quit()
