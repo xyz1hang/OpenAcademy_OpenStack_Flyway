@@ -1,7 +1,6 @@
 __author__ = 'chengxue'
 
 import sys
-
 sys.path.append('../')
 from utils.db_base import *
 from collections import OrderedDict
@@ -30,7 +29,7 @@ def initialise_keypairs_mapping():
         return
 
 
-def record_keypair_migrated(keypair_details):
+def record_keypairs(keypair_details):
     """function to insert the detail of
     keypair, which has been migrated, into database
 
@@ -60,18 +59,30 @@ def update_keypairs(**keypair_details):
     :param keypair_details: relevant data of migrated keypair
     """
     table_name = "keypairs"
-
     s_dict = OrderedDict([('dst_uuid', keypair_details["dst_uuid"]),
                           ('state', keypair_details["state"])])
-
     w_dict = OrderedDict([('name', keypair_details["name"]),
                           ('src_cloud', keypair_details["src_cloud"]),
-                          ('src_cloud', keypair_details["src_cloud"])])
+                          ('dst_cloud', keypair_details["dst_cloud"])])
 
     update_table(table_name, s_dict, w_dict, True)
 
 
-def get_migrated_keypairs(values):
+def delete_keypairs(values):
+    """function to delete a keypair record,
+    which has been migrated, into database
+
+    :param keypair_details: relevant data of migrated keypair
+    """
+    table_name = "keypairs"
+    w_dict = OrderedDict([('name', values[0]),
+                          ('src_cloud', values[1]),
+                          ('dst_cloud', values[2])])
+
+    delete_record(table_name, w_dict)
+
+
+def get_keypairs(values):
     """function to return detail of keypair migration
     :param values: keypair name and cloud name that used to filter data
     :return: keypair migrate detail
@@ -88,11 +99,11 @@ def get_migrated_keypairs(values):
 
     if len(data) == 0:
         print("no record found for keypair {0} migration from cloud {1} to could {2}"
-              .format(filters.keys()[0], filters.keys()[1], filters.keys()[2]))
+              .format(filters['name'], filters['src_cloud'], filters['dst_cloud']))
         return None
     elif len(data) > 1:
         print("multiple record found for keypair {0} migration from cloud {1} to could {2}"
-              .format(filters.keys()[0], filters.keys()[1], filters.keys()[2]))
+              .format(filters['name'], filters['src_cloud'], filters['dst_cloud']))
         return None
 
     # should be only one row

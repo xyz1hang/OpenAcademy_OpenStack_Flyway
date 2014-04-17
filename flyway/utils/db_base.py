@@ -268,5 +268,3 @@ def check_record_exist(table_name, where_dict):
 
 def add_quotes(string):
     return "'" + str(string) + "'"
-
-

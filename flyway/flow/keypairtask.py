@@ -35,7 +35,7 @@ class KeypairMigrationTask(task.Task):
 
         # create a new keypair
         values = [s_keypair.name, self.s_cloud_name, self.t_cloud_name]
-        keypair_data = db_handler.get_migrated_keypairs(values)
+        keypair_data = db_handler.get_keypairs(values)
         migrated_keypair = None
         try:
             migrated_keypair = self.nv_target.keypairs.create(s_keypair.name,
@@ -81,7 +81,7 @@ class KeypairMigrationTask(task.Task):
 
         for keypair_name in keypairs_to_move:
             values = [keypair_name, self.s_cloud_name, self.t_cloud_name]
-            m_keypair = db_handler.get_migrated_keypairs(values)
+            m_keypair = db_handler.get_keypairs(values)
 
             # add keypairs that have not been stored in the database
             if m_keypair is None:
@@ -120,7 +120,7 @@ class KeypairMigrationTask(task.Task):
                                 'dst_uuid': keypair.id,
                                 'dst_cloud': self.t_cloud_name,
                                 'state': "unknown"}
-                db_handler.record_keypair_migrated([keypair_data])
+                db_handler.record_keypairs([keypair_data])
 
                 LOG.info("Migrating keypair '{}'\n".format(keypair_name))
                 self.migrate_one_keypair(keypair_name)
