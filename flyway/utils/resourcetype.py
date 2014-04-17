@@ -6,6 +6,7 @@ class ResourceType(Enum):
     user = "user"
     tenant = "tenant"
     image = "image"
+    keypair = "keypair"
     resource = "resource"
     flavor = "flavor"
     vm = "vm"

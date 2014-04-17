@@ -17,20 +17,15 @@
 import logging
 
 from utils.helper import *
-from utils.db_base import *
 from taskflow import task
 
 LOG = logging.getLogger(__name__)
 
-TABLE_NAME = 'role_mapping'
-TABLE_COLUMNS = '''id INT NOT NULL AUTO_INCREMENT,
-                    roleName VARCHAR(64) NOT NULL,
-                    src_cloud VARCHAR(64) NOT NULL,
-                    dst_cloud VARCHAR(64) NOT NULL,
-                    state VARCHAR(10) NOT NULL,
-                    PRIMARY KEY(id),
-                    UNIQUE (roleName, src_cloud, dst_cloud)
-                '''
+
+def find_all_roles_in(keystone_client):
+    LOG.info('Get all roles in ')
+    LOG.info(keystone_client)
+    return keystone_client.roles.list()
 
 
 class RoleMigrationTask(task.Task):
@@ -41,63 +36,37 @@ class RoleMigrationTask(task.Task):
 
     def __init__(self, **kwargs):
         super(RoleMigrationTask, self).__init__(kwargs)
-        self.ks_source = get_keystone_source()
-        self.ks_target = get_keystone_target()
-
-        self.s_cloud = cfg.CONF.SOURCE.os_auth_url
-        self.t_cloud = cfg.CONF.TARGET.os_auth_url
-
-    @staticmethod
-    def list_roles(keystone_client):
-        return keystone_client.roles.list()
-
-    def init_db(self):
-        delete_all_data(TABLE_NAME)
-        create_table(TABLE_NAME, TABLE_COLUMNS, False)
-        roles_to_move = self.check()
-
-        for role in roles_to_move:
-            record = "'null', '"+role.name+"','"+self.s_cloud+"', '"+self.t_cloud+"', 'unknown'"
-            print record
-            insert_record(TABLE_NAME, [record], False)
-
-    def migrate_one_role(self, source_role):
-        target_role = self.ks_target.roles.create(source_role.name)
-        update_table(TABLE_NAME, {'state': 'completed'}, {'roleName': source_role.name, 'src_cloud': self.s_cloud,
-                                                          'dst_cloud': self.t_cloud}, True)
+        self.ks_source = None
+        self.ks_target = None
 
     def execute(self):
         LOG.debug('Migrating roles...........')
-        roles_to_move = self.check()
-        roles_in_target = self.list_roles(self.ks_target)
-        moved_roles = []
 
-        for role in roles_to_move:
-            found = False
-            for t_role in roles_in_target:
-                if role.name == t_role.name:
-                    found = True
-                    break
-            if not found:
-                self.migrate_one_role(role)
-                moved_roles.append(role.name)
+        self.ks_source = get_keystone_source()
+        self.ks_target = get_keystone_target()
+
+        source_roles = find_all_roles_in(self.ks_source)
+
+        moved_roles = self.migrate_roles_to_target(source_roles)
+
         LOG.info("Role immigration is finished")
+
         return moved_roles
 
-    def check(self):
-        roles_in_source = self.list_roles(self.ks_source)
-        roles_in_target = self.list_roles(self.ks_target)
-        roles_to_move = []
-        for role in roles_in_source:
+    def migrate_role(self, source_role):
+        target_role = self.ks_target.roles.create(source_role.name)
+        return target_role
+
+    def migrate_roles_to_target(self, source_roles):
+        target_roles = find_all_roles_in(self.ks_target)
+        moved_roles = []
+        print source_roles
+        for role in source_roles:
             found = False
-            for t_role in roles_in_target:
+            for t_role in target_roles:
                 if role.name == t_role.name:
                     found = True
                     break
             if not found:
-                roles_to_move.append(role)
-        return roles_to_move
-
-
-
-
+                moved_roles.append(self.migrate_role(role))
+        return moved_roles

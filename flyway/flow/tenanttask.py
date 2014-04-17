@@ -19,8 +19,8 @@ class TenantMigrationTask(task.Task):
     def __init__(self, name, **kwargs):
         super(TenantMigrationTask, self).__init__(name, **kwargs)
         # config must be ready at this point
-        self.ks_source = get_keystone_source()
-        self.ks_target = get_keystone_target()
+        self.ks_source = get_auth_source()
+        self.ks_target = get_auth_target()
 
     def migrate_one_tenant(self, tenant_name):
         try:
@@ -67,6 +67,7 @@ class TenantMigrationTask(task.Task):
                        'src_uuid': s_tenant.id,
                        'src_cloud': s_cloud_name,
                        'new_project_name': new_tenant_name,
+                       'dst_uuid': s_tenant.id,
                        'dst_cloud': t_cloud_name,
                        'state': "unknown"}
 

@@ -15,10 +15,9 @@
 #    under the License.
 
 import logging
+from utils.db_handlers.users import set_user_complete, delete_migrated_users, initialise_users_mapping
 
 from utils.helper import *
-from utils.db_base import *
-import time
 
 from taskflow import task
 
@@ -31,68 +30,56 @@ class UserMigrationTask(task.Task):
     """
 
     def __init__(self, *args, **kwargs):
-        super(UserMigrationTask, self).__init__(**kwargs)
+        super(UserMigrationTask, self).__init__(*args, **kwargs)
         self.ks_source = get_keystone_source()
         self.ks_target = get_keystone_target()
 
-        self.target_user_names = []
-        for user in self.ks_target.users.list():
-            self.target_user_names.append(user.name)
-        print self.target_user_names
-
-        self.initialise_db()
+        self.target_user_names = [user.name for user in self.ks_target.users.list()]
 
     def migrate_one_user(self, user):
-
+        LOG.info("Begin to migrate user {0}".format(user))
+        migrated_user = None
         if user.name not in self.target_user_names:
+            password = self.generate_new_password(user)
+
+            try:
+                migrated_user = self.ks_target.users.create(user.name,
+                                                            password,
+                                                            user.email,
+                                                            enabled=True)
+            except Exception, e:
+                LOG.error("There is an error while migrating user {0}".format(user))
+                LOG.error("The error is {0}".format(e))
+            else:
+                LOG.info("Succeed to migrate user {0}".format(user))
+                set_user_complete(user)
+        return migrated_user
+
+    @staticmethod
+    def generate_new_password(user, default_password='123456'):
+        """
+        Generate a random password for the user and email to the user,
+        default_password is used if the user has no email
+        """
+        if user.email is not None:
             password = generate_new_password()
+            send_reset_password_email(user.email, password)
+        else:
+            password = default_password
 
-            self.ks_target.users.create(user.name,
-                                        password,
-                                        user.email,
-                                        enabled=True)
-
-            set_dict = {'completed': 'YES'}
-            where_dict = {'name': user.name}
-            start = time.time()
-            while True:
-                if time.time() - start > 10:
-                    print 'Fail!!!'
-                    break
-                elif self.migration_succeed(user):
-                    update_table('users', set_dict, where_dict, False)
-                    break
-
-    def migration_succeed(self, user):
-        for target_user in self.ks_target.users.list():
-            if user.name == target_user.name:
-                return True
-
-        return False
+        return password
 
     def execute(self):
         LOG.info('Migrating all users ...')
 
+        initialise_users_mapping(self.ks_source, self.target_user_names)
+
+        migrated_users = []
         for user in self.ks_source.users.list():
-            self.migrate_one_user(user)
+            migrated_user = self.migrate_one_user(user)
+            if migrated_user is not None:
+                migrated_users.append(migrated_user)
 
-    def initialise_db(self):
+        delete_migrated_users()
 
-        table_columns = '''id INT NOT NULL AUTO_INCREMENT,
-                           name VARCHAR(64) NOT NULL,
-                           email VARCHAR(64) NOT NULL,
-                           completed VARCHAR(10) NOT NULL,
-                           PRIMARY KEY(id),
-                           UNIQUE (name)
-                        '''
-
-        if not check_table_exist('users'):
-            create_table('users', table_columns, False)
-
-        values = []
-        for user in self.ks_source.users.list():
-            if user.name not in self.target_user_names:
-                values.append(
-                    "null, '{0}', '{1}', 'NO'".format(user.name, user.email))
-
-        insert_record('users', values, False)
+        return migrated_users
