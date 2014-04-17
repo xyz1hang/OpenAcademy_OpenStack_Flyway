@@ -2,7 +2,7 @@ import sys
 
 from flow import flow
 from common import config
-from utils.db_handler import *
+from utils.db_handlers.environment_config import *
 
 
 def main():

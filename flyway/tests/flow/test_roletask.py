@@ -1,8 +1,6 @@
 from testtools import TestCase
 import mox
 import sys
-import os
-from flyway.utils.helper import get_clients
 
 sys.path.append('../..')
 from flyway.flow.roletask import RoleMigrationTask

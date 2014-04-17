@@ -1,11 +1,12 @@
 import logging
+
 from taskflow import task
-from utils.db_handler import initialise_tenants_mapping
-from utils import db_handler
+from keystoneclient import exceptions as keystone_exceptions
+
+from utils.db_handlers import tenants
 from utils import exceptions
 from utils.helper import *
 from utils.resourcetype import ResourceType
-from keystoneclient import exceptions as keystone_exceptions
 
 LOG = logging.getLogger(__name__)
 
@@ -19,8 +20,8 @@ class TenantMigrationTask(task.Task):
     def __init__(self, name, **kwargs):
         super(TenantMigrationTask, self).__init__(name, **kwargs)
         # config must be ready at this point
-        self.ks_source = get_auth_source()
-        self.ks_target = get_auth_target()
+        self.ks_source = get_keystone_source()
+        self.ks_target = get_keystone_target()
 
     def migrate_one_tenant(self, tenant_name):
         try:
@@ -37,7 +38,7 @@ class TenantMigrationTask(task.Task):
 
         # check whether the tenant has been migrated
         values = [tenant_name, s_cloud_name]
-        m_tenant = db_handler.get_migrated_tenant(values)
+        m_tenant = tenants.get_migrated_tenant(values)
 
         if m_tenant is not None and m_tenant['state'] is "completed":
             print("tenant {0} in cloud {1} has already been migrated"
@@ -50,9 +51,9 @@ class TenantMigrationTask(task.Task):
             found = self.ks_target.tenants.find(name=s_tenant.name)
             if found:
                 user_input = \
-                    raw_input("duplicated tenant {0} found on " +
-                              "cloud {1}\nPlease type in a new name or " +
-                              "'abort':".format(found.name, t_cloud_name))
+                    raw_input("duplicated tenant {0} found on cloud {1}\n"
+                              "Please type in a new name or 'abort':"
+                              .format(found.name, t_cloud_name))
                 if user_input is "abort":
                     # TODO: implement cleaning up and proper exit
                     return None
@@ -69,7 +70,7 @@ class TenantMigrationTask(task.Task):
                        'new_project_name': new_tenant_name,
                        'dst_uuid': s_tenant.id,
                        'dst_cloud': t_cloud_name,
-                       'image_migrated': 'FALSE',
+                       'image_migrated': '1',
                        'state': "unknown"}
 
         # create a new tenant
@@ -87,7 +88,7 @@ class TenantMigrationTask(task.Task):
             print "tenant {} migration failure".format(s_tenant.name)
             # update database record
             tenant_data.update({'state': "error"})
-            db_handler.record_tenant_migrated(**tenant_data)
+            tenants.record_tenant_migrated(**tenant_data)
             return
 
         # add the "admin" as the default user - admin - of
@@ -102,9 +103,9 @@ class TenantMigrationTask(task.Task):
         tenant_data.update({'dst_uuid': migrated_tenant.id})
         tenant_data.update({'state': 'proxy_created'})
 
-        db_handler.record_tenant_migrated(**tenant_data)
+        tenants.record_tenant_migrated([tenant_data])
 
-    def execute(self, tenants_to_move=[]):
+    def execute(self, tenants_to_move=None):
 
         """execute the tenant migration task
 
@@ -113,11 +114,16 @@ class TenantMigrationTask(task.Task):
         specified tenant will be migrated
         """
 
+        # convert tenants_to_move to list in case only
+        # one string gets passed in
+        if type(tenants_to_move) is str:
+            tenants_to_move = [tenants_to_move]
+
         # create new table if not exists or
         # delete all data in order to be able to recording new migration
-        initialise_tenants_mapping()
+        tenants.initialise_tenants_mapping()
 
-        if not tenants_to_move or len(list(tenants_to_move)) == 0:
+        if not tenants_to_move or len(tenants_to_move) == 0:
             LOG.info("Migrating all tenants ...")
             tenants_to_move = []
             for tenant in self.ks_source.tenants.list():

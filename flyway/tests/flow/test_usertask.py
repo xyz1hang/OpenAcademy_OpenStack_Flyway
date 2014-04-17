@@ -1,11 +1,11 @@
-from testtools import TestCase
 import mox
 
 from flow.usertask import UserMigrationTask
 from common import config as cfg
+from tests.flow.test_base import TestBase
 
 
-class UserTaskTest(TestCase):
+class UserTaskTest(TestBase):
     """Unit test for user migration"""
 
     def __init__(self, *args, **kwargs):
@@ -20,9 +20,8 @@ class UserTaskTest(TestCase):
         new_user_email = "liang.shang13@imperial.ac.uk"
 
         try:
-            new_user = self.migration_task.ks_source.users.create(new_user_name,
-                                                                  new_user_password,
-                                                                  email=new_user_email)
+            new_user = self.migration_task.ks_source.users.create(
+                new_user_name, new_user_password, email=new_user_email)
             users_moved_to_target = self.migration_task.execute()
             target_users = self.migration_task.ks_target.users.list()
             self.assertIn(users_moved_to_target[0], target_users)
@@ -31,4 +30,5 @@ class UserTaskTest(TestCase):
         finally:
             self.migration_task.ks_source.users.delete(new_user)
             if users_moved_to_target is not None:
-                self.migration_task.ks_target.users.delete(users_moved_to_target[0])
+                self.migration_task.ks_target.users.delete(
+                    users_moved_to_target[0])

@@ -97,7 +97,7 @@ def get_keypairs(values):
 
     data = read_record(table_name, columns, filters, True)
 
-    if len(data) == 0:
+    if not data or len(data) == 0:
         print("no record found for keypair {0} migration from cloud {1} to could {2}"
               .format(filters['name'], filters['src_cloud'], filters['dst_cloud']))
         return None

@@ -1,7 +1,8 @@
 import logging
-from taskflow import task
-from utils import db_handler
 
+from taskflow import task
+
+from utils.db_handlers import instances
 from utils.helper import *
 
 
@@ -26,7 +27,7 @@ class InstanceMigrationTask(task.Task):
         original_flavor = source_nova_client.flavors.find(id=original_flavor_id)
         filter_values = [original_flavor.name, original_flavor.id,
                          source_cloud_name]
-        migrated_flavor = db_handler.get_migrated_flavor(filter_values)
+        migrated_flavor = instances.get_migrated_flavor(filter_values)
 
         if not migrated_flavor:
             print("The required flavor hasn't been migrated yet.")
@@ -41,7 +42,7 @@ class InstanceMigrationTask(task.Task):
         filter_values = [original_image.name, original_image.id,
                          source_cloud_name]
 
-        migrated_image = db_handler.get
+        # to be completed: migrated_image = images.get
 
     def create_proxy_vm(self, server, source_nova_client, target_nova_client):
 
@@ -57,7 +58,7 @@ class InstanceMigrationTask(task.Task):
 
             # check whether the vm has been migrated
             values = [server.name, src_tenant, s_cloud_name]
-            instances = db_handler.get_migrated_vm(values)
+            instances = instances.get_migrated_vm(values)
 
             instance = instances[0] if instances else None
             if instance:
@@ -85,7 +86,7 @@ class InstanceMigrationTask(task.Task):
                     'state': instance_state,
                     'status': 'launching_proxy'}
 
-                db_handler.record_vm_migrated(**instance_migration_data)
+                instances.record_vm_migrated(**instance_migration_data)
 
                 time.sleep(5)
                 d_server = create_vm(src_cloud, dst_cloud,
@@ -138,7 +139,7 @@ class InstanceMigrationTask(task.Task):
             for tenant in self.ks_source.tenants.list():
                 source_nova = get_nova_source(tenant)
 
-                target_tenant = db_handler.get_migrated_vm(tenant)
+                target_tenant = environment_config.get_migrated_vm(tenant)
                 if not target_tenant[0]:
                     print ("The tanent of this instance hasn't been ")
 

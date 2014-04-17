@@ -48,7 +48,8 @@ class UserMigrationTask(task.Task):
                                                             user.email,
                                                             enabled=True)
             except Exception, e:
-                LOG.error("There is an error while migrating user {0}".format(user))
+                LOG.error("There is an error while migrating user {0}"
+                          .format(user))
                 LOG.error("The error is {0}".format(e))
             else:
                 LOG.info("Succeed to migrate user {0}".format(user))

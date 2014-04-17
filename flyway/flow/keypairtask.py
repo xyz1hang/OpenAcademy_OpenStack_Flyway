@@ -38,8 +38,8 @@ class KeypairMigrationTask(task.Task):
         keypair_data = db_handler.get_keypairs(values)
         migrated_keypair = None
         try:
-            migrated_keypair = self.nv_target.keypairs.create(s_keypair.name,
-                                                              public_key=s_keypair.public_key)
+            migrated_keypair = self.nv_target.keypairs.create(
+                s_keypair.name, public_key=s_keypair.public_key)
         except IOError as (err_no, strerror):
             print "I/O error({0}): {1}".format(err_no, strerror)
         except:
@@ -55,11 +55,12 @@ class KeypairMigrationTask(task.Task):
         keypair_data.update({'state': 'completed'})
         db_handler.update_keypairs(**keypair_data)
 
-    def execute(self, keypairs_to_move=[]):
+    def execute(self, keypairs_to_move=None):
         """execute the keypair migration task
 
-        :param keypairs_to_move: the list of keypairs to move. If the not specified
-        or length equals to 0 all tenant will be migrated, otherwise only
+        :param keypairs_to_move: the list of keypairs to move.
+        If the not specified or length equals to 0 all tenant will be
+        migrated, otherwise only
         specified keypairs will be migrated
         """
 
@@ -91,9 +92,10 @@ class KeypairMigrationTask(task.Task):
                     found = self.nv_target.keypairs.find(name=keypair_name)
                     if found:
                         user_input = \
-                            raw_input("duplicated keypair {0} found on " +
-                                      "cloud {1}\nPlease type in a new name or " +
-                                      "'abort':".format(found.name, self.t_cloud_name))
+                            raw_input("duplicated keypair {0} found on cloud "
+                                      "{1}\nPlease type in a new name or "
+                                      "'abort':".format(found.name,
+                                                        self.t_cloud_name))
                         if user_input is "abort":
                             # TODO: implement cleaning up and proper exit
                             return None
@@ -107,7 +109,8 @@ class KeypairMigrationTask(task.Task):
                     keypair = self.nv_source.keypairs.find(name=keypair_name)
                 except nova_exceptions.NotFound:
                     # encapsulate exceptions to make it more understandable
-                    # to user. Other exception handling mechanism can be added later
+                    # to user. Other exception handling
+                    # mechanism can be added later
                     raise exceptions.ResourceNotFoundException(
                         ResourceType.keypair, keypair_name,
                         utils.helper.cfg.CONF.SOURCE.os_cloud_name)

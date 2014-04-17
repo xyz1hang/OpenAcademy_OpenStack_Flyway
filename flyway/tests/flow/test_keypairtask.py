@@ -1,20 +1,21 @@
+from tests.flow.test_base import TestBase
+
 __author__ = 'chengxue'
 
-import unittest
+from novaclient import exceptions as nova_exceptions
+
 from flyway.common import config
 from flyway.flow.keypairtask import KeypairMigrationTask
-from novaclient import exceptions as nova_exceptions
 from utils.db_handlers import keypairs as db_handler
 import utils.helper
 
 
-class KeypairTaskTest(unittest.TestCase):
+class KeypairTaskTest(TestBase):
 
     def __init__(self, *args, **kwargs):
-        super(KeypairTaskTest, self).__init__(*args, **kwargs)
+        super(KeypairTaskTest, self).__init__(KeypairTaskTest, *args, **kwargs)
         config.parse(['--config-file', '../../etc/flyway.conf'])
         self.migration_task = KeypairMigrationTask('keypair_migration_task')
-
         self.s_cloud_name = utils.helper.cfg.CONF.SOURCE.os_cloud_name
         self.t_cloud_name = utils.helper.cfg.CONF.TARGET.os_cloud_name
 

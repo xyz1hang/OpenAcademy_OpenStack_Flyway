@@ -1,54 +1,57 @@
 __author__ = 'hydezhang'
 
-import mox
-from tests.flow.test_base import TestBase
-
-from flow.tenanttask import TenantMigrationTask
-from common import config
-from utils.helper import get_keystone_source, get_keystone_target
 from keystoneclient import exceptions as keystone_exceptions
 from oslo.config import cfg
-from utils.db_handlers import tenants
+
+from tests.flow.test_base import TestBase
+from flow.flavortask import FlavorMigrationTask
+from common import config
+from utils.db_handlers import flavors
 
 
-class TenantTaskTest(TestBase):
-    """Unit test for Tenant migration"""
+class FlavorTaskTest(TestBase):
+    """Unit test for Flavor migration"""
 
     def __init__(self, *args, **kwargs):
-        super(TenantTaskTest, self).__init__(*args, **kwargs)
+        super(FlavorTaskTest, self).__init__(*args, **kwargs)
         config.parse(['--config-file', '../../etc/flyway.conf'])
-        self.migration_task = TenantMigrationTask('tenant_migration_task')
-        self.migration_task.ks_source = get_keystone_source()
-        self.migration_task.ks_target = get_keystone_target()
-        self.mox_factory = mox.Mox()
+        self.migration_task = FlavorMigrationTask('flavor_migration_task')
 
     def test_execute(self):
-        tenant_name = "Tenant_on_source_cloud"
-        tenant_to_migrate = self.migration_task.ks_source.tenants.create(
-            tenant_name, "for tenant migration test", True)
+        test_flavor_name = 'Flavor_on_source'
+        test_flavor_details = {'name': test_flavor_name,
+                               'ram': 512,
+                               'vcpus': 1,
+                               'disk': 1,
+                               'ephemeral': 0,
+                               'swap': 0,
+                               'rxtx_factor': 1.0,
+                               'is_public': 'True'}
 
-        self.migration_task.execute([tenant_name])
+        flavor_to_migrate = self.migration_task. \
+            nv_source.flavors.create(**test_flavor_details)
 
-        migrated_tenant = None
+        migrated_flavor = None
         try:
-            migrated_tenant = self.migration_task.ks_target.tenants.find(
-                name=tenant_name)
+            self.migration_task.execute([test_flavor_name])
 
-            self.assertEqual(tenant_to_migrate.name, migrated_tenant.name)
+            migrated_flavor = self.migration_task.nv_target.flavors.find(
+                name=test_flavor_name)
+
+            self.assertEqual(flavor_to_migrate.name, migrated_flavor.name)
 
         except keystone_exceptions.NotFound as e:
             print str(e)
         finally:
-            self.clean_up(tenant_to_migrate, migrated_tenant)
+            self.clean_up(flavor_to_migrate, migrated_flavor)
 
-    def clean_up(self, tenant_to_migrate, migrated_tenant=None):
-        self.migration_task.ks_source.tenants.delete(tenant_to_migrate)
+    def clean_up(self, flavor_to_migrate, migrated_flavor=None):
+        self.migration_task.nv_source.flavors.delete(flavor_to_migrate)
         # clean database
-        filter_values = [tenant_to_migrate.name,
-                         tenant_to_migrate.id,
+        filter_values = [flavor_to_migrate.name,
+                         flavor_to_migrate.id,
                          cfg.CONF.SOURCE.os_cloud_name]
-        tenants.delete_migration_record(filter_values)
+        flavors.delete_migration_record(filter_values)
 
-        if migrated_tenant:
-            self.migration_task.ks_target.tenants.delete(migrated_tenant)
-
+        if migrated_flavor:
+            self.migration_task.nv_target.flavors.delete(migrated_flavor)

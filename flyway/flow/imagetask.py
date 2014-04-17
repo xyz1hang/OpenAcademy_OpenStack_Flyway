@@ -3,7 +3,8 @@ import logging
 
 from taskflow import task
 
-from utils import db_handler
+from utils.db_handlers import images
+from utils.db_handlers import tenants
 from utils.http_client import HttpRequestHandler
 from utils.exceptions import HttpRequestException
 from utils.helper import *
@@ -35,7 +36,7 @@ class ImageMigrationTask(task.Task):
         self.t_server_client = HttpRequestHandler(
             target_glance_server_url, target_auth_token)
 
-        db_handler.initialise_image_mapping()
+        images.initialise_image_mapping()
 
     # TODO: all these http request related task can be
     # TODO: restructured into the http_client.py or different modules
@@ -194,7 +195,7 @@ class ImageMigrationTask(task.Task):
         image_migration_record.update(dest_details)
 
         # update database record
-        db_handler.record_image_migrated(**image_migration_record)
+        images.record_image_migrated(**image_migration_record)
 
         return migrated_image_meta['id']
 
@@ -240,7 +241,7 @@ class ImageMigrationTask(task.Task):
         :param tenant_to_process: list of tenants of which
         all images will be migrated
         """
-        db_handler.initialise_image_mapping()
+        images.initialise_image_mapping()
 
         owner_tenants = tenant_to_process
         if not owner_tenants:
@@ -250,7 +251,7 @@ class ImageMigrationTask(task.Task):
         for tenant in owner_tenants:
             s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
             filter_values = [tenant, s_cloud_name]
-            m_tenants = db_handler.get_migrated_tenant(filter_values)
+            m_tenants = tenants.get_migrated_tenant(filter_values)
             migrated_tenant = m_tenants[0] if m_tenants else None
             if not migrated_tenant:
                 print ("The tenant to which the image belongs to hasn't" +
