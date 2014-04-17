@@ -1,0 +1,54 @@
+__author__ = 'hydezhang'
+
+import mox
+from tests.flow.test_base import TestBase
+
+from flow.tenanttask import TenantMigrationTask
+from common import config
+from utils.helper import get_keystone_source, get_keystone_target
+from keystoneclient import exceptions as keystone_exceptions
+from oslo.config import cfg
+from utils.db_handlers import tenants
+
+
+class TenantTaskTest(TestBase):
+    """Unit test for Tenant migration"""
+
+    def __init__(self, *args, **kwargs):
+        super(TenantTaskTest, self).__init__(*args, **kwargs)
+        config.parse(['--config-file', '../../etc/flyway.conf'])
+        self.migration_task = TenantMigrationTask('tenant_migration_task')
+        self.migration_task.ks_source = get_keystone_source()
+        self.migration_task.ks_target = get_keystone_target()
+        self.mox_factory = mox.Mox()
+
+    def test_execute(self):
+        tenant_name = "Tenant_on_source_cloud"
+        tenant_to_migrate = self.migration_task.ks_source.tenants.create(
+            tenant_name, "for tenant migration test", True)
+
+        self.migration_task.execute([tenant_name])
+
+        migrated_tenant = None
+        try:
+            migrated_tenant = self.migration_task.ks_target.tenants.find(
+                name=tenant_name)
+
+            self.assertEqual(tenant_to_migrate.name, migrated_tenant.name)
+
+        except keystone_exceptions.NotFound as e:
+            print str(e)
+        finally:
+            self.clean_up(tenant_to_migrate, migrated_tenant)
+
+    def clean_up(self, tenant_to_migrate, migrated_tenant=None):
+        self.migration_task.ks_source.tenants.delete(tenant_to_migrate)
+        # clean database
+        filter_values = [tenant_to_migrate.name,
+                         tenant_to_migrate.id,
+                         cfg.CONF.SOURCE.os_cloud_name]
+        tenants.delete_migration_record(filter_values)
+
+        if migrated_tenant:
+            self.migration_task.ks_target.tenants.delete(migrated_tenant)
+
