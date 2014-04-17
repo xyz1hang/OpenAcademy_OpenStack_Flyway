@@ -1,9 +1,6 @@
 from testtools import TestCase
 import mox
 import sys
-import os
-#sys.path.append(os.path.abspath(os.path.dirname(__file__)+'/'+'../..'))
-from flyway.utils.helper import get_clients
 
 sys.path.append('../..')
 from flyway.flow.usertask import UserMigrationTask

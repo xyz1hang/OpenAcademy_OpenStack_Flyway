@@ -6,11 +6,11 @@ def initialize_environment():
     create_database('flyway')
 
 
-def read_environment(value):
+def read_environment(*value):
     # parameters for "SELECT"
     table_name = "clouds_info"
     columns = ["*"]
-    filters = {'cloud_name': value}
+    filters = {'cloud_name': value[0]}
 
     data = read_record(table_name, columns, filters, True)
     print data
@@ -133,17 +133,19 @@ def initialise_tenants_mapping():
     """
 
     table_name = "tenants"
-    columns = '''id INT NOT NULL AUTO_INCREMENT,
+
+    if not check_table_exist(table_name):
+        columns = '''id INT NOT NULL AUTO_INCREMENT,
                  project_name VARCHAR(32) NOT NULL,
                  src_uuid VARCHAR(128) NOT NULL,
                  src_cloud VARCHAR(128) NOT NULL,
                  new_project_name VARCHAR(32) NOT NULL,
                  dst_uuid VARCHAR(128) NOT NULL,
                  dst_cloud VARCHAR(128) NOT NULL,
+                 image_migrated BOOL NOT NULL,
                  state VARCHAR(128) NOT NULL,
                  PRIMARY KEY(id, src_uuid, dst_uuid)
               '''
-    if not check_table_exist(table_name):
         create_table(table_name, columns, True)
         return
 
@@ -162,12 +164,13 @@ def record_tenant_migrated(**tenant_details):
                        + tenant_details["new_project_name"] + "','" \
                        + tenant_details["dst_uuid"] + "','" \
                        + tenant_details["dst_cloud"] + "','" \
+                       + tenant_details["image_migrated"] + "','" \
                        + tenant_details["state"] + "'"
 
-    insert_record(table_name, values_to_insert, True)
+    insert_record(table_name, [values_to_insert], True)
 
 
-def get_migrated_tenant(values):
+def get_migrated_tenant(*values):
     """function to return detail of tenant migration
     :param values: tenant name and cloud name that used to filter data
     :return: tenant migrate detail
@@ -177,16 +180,16 @@ def get_migrated_tenant(values):
     columns = ["*"]
 
     filters = {"project_name": values[0],
-               "cloud_name": values[1]}
+               "src_cloud": values[1]}
 
     data = read_record(table_name, columns, filters, True)
 
     if len(data) == 0:
-        print('no record found for tenant {0} in cloud {1}'
+        print('no migration record found for tenant {0} in cloud {1}'
               .format(filters.keys()[0], filters.keys()[1]))
         return None
     elif len(data) > 1:
-        print('multiple record found for tenant {0} in cloud {1}'
+        print('multiple migration record found for tenant {0} in cloud {1}'
               .format(filters.keys()[0], filters.keys()[1]))
         return None
 
@@ -197,13 +200,16 @@ def get_migrated_tenant(values):
                    'new_project_name': data[0][4],
                    'dst_uuid': data[0][5],
                    'dst_cloud': data[0][6],
-                   'state': data[0][7]}
+                   'image_migrated': data[0][7],
+                   'state': data[0][8]}
     return tenant_data
 
 
 def initialise_vm_mapping():
     table_name = "instances"
-    columns = '''id INT NOT NULL AUTO_INCREMENT,
+
+    if not check_table_exist(table_name):
+        columns = '''id INT NOT NULL AUTO_INCREMENT,
                  src_server_name VARCHAR(32) NOT NULL,
                  src_uuid VARCHAR(128) NOT NULL,
                  src_cloud VARCHAR(128) NOT NULL,
@@ -214,7 +220,6 @@ def initialise_vm_mapping():
                  migration_state VARCHAR(128) NOT NULL,
                  PRIMARY KEY(id, src_uuid)
               '''
-    if not check_table_exist(table_name):
         create_table(table_name, columns, True)
         return
 
@@ -239,7 +244,7 @@ def record_vm_migrated(**vm_details):
     insert_record(table_name, values_to_insert, True)
 
 
-def get_migrated_vm(values):
+def get_migrated_vm(*values):
     """function to return detail of vm migration
     :param values: tenant name and cloud name that used to filter data
     :return: vm migrate detail
@@ -249,21 +254,23 @@ def get_migrated_vm(values):
     columns = ["*"]
     filters = {"src_server_name": values[0],
                "src_tenant": values[1],
-               "cloud_name": values[2]}
+               "src_cloud": values[2]}
 
     data = read_record(table_name, columns, filters, True)
 
     if len(data) == 0:
-        print('no record found for instance {0} from tenant {1} in cloud {2}'
+        print('no migration record found for '
+              'instance {0} from tenant {1} in cloud {2}'
               .format(add_quotes(filters.keys()[0]),
                       add_quotes(filters.keys()[1]),
                       add_quotes(filters.keys()[2])))
         return None
     elif len(data) > 1:
-        print('multiple records found for instance {0} from tenant {1}'
-              ' in cloud {2}'.format(add_quotes(filters.keys()[0]),
-                                     add_quotes(filters.keys()[1]),
-                                     add_quotes(filters.keys()[2])))
+        print('multiple migration records found for '
+              'instance {0} from tenant {1} in cloud {2}'
+              .format(add_quotes(filters.keys()[0]),
+                      add_quotes(filters.keys()[1]),
+                      add_quotes(filters.keys()[2])))
         return None
 
     # should be only one row
@@ -280,7 +287,9 @@ def get_migrated_vm(values):
 
 def initialise_flavor_mapping():
     table_name = "flavors"
-    columns = '''id INT NOT NULL AUTO_INCREMENT,
+
+    if not check_table_exist(table_name):
+        columns = '''id INT NOT NULL AUTO_INCREMENT,
                  src_flavor_name VARCHAR(32) NOT NULL,
                  src_uuid VARCHAR(128) NOT NULL,
                  src_cloud VARCHAR(128) NOT NULL,
@@ -289,30 +298,34 @@ def initialise_flavor_mapping():
                  dst_cloud VARCHAR(128) NOT NULL
                  PRIMARY KEY(id, src_uuid)
               '''
-    if not check_table_exist(table_name):
         create_table(table_name, columns, True)
         return
 
 
-def record_flavor_migrated(**flavor_details):
+def record_flavor_migrated(*flavor_details):
     """function to insert the detail of
     flavor, which has been migrated, into database
 
-    :param flavor_details: relevant data of migrated flavor
+    :param flavor_details: a list of dict which stores relevant data of
+    migrated flavor
     """
     table_name = "flavors"
-    values_to_insert = "NULL,'" \
-                       + flavor_details["src_flavor_name"] + "','" \
-                       + flavor_details["src_uuid"] + "','" \
-                       + flavor_details["src_cloud"] + "','" \
-                       + flavor_details["dst_flavor_name"] + "','" \
-                       + flavor_details["dst_uuid"] + "','" \
-                       + flavor_details["dst_cloud"] + "'"
+    values_to_insert = []
+    for f_details in flavor_details:
+        value_to_insert = "NULL,'" \
+                       + f_details["src_flavor_name"] + "','" \
+                       + f_details["src_uuid"] + "','" \
+                       + f_details["src_cloud"] + "','" \
+                       + f_details["dst_flavor_name"] + "','" \
+                       + f_details["dst_uuid"] + "','" \
+                       + f_details["dst_cloud"] + "'"
+
+        values_to_insert.append(value_to_insert)
 
     insert_record(table_name, values_to_insert, True)
 
 
-def get_migrated_flavor(values):
+def get_migrated_flavor(*values):
     """function to return detail of flavor migration
     :param values: flavor id on source cloud and cloud name that
     used to filter data
@@ -328,12 +341,13 @@ def get_migrated_flavor(values):
     data = read_record(table_name, columns, filters, True)
 
     if len(data) == 0:
-        print('no record found for flavor {0} in cloud {1}'
+        print('no migration record found for flavor {0} in cloud {1}'
               .format(add_quotes(filters.keys()[0]),
                       add_quotes(filters.keys()[2])))
         return None
     elif len(data) > 1:
-        print('multiple records found for flavor {0} from in cloud {1}'
+        print('multiple migration records found for '
+              'flavor {0} from in cloud {1}'
               .format(add_quotes(filters.keys()[0]),
                       add_quotes(filters.keys()[2])))
         return None
@@ -346,6 +360,95 @@ def get_migrated_flavor(values):
                'dst_uuid': data[0][5],
                'dst_cloud': data[0][6]}
     return vm_data
+
+
+def initialise_image_mapping():
+    table_name = "images"
+
+    if not check_table_exist(table_name):
+        columns = '''id INT NOT NULL AUTO_INCREMENT,
+                 src_image_name VARCHAR(32) NOT NULL,
+                 src_uuid VARCHAR(128) NOT NULL,
+                 src_owner_tenant VARCHAR(128) NOT NULL,
+                 src_cloud VARCHAR(128) NOT NULL,
+                 dst_image_name VARCHAR(32) NOT NULL,
+                 dst_uuid VARCHAR(128) NOT NULL,
+                 dst_owner_tenant VARCHAR(128) NOT NULL,
+                 dst_cloud VARCHAR(128) NOT NULL,
+                 checksum VARCHAR(1024) NOT NULL
+                 state VARCHAR(128) NOT NULL
+                 PRIMARY KEY(id, src_uuid)
+              '''
+        create_table(table_name, columns, True)
+        return
+
+
+def record_image_migrated(**image_details):
+    """function to insert the detail of
+    image, which has been migrated, into database
+
+    :param image_details: relevant data of a list of migrated images
+    """
+    table_name = "images"
+    values_to_insert = "NULL,'" \
+                       + image_details["src_image_name"] + "','" \
+                       + image_details["src_uuid"] + "','" \
+                       + image_details["src_owner_tenant"] + "','" \
+                       + image_details["src_cloud"] + "','" \
+                       + image_details["dst_image_name"] + "','" \
+                       + image_details["dst_uuid"] + "','" \
+                       + image_details["dst_owner_tenant"] + "','" \
+                       + image_details["dst_cloud"] + "','" \
+                       + image_details["checksum"] + "','" \
+                       + image_details["state"] + "'"
+
+    insert_record(table_name, values_to_insert, True)
+
+
+def get_migrated_image(*values):
+    """function to return detail of image migration
+    :param values: image id on source cloud and cloud name that
+    used to filter data
+    :return: image migrate detail
+    """
+    # parameters for "SELECT"
+    table_name = "images"
+    columns = ["*"]
+    filters = {"src_image_name": values[0],
+               "src_uuid": values[1],
+               "src_owner_tenant": values[2],
+               "src_cloud": values[3]}
+
+    data = read_record(table_name, columns, filters, True)
+
+    if len(data) == 0:
+        print('no migration record found for image {0} '
+              'from tenant {1} in cloud {2}'
+              .format(add_quotes(filters.keys()[0]),
+                      add_quotes(filters.keys()[2]),
+                      add_quotes(filters.keys()[3])))
+        return None
+    elif len(data) > 1:
+        print('multiple migration records found for for image {0} '
+              'from tenant {1} in cloud {2}'
+              .format(add_quotes(filters.keys()[0]),
+                      add_quotes(filters.keys()[2]),
+                      add_quotes(filters.keys()[3])))
+        return None
+
+    # should be only one row
+    image_data = {'src_flavor_name': data[0][1],
+                  'src_uuid': data[0][2],
+                  'src_owner_tenant': data[0][3],
+                  'src_cloud': data[0][4],
+                  'dst_image_name': data[0][5],
+                  'dst_flavor_name': data[0][6],
+                  'dst_uuid': data[0][7],
+                  'dst_owner_tenant': data[0][8],
+                  'dst_cloud': data[0][9],
+                  'checksum': data[0][10],
+                  'state': data[0][11]}
+    return image_data
 
 
 def add_quotes(string):

@@ -39,7 +39,7 @@ class TenantMigrationTask(task.Task):
         values = [tenant_name, s_cloud_name]
         m_tenant = db_handler.get_migrated_tenant(values)
 
-        if m_tenant is not None & m_tenant['state'] is "completed":
+        if m_tenant is not None and m_tenant['state'] is "completed":
             print("tenant {0} in cloud {1} has already been migrated"
                   .format(m_tenant["project_name"], s_cloud_name))
             return
@@ -68,6 +68,7 @@ class TenantMigrationTask(task.Task):
                        'src_cloud': s_cloud_name,
                        'new_project_name': new_tenant_name,
                        'dst_cloud': t_cloud_name,
+                       'image_migrated': 'FALSE',
                        'state': "unknown"}
 
         # create a new tenant
@@ -98,11 +99,11 @@ class TenantMigrationTask(task.Task):
 
         # record in database
         tenant_data.update({'dst_uuid': migrated_tenant.id})
-        tenant_data.update({'state': 'completed'})
+        tenant_data.update({'state': 'proxy_created'})
 
         db_handler.record_tenant_migrated(**tenant_data)
 
-    def execute(self, tenants_to_move):
+    def execute(self, tenants_to_move=[]):
 
         """execute the tenant migration task
 

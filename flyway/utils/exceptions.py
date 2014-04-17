@@ -15,3 +15,13 @@ class ResourceNotFoundException(Exception):
             self.resource_type,
             self.resource_id or "?",
             self.cloud or "?")
+
+
+class HttpRequestException(Exception):
+
+    def __init__(self, code, state, response_body):
+        self.exception_message = "[HTTP {0}]: {1} \n" + "Details: {2}"\
+            .format(code, state, response_body)
+
+    def __str__(self):
+        return self.exception_message

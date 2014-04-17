@@ -1,6 +1,6 @@
 import base64
 import keystoneclient.v2_0.client as ksclient
-import glanceclient.v2.client as glclient
+import glanceclient.v1.client as glclient
 import novaclient.v3.client as nvclient
 
 import random

@@ -32,12 +32,12 @@ def get_flow():
             # Note that creating users and tenants can happen in parallel and
             # hence it is part of unordered flow
             #UserMigrationTask('user_migration_task'),
-            #TenantMigrationTask('tenant_migration_task')
+            TenantMigrationTask('tenant_migration_task')
             #FlavorMigrationTask('flavor_migration_task')
         ),
         # TODO: Add other tasks to the flow e.g migrate image, private key etc.
         #RoleMigrationTask('role_migration_task'),
-        #ImageMigrationTask('image_migration_task'),
+        ImageMigrationTask('image_migration_task'),
         #KeypairMigrationTask('keypairs_migration_task')
         #InstanceMigrationTask('instances_migration_task')
     )
@@ -55,8 +55,7 @@ def execute():
     # execute(self, woof)
     #TODO: need to figure out a better way to allow user to specify
     #TODO: specific resource to migrate
-    data_required = {'tenants_to_move': ['Migrate'],
-                     'example_input': ['test']}
+    data_required = {'tenants_to_move': ['demo']}
 
     eng = engines.load(flow, store=data_required)
 
