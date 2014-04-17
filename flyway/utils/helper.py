@@ -164,3 +164,18 @@ def send_email(from_addr, to_addr_list, cc_addr_list, subject,
     server.login(login, password)
     server.sendmail(from_addr, to_addr_list, message)
     server.quit()
+
+
+def send_reset_password_email(email_addr, password):
+    msg_content = "Your password has been reset to " + password \
+                  + " because of resource migration." \
+                  + "\nPlease change your password. Thank you."
+    email = {'from_addr': "openstack.flyway@gmail.com",
+             'to_addr_list': [email_addr],
+             'cc_addr_list': [],
+             'subject': "Flyway: Please change your password",
+             'message': msg_content,
+             'login': "openstack.flyway@gmail.com",
+             'password': "flywaypassword"
+             }
+    send_email(**email)

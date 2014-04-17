@@ -15,21 +15,13 @@
 #    under the License.
 
 import logging
+from utils.db_handlers.users import set_user_complete, delete_migrated_users, initialise_users_mapping
 
 from utils.helper import *
-from utils.db_base import *
 
 from taskflow import task
 
 LOG = logging.getLogger(__name__)
-TABLE_NAME = 'users'
-
-
-def update_user_complete(user):
-    update_table(TABLE_NAME, {'state': 'completed'}, {'name': user.name,
-                                                      'src_cloud': cfg.CONF.SOURCE.os_cloud_name,
-                                                      'dst_cloud': cfg.CONF.TARGET.os_cloud_name}, False)
-    LOG.info("User {0} succeeded to migrate, recorded in database".format(user))
 
 
 class UserMigrationTask(task.Task):
@@ -48,7 +40,7 @@ class UserMigrationTask(task.Task):
         LOG.info("Begin to migrate user {0}".format(user))
         migrated_user = None
         if user.name not in self.target_user_names:
-            password = generate_new_password()
+            password = self.generate_new_password(user)
 
             try:
                 migrated_user = self.ks_target.users.create(user.name,
@@ -60,53 +52,27 @@ class UserMigrationTask(task.Task):
                 LOG.error("The error is {0}".format(e))
             else:
                 LOG.info("Succeed to migrate user {0}".format(user))
-                update_user_complete(user)
+                set_user_complete(user)
         return migrated_user
 
-    def initialise_users_mapping(self):
-
-        if not check_table_exist(TABLE_NAME):
-            table_columns = '''id INT NOT NULL AUTO_INCREMENT,
-                           name VARCHAR(64) NOT NULL,
-                           email VARCHAR(64),
-                           src_cloud VARCHAR(64) NOT NULL,
-                           dst_cloud VARCHAR(64) NOT NULL,
-                           state VARCHAR(10) NOT NULL,
-                           PRIMARY KEY(id),
-                           UNIQUE (name, src_cloud, dst_cloud)
-                        '''
-            create_table(TABLE_NAME, table_columns, False)
-
-        s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
-        t_cloud_name = cfg.CONF.TARGET.os_cloud_name
-        init_string = "null, '{0}', '{1}', '"+s_cloud_name+"', '"+t_cloud_name+"', 'unknown'"
-        LOG.debug("init_string: "+init_string)
-
-        init_users = []
-        for user in self.ks_source.users.list():
-            if user.name not in self.target_user_names and not self.is_migrated(user):
-                init_users.append(
-                    init_string.format(user.name, user.email))
-                LOG.debug("insert user:")
-                LOG.debug(init_string.format(user.name, user.email))
-
-        insert_record(TABLE_NAME, init_users, True)
-
     @staticmethod
-    def is_migrated(user):
-        filters = {
-            "name": user.name,
-            "src_cloud": cfg.CONF.SOURCE.os_cloud_name,
-            "dst_cloud": cfg.CONF.TARGET.os_cloud_name,
-            "state": "completed"
-        }
-        data = read_record(TABLE_NAME, ["0"], filters, True)
-        return len(data) > 0
+    def generate_new_password(user, default_password='123456'):
+        """
+        Generate a random password for the user and email to the user,
+        default_password is used if the user has no email
+        """
+        if user.email is not None:
+            password = generate_new_password()
+            send_reset_password_email(user.email, password)
+        else:
+            password = default_password
+
+        return password
 
     def execute(self):
         LOG.info('Migrating all users ...')
 
-        self.initialise_users_mapping()
+        initialise_users_mapping(self.ks_source, self.target_user_names)
 
         migrated_users = []
         for user in self.ks_source.users.list():
@@ -114,9 +80,6 @@ class UserMigrationTask(task.Task):
             if migrated_user is not None:
                 migrated_users.append(migrated_user)
 
-        # TODO delete the corresponding data when the task is finished
-        delete_record(TABLE_NAME, {"src_cloud": cfg.CONF.SOURCE.os_cloud_name,
-                                   "dst_cloud": cfg.CONF.TARGET.os_cloud_name,
-                                   "state": "completed"})
+        delete_migrated_users()
 
         return migrated_users
