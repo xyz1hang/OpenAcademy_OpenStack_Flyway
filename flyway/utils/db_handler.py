@@ -177,7 +177,7 @@ def get_migrated_tenant(values):
     columns = ["*"]
 
     filters = {"project_name": values[0],
-               "cloud_name": values[1]}
+               "src_cloud": values[1]}
 
     data = read_record(table_name, columns, filters, True)
 
