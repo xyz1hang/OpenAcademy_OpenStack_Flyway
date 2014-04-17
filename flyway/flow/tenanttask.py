@@ -67,6 +67,7 @@ class TenantMigrationTask(task.Task):
                        'src_uuid': s_tenant.id,
                        'src_cloud': s_cloud_name,
                        'new_project_name': new_tenant_name,
+                       'dst_uuid': s_tenant.id,
                        'dst_cloud': t_cloud_name,
                        'state': "unknown"}
 
