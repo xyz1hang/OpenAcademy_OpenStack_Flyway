@@ -1,34 +1,31 @@
 from testtools import TestCase
-import mox
-import sys
 
-sys.path.append('../..')
-from flyway.flow.roletask import RoleMigrationTask
-from flyway.common import config
+from flow.roletask import RoleMigrationTask
+from common import config
 
 
 class RoleTaskTest(TestCase):
     """Unit test for role migration"""
 
     def __init__(self, *args, **kwargs):
+
         super(RoleTaskTest, self).__init__(*args, **kwargs)
         config.parse(['--config-file', '../../etc/flyway.conf'])
         self.migration_task = RoleMigrationTask()
 
-        clients = get_clients()
-        self.migration_task.ks_source = clients.get_source()
-        self.migration_task.ks_target = clients.get_destination()
-
-        self.mox_factory = mox.Mox()
-
     def test_execute(self):
+
+        self.migration_task.init_db()
         new_role_name = "role_that_should_not_exist"
-        new_role = self.migration_task.ks_source.roles.create(new_role_name)
+        self.migration_task.ks_source.roles.create(new_role_name)
+        moved_roles = self.migration_task.execute()
+        self.assertIn(new_role_name, moved_roles)
+        assert(not self.migration_task.check())
 
-        roles_moved_to_target = self.migration_task.execute()
+        for role in self.migration_task.ks_source.roles.list():
+            if role.name == "role_that_should_not_exist":
+                self.migration_task.ks_source.roles.delete(role)
 
-        target_roles = self.migration_task.ks_target.roles.list()
-        self.assertIn(roles_moved_to_target[0], target_roles)
-
-        self.migration_task.ks_source.roles.delete(new_role)
-        self.migration_task.ks_target.roles.delete(roles_moved_to_target[0])
+        for role in self.migration_task.ks_target.roles.list():
+            if role.name == "role_that_should_not_exist":
+                self.migration_task.ks_target.roles.delete(role)
