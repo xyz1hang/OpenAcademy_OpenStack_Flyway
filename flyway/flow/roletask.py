@@ -42,8 +42,8 @@ class RoleMigrationTask(task.Task):
     def execute(self):
         LOG.debug('Migrating roles...........')
 
-        self.ks_source = get_keystone_source()
-        self.ks_target = get_keystone_target()
+        self.ks_source = get_auth_source()
+        self.ks_target = get_auth_target()
 
         source_roles = find_all_roles_in(self.ks_source)
 
