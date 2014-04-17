@@ -18,11 +18,18 @@ import logging
 
 from utils.helper import *
 from utils.db_base import *
-import time
 
 from taskflow import task
 
 LOG = logging.getLogger(__name__)
+TABLE_NAME = 'users'
+
+
+def update_user_complete(user):
+    update_table(TABLE_NAME, {'state': 'completed'}, {'name': user.name,
+                                                      'src_cloud': cfg.CONF.SOURCE.os_cloud_name,
+                                                      'dst_cloud': cfg.CONF.TARGET.os_cloud_name}, False)
+    LOG.info("User {0} succeeded to migrate, recorded in database".format(user))
 
 
 class UserMigrationTask(task.Task):
@@ -31,68 +38,85 @@ class UserMigrationTask(task.Task):
     """
 
     def __init__(self, *args, **kwargs):
-        super(UserMigrationTask, self).__init__(**kwargs)
+        super(UserMigrationTask, self).__init__(*args, **kwargs)
         self.ks_source = get_keystone_source()
         self.ks_target = get_keystone_target()
 
-        self.target_user_names = []
-        for user in self.ks_target.users.list():
-            self.target_user_names.append(user.name)
-        print self.target_user_names
-
-        self.initialise_db()
+        self.target_user_names = [user.name for user in self.ks_target.users.list()]
 
     def migrate_one_user(self, user):
-
+        LOG.info("Begin to migrate user {0}".format(user))
+        migrated_user = None
         if user.name not in self.target_user_names:
             password = generate_new_password()
 
-            self.ks_target.users.create(user.name,
-                                        password,
-                                        user.email,
-                                        enabled=True)
+            try:
+                migrated_user = self.ks_target.users.create(user.name,
+                                                            password,
+                                                            user.email,
+                                                            enabled=True)
+            except Exception, e:
+                LOG.error("There is an error while migrating user {0}".format(user))
+                LOG.error("The error is {0}".format(e))
+            else:
+                LOG.info("Succeed to migrate user {0}".format(user))
+                update_user_complete(user)
+        return migrated_user
 
-            set_dict = {'completed': 'YES'}
-            where_dict = {'name': user.name}
-            start = time.time()
-            while True:
-                if time.time() - start > 10:
-                    print 'Fail!!!'
-                    break
-                elif self.migration_succeed(user):
-                    update_table('users', set_dict, where_dict, False)
-                    break
+    def initialise_users_mapping(self):
 
-    def migration_succeed(self, user):
-        for target_user in self.ks_target.users.list():
-            if user.name == target_user.name:
-                return True
+        if not check_table_exist(TABLE_NAME):
+            table_columns = '''id INT NOT NULL AUTO_INCREMENT,
+                           name VARCHAR(64) NOT NULL,
+                           email VARCHAR(64),
+                           src_cloud VARCHAR(64) NOT NULL,
+                           dst_cloud VARCHAR(64) NOT NULL,
+                           state VARCHAR(10) NOT NULL,
+                           PRIMARY KEY(id),
+                           UNIQUE (name, src_cloud, dst_cloud)
+                        '''
+            create_table(TABLE_NAME, table_columns, False)
 
-        return False
+        s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
+        t_cloud_name = cfg.CONF.TARGET.os_cloud_name
+        init_string = "null, '{0}', '{1}', '"+s_cloud_name+"', '"+t_cloud_name+"', 'unknown'"
+        LOG.debug("init_string: "+init_string)
+
+        init_users = []
+        for user in self.ks_source.users.list():
+            if user.name not in self.target_user_names and not self.is_migrated(user):
+                init_users.append(
+                    init_string.format(user.name, user.email))
+                LOG.debug("insert user:")
+                LOG.debug(init_string.format(user.name, user.email))
+
+        insert_record(TABLE_NAME, init_users, True)
+
+    @staticmethod
+    def is_migrated(user):
+        filters = {
+            "name": user.name,
+            "src_cloud": cfg.CONF.SOURCE.os_cloud_name,
+            "dst_cloud": cfg.CONF.TARGET.os_cloud_name,
+            "state": "completed"
+        }
+        data = read_record(TABLE_NAME, ["0"], filters, True)
+        return len(data) > 0
 
     def execute(self):
         LOG.info('Migrating all users ...')
 
+        self.initialise_users_mapping()
+
+        migrated_users = []
         for user in self.ks_source.users.list():
-            self.migrate_one_user(user)
+            migrated_user = self.migrate_one_user(user)
+            if migrated_user is not None:
+                migrated_users.append(migrated_user)
 
-    def initialise_db(self):
+        # TODO delete the corresponding data when the task is finished
+        delete_record(TABLE_NAME, {"src_cloud": cfg.CONF.SOURCE.os_cloud_name,
+                                   "dst_cloud": cfg.CONF.TARGET.os_cloud_name,
+                                   "state": "completed"})
 
-        table_columns = '''id INT NOT NULL AUTO_INCREMENT,
-                           name VARCHAR(64) NOT NULL,
-                           email VARCHAR(64) NOT NULL,
-                           completed VARCHAR(10) NOT NULL,
-                           PRIMARY KEY(id),
-                           UNIQUE (name)
-                        '''
-
-        if not check_table_exist('users'):
-            create_table('users', table_columns, False)
-
-        values = []
-        for user in self.ks_source.users.list():
-            if user.name not in self.target_user_names:
-                values.append(
-                    "null, '{0}', '{1}', 'NO'".format(user.name, user.email))
-
-        insert_record('users', values, False)
+        return migrated_users

@@ -146,6 +146,17 @@ def update_table(table_name, set_dict, where_dict, close):
         db.close()
 
 
+def build_where_string(where_dict):
+    # build "WHERE" string
+    filter_str = ''
+    for key in where_dict.keys():
+        if key != where_dict.keys()[0]:
+            filter_str += ' AND '
+        filter_str += str(key) + " = '" + str(where_dict[key]) + "'"
+
+    return filter_str
+
+
 def read_record(table_name, columns, where_dict, close):
     """
     function that implements SELECT statement
@@ -158,13 +169,7 @@ def read_record(table_name, columns, where_dict, close):
     db = connect(True)
     cursor = get_cursor(db)
 
-    # build "WHERE" string
-    filter_str = ''
-    for key in where_dict.keys():
-        if key != where_dict.keys()[0]:
-            filter_str += ' AND '
-        filter_str += str(key) + " = '" + str(where_dict[key]) + "'"
-
+    filter_str = build_where_string(where_dict)
     # build columns list
     columns_str = ', '.join(columns)
 
@@ -197,6 +202,24 @@ def delete_all_data(table_name):
     cursor = get_cursor(db)
 
     query = "DELETE FROM {0}".format(table_name)
+    try:
+        cursor.execute(query)
+    except MySQLdb.Error, e:
+        print("MySQL error: {}".format(e))
+        db.rollback()
+
+    db.close()
+
+
+def delete_record(table_name, where_dict):
+    """
+    function that delete all data from a table
+    """
+    # establish connection
+    db = connect(True)
+    cursor = get_cursor(db)
+    where_string = build_where_string(where_dict)
+    query = "DELETE FROM {0} WHERE {1}".format(table_name, where_string)
     try:
         cursor.execute(query)
     except MySQLdb.Error, e:
