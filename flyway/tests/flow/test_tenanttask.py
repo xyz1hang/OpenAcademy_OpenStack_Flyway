@@ -26,10 +26,16 @@ class TenantTaskTest(TestBase):
         try:
             self.migration_task.execute([tenant_name])
 
-            migrated_tenant = self.migration_task.ks_target.tenants.find(
-                name=tenant_name)
+            # get the tenant data that has been migrated from src to dst
+            values = [tenant_name, cfg.CONF.SOURCE.os_cloud_name,
+                      cfg.CONF.TARGET.os_cloud_name]
+            tenant_data = tenants.get_migrated_tenant(values)
 
-            self.assertEqual(tenant_to_migrate.name, migrated_tenant.name)
+            tenant_new_name = tenant_data['new_project_name']
+            migrated_tenant = self.migration_task.ks_target.tenants.\
+                find(name=tenant_new_name)
+
+            self.assertIsNotNone(migrated_tenant)
 
         except keystone_exceptions.NotFound as e:
             print str(e)
@@ -41,7 +47,8 @@ class TenantTaskTest(TestBase):
         # clean database
         filter_values = [tenant_to_migrate.name,
                          tenant_to_migrate.id,
-                         cfg.CONF.SOURCE.os_cloud_name]
+                         cfg.CONF.SOURCE.os_cloud_name,
+                         cfg.CONF.TARGET.os_cloud_name]
         tenants.delete_migration_record(filter_values)
 
         if migrated_tenant:

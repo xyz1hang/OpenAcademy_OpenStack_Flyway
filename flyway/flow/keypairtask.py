@@ -1,6 +1,6 @@
 import logging
 from taskflow import task
-import utils.helper
+from utils.helper import *
 from utils.resourcetype import ResourceType
 from utils.db_handlers import keypairs as db_handler
 from utils import exceptions
@@ -17,11 +17,11 @@ class KeypairMigrationTask(task.Task):
     def __init__(self, *args, **kwargs):
         super(KeypairMigrationTask, self).__init__(*args, **kwargs)
         # config must be ready at this point
-        self.nv_source = utils.helper.get_nova_source()
-        self.nv_target = utils.helper.get_nova_target()
+        self.nv_source = get_nova_source()
+        self.nv_target = get_nova_target()
 
-        self.s_cloud_name = utils.helper.cfg.CONF.SOURCE.os_cloud_name
-        self.t_cloud_name = utils.helper.cfg.CONF.TARGET.os_cloud_name
+        self.s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
+        self.t_cloud_name = cfg.CONF.TARGET.os_cloud_name
 
     def migrate_one_keypair(self, keypair_name):
         try:
@@ -31,7 +31,7 @@ class KeypairMigrationTask(task.Task):
             # to user. Other exception handling mechanism can be added later
             raise exceptions.ResourceNotFoundException(
                 ResourceType.keypair, keypair_name,
-                utils.helper.cfg.CONF.SOURCE.os_cloud_name)
+                cfg.CONF.SOURCE.os_cloud_name)
 
         # create a new keypair
         values = [s_keypair.name, self.s_cloud_name, self.t_cloud_name]
@@ -113,7 +113,7 @@ class KeypairMigrationTask(task.Task):
                     # mechanism can be added later
                     raise exceptions.ResourceNotFoundException(
                         ResourceType.keypair, keypair_name,
-                        utils.helper.cfg.CONF.SOURCE.os_cloud_name)
+                        cfg.CONF.SOURCE.os_cloud_name)
 
                 keypair_data = {'name': keypair.name,
                                 'public_key': keypair.public_key,

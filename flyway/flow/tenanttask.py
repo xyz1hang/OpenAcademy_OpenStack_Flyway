@@ -37,7 +37,7 @@ class TenantMigrationTask(task.Task):
         t_cloud_name = cfg.CONF.TARGET.os_cloud_name
 
         # check whether the tenant has been migrated
-        values = [tenant_name, s_cloud_name]
+        values = [tenant_name, s_cloud_name, t_cloud_name]
         m_tenant = tenants.get_migrated_tenant(values)
 
         if m_tenant is not None and m_tenant['state'] is "completed":

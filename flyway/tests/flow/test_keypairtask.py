@@ -13,7 +13,7 @@ import utils.helper
 class KeypairTaskTest(TestBase):
 
     def __init__(self, *args, **kwargs):
-        super(KeypairTaskTest, self).__init__(KeypairTaskTest, *args, **kwargs)
+        super(KeypairTaskTest, self).__init__(*args, **kwargs)
         config.parse(['--config-file', '../../etc/flyway.conf'])
         self.migration_task = KeypairMigrationTask('keypair_migration_task')
         self.s_cloud_name = utils.helper.cfg.CONF.SOURCE.os_cloud_name
@@ -26,11 +26,17 @@ class KeypairTaskTest(TestBase):
 
         self.migration_task.execute(keypair_name)
 
+        migrated_keypair = None
         try:
-            migrated_keypair = self.migration_task.nv_target.keypairs.find(
-                name=keypair_name)
+            # get the tenant data that has been migrated from src to dst
+            values = [keypair_name, self.s_cloud_name, self.t_cloud_name]
+            keypair_data = db_handler.get_keypairs(values)
 
-            self.assertEqual(keypair_to_migrate.name, migrated_keypair.name)
+            new_name = keypair_data['new_name']
+            migrated_keypair = self.migration_task.nv_target.keypairs.\
+                find(name=new_name)
+
+            self.assertIsNotNone(migrated_keypair)
 
         except nova_exceptions.NotFound:
             self.migration_task.ks_source.tenants.delete(keypair_to_migrate)
@@ -38,7 +44,7 @@ class KeypairTaskTest(TestBase):
 
         finally:
             self.migration_task.nv_source.keypairs.delete(keypair_to_migrate)
-            self.migration_task.nv_target.keypairs.delete(migrated_keypair)
-
+            if migrated_keypair is not None:
+                self.migration_task.nv_target.keypairs.delete(migrated_keypair)
             values = [keypair_name, self.s_cloud_name, self.t_cloud_name]
             db_handler.delete_keypairs(values)

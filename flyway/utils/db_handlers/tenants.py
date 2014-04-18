@@ -59,7 +59,8 @@ def get_migrated_tenant(values):
     columns = ["*"]
 
     filters = {"project_name": values[0],
-               "src_cloud": values[1]}
+               "src_cloud": values[1],
+               "dst_cloud": values[2]}
 
     data = read_record(table_name, columns, filters, True)
 
@@ -93,6 +94,7 @@ def delete_migration_record(values):
     table_name = "tenants"
     record_filter = {'project_name': values[0],
                      'src_uuid': values[1],
-                     'src_cloud': values[2]}
+                     'src_cloud': values[2],
+                     'dst_cloud': values[3]}
 
     delete_record(table_name, record_filter)

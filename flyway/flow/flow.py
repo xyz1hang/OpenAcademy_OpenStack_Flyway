@@ -40,6 +40,9 @@ def get_flow():
         ImageMigrationTask('image_migration_task'),
         #KeypairMigrationTask('keypairs_migration_task')
         #InstanceMigrationTask('instances_migration_task')
+
+        # after resource migration:
+        #UpdateProjectsQuotaTask('update_projects_quotas')
     )
 
     return flow
