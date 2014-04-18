@@ -19,6 +19,8 @@ class UserTaskTest(TestBase):
         new_user_password = "password"
         new_user_email = "liang.shang13@imperial.ac.uk"
 
+        new_user, users_moved_to_target = None, None
+
         try:
             new_user = self.migration_task.ks_source.users.create(
                 new_user_name, new_user_password, email=new_user_email)
