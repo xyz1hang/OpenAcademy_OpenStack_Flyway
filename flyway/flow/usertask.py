@@ -88,6 +88,7 @@ class UserMigrationTask(task.Task):
             if migrated_user is not None:
                 migrated_users.append(migrated_user)
 
-        delete_migrated_users()
+        # TODO: When to delete the record in Database?
+        #delete_migrated_users()
 
         return migrated_users
