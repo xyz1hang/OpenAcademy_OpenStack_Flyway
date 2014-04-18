@@ -1,6 +1,7 @@
 __author__ = 'hydezhang'
 
 from utils.db_base import *
+from collections import OrderedDict
 
 
 def initialise_tenants_mapping():
@@ -21,6 +22,7 @@ def initialise_tenants_mapping():
                  dst_cloud VARCHAR(128) NOT NULL,
                  image_migrated INT NOT NULL,
                  state VARCHAR(128) NOT NULL,
+                 quota_updated INT NOT NULL,
                  PRIMARY KEY(id, src_uuid, dst_uuid)
               '''
         create_table(table_name, columns, True)
@@ -42,11 +44,27 @@ def record_tenant_migrated(tenant_details):
                            + t_details["src_cloud"] + "','" \
                            + t_details["new_project_name"] + "','" \
                            + t_details["dst_uuid"] + "','" \
-                           + t_details["dst_cloud"] + "', " \
-                           + t_details["image_migrated"] + ", '" \
-                           + t_details["state"] + "'"
+                           + t_details["dst_cloud"] + "','" \
+                           + t_details["image_migrated"] + "','" \
+                           + t_details["state"] + "','" \
+                           + t_details["quota_updated"] + "'"
 
     insert_record(table_name, [values_to_insert], True)
+
+
+def update_tenant_migrated(**tenant_details):
+    """function to update the state of a
+    tenant record, which has been migrated, into database
+
+    :param tenant_details: relevant data of migrated tenant
+    """
+    table_name = "tenants"
+    s_dict = OrderedDict([('quota_updated', tenant_details["quota_updated"])])
+    w_dict = OrderedDict([('project_name', tenant_details["project_name"]),
+                          ('src_cloud', tenant_details["src_cloud"]),
+                          ('dst_cloud', tenant_details["dst_cloud"])])
+
+    update_table(table_name, s_dict, w_dict, True)
 
 
 def get_migrated_tenant(values):
@@ -81,7 +99,8 @@ def get_migrated_tenant(values):
                    'dst_uuid': data[0][5],
                    'dst_cloud': data[0][6],
                    'image_migrated': data[0][7],
-                   'state': data[0][8]}
+                   'state': data[0][8],
+                   'quota_updated': data[0][9]}
     return tenant_data
 
 
