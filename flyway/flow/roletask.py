@@ -39,8 +39,8 @@ class RoleMigrationTask(task.Task):
     cloud to the target cloud.
     """
 
-    def __init__(self, **kwargs):
-        super(RoleMigrationTask, self).__init__(kwargs)
+    def __init__(self, *args, **kwargs):
+        super(RoleMigrationTask, self).__init__(*args, **kwargs)
         self.ks_source = get_keystone_source()
         self.ks_target = get_keystone_target()
 
@@ -56,6 +56,7 @@ class RoleMigrationTask(task.Task):
 
     def init_db(self):
         delete_all_data(TABLE_NAME)
+        print "********************"
         create_table(TABLE_NAME, TABLE_COLUMNS, False)
         roles_to_move = self.get_roles_to_move()
 
