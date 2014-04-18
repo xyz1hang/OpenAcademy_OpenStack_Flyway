@@ -48,7 +48,8 @@ class UpdateProjectsQuotas(task.Task):
             nv = get_nova_target()
             nv.quotas.update(tenant.id,
                              metadata_items=quota.metadata_items,
-                             injected_file_content_bytes=quota.injected_file_content_bytes,
+                             injected_file_content_bytes=
+                             quota.injected_file_content_bytes,
                              injected_file_path_bytes=None,
                              ram=quota.ram,
                              floating_ips=quota.floating_ips,
@@ -60,7 +61,7 @@ class UpdateProjectsQuotas(task.Task):
                              security_group_rules=None)
 
     def execute(self):
-        LOG.info('updating projects quotas ...')
+        print "project quota updating ..."
         tenants = self.ks_source.tenants.list()
 
         for tenant in tenants:
@@ -70,10 +71,22 @@ class UpdateProjectsQuotas(task.Task):
             tenant_data = db_handler.get_migrated_tenant(values)
 
             # only update quotas for project that has been completed migrated
-            if tenant_data is not None and tenant_data['state'] is 'completed':
-                new_name_dst = tenant_data['new_project_name']
+            if tenant_data is not None:
+                if tenant_data['state'] == "proxy_created":
+                    if tenant_data['quota_updated'] == '1':
+                        print "The quota has been updated."
 
-                # get source project quota
-                src_quota = self.nv_source.quotas.get(tenant.id)
-                # update destination project quota
-                self.update_quota(new_name_dst, src_quota)
+                    else:
+                        new_name_dst = tenant_data['new_project_name']
+
+                        # get source project quota
+                        src_quota = self.nv_source.quotas.get(tenant.id)
+                        # update destination project quota
+                        self.update_quota(new_name_dst, src_quota)
+
+                        tenant_data.update({'quota_updated': '1'})
+                        db_handler.update_tenant_migrated(**tenant_data)
+
+                else:
+                    print "The corresponding project {0} has not been migrated.".\
+                        format(tenant_data['project_name'])

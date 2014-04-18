@@ -46,6 +46,7 @@ class UpdateProjectsQuotasTest(TestBase):
             dest_quota = self.nv_source.quotas.get(migrated_tenant.id)
 
             self.assertIsNotNone(migrated_tenant)
+            self.assertEqual(1, tenant_data['quota_updated'])
             self.assertEqual(src_quota.metadata_items,
                              dest_quota.metadata_items)
             self.assertEqual(src_quota.injected_file_content_bytes,

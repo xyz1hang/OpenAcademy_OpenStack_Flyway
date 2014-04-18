@@ -37,6 +37,7 @@ class KeypairTaskTest(TestBase):
                 find(name=new_name)
 
             self.assertIsNotNone(migrated_keypair)
+            self.assertEqual("completed", keypair_data['state'])
 
         except nova_exceptions.NotFound:
             self.migration_task.ks_source.tenants.delete(keypair_to_migrate)

@@ -8,6 +8,7 @@ from utils import exceptions
 from utils.helper import *
 from utils.resourcetype import ResourceType
 
+
 LOG = logging.getLogger(__name__)
 
 
@@ -40,7 +41,7 @@ class TenantMigrationTask(task.Task):
         values = [tenant_name, s_cloud_name, t_cloud_name]
         m_tenant = tenants.get_migrated_tenant(values)
 
-        if m_tenant is not None and m_tenant['state'] is "completed":
+        if m_tenant is not None and m_tenant['state'] == "completed":
             print("tenant {0} in cloud {1} has already been migrated"
                   .format(m_tenant["project_name"], s_cloud_name))
             return
@@ -71,7 +72,8 @@ class TenantMigrationTask(task.Task):
                        'dst_uuid': s_tenant.id,
                        'dst_cloud': t_cloud_name,
                        'image_migrated': '1',
-                       'state': "unknown"}
+                       'state': "unknown",
+                       'quota_updated': '0'}
 
         # create a new tenant
         migrated_tenant = None

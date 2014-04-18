@@ -96,7 +96,7 @@ class KeypairMigrationTask(task.Task):
                                       "{1}\nPlease type in a new name or "
                                       "'abort':".format(found.name,
                                                         self.t_cloud_name))
-                        if user_input is "abort":
+                        if user_input == "abort":
                             # TODO: implement cleaning up and proper exit
                             return None
                         elif user_input:
@@ -129,7 +129,7 @@ class KeypairMigrationTask(task.Task):
                 self.migrate_one_keypair(keypair_name)
 
             else:
-                if m_keypair['state'] is "completed":
+                if m_keypair['state'] == "completed":
                     print("keypair {0} in cloud {1} has already been migrated"
                           .format(keypair_name, self.s_cloud_name))
                 else:
