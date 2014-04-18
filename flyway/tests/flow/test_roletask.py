@@ -20,12 +20,11 @@ class RoleTaskTest(TestCase):
         self.migration_task.ks_source.roles.create(new_role_name)
         moved_roles = self.migration_task.execute()
         self.assertIn(new_role_name, moved_roles)
-        assert(not self.migration_task.check())
 
         for role in self.migration_task.ks_source.roles.list():
-            if role.name == "role_that_should_not_exist":
+            if role.name == new_role_name:
                 self.migration_task.ks_source.roles.delete(role)
 
         for role in self.migration_task.ks_target.roles.list():
-            if role.name == "role_that_should_not_exist":
+            if role.name == new_role_name:
                 self.migration_task.ks_target.roles.delete(role)
