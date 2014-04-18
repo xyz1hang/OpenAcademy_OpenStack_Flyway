@@ -202,7 +202,7 @@ class ImageMigrationTask(task.Task):
     def migrate_one_image(self, image):
 
         new_img_id = None
-        if image['status'] is "active":
+        if image['status'] == "active":
             LOG.info('Migrating image [ID: %s] ...' % image['id'])
 
             # upload kernel image and ramdisk image first if exists

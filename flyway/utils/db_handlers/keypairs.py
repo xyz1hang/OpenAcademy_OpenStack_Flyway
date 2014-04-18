@@ -91,7 +91,7 @@ def get_keypairs(values):
     table_name = "keypairs"
     columns = ["*"]
 
-    filters = {"name": values[0],
+    filters = {"src_uuid": values[0],
                "src_cloud": values[1],
                "dst_cloud": values[2]}
 
@@ -99,11 +99,11 @@ def get_keypairs(values):
 
     if not data or len(data) == 0:
         print("no record found for keypair {0} migration from cloud {1} to could {2}"
-              .format(filters['name'], filters['src_cloud'], filters['dst_cloud']))
+              .format(filters['src_uuid'], filters['src_cloud'], filters['dst_cloud']))
         return None
     elif len(data) > 1:
         print("multiple record found for keypair {0} migration from cloud {1} to could {2}"
-              .format(filters['name'], filters['src_cloud'], filters['dst_cloud']))
+              .format(filters['src_uuid'], filters['src_cloud'], filters['dst_cloud']))
         return None
 
     # should be only one row
