@@ -14,23 +14,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
-
 from utils.helper import *
-from utils.db_base import *
+from utils.db_handlers.roles import *
 from taskflow import task
 
 LOG = logging.getLogger(__name__)
-
-TABLE_NAME = 'roles'
-TABLE_COLUMNS = '''id INT NOT NULL AUTO_INCREMENT,
-                    roleName VARCHAR(64) NOT NULL,
-                    src_cloud VARCHAR(64) NOT NULL,
-                    dst_cloud VARCHAR(64) NOT NULL,
-                    state VARCHAR(10) NOT NULL,
-                    PRIMARY KEY(id),
-                    UNIQUE (roleName, src_cloud, dst_cloud)
-                '''
 
 
 class RoleMigrationTask(task.Task):
@@ -41,59 +29,41 @@ class RoleMigrationTask(task.Task):
 
     def __init__(self, *args, **kwargs):
         super(RoleMigrationTask, self).__init__(*args, **kwargs)
+        # get keystone client for source and target clouds
         self.ks_source = get_keystone_source()
         self.ks_target = get_keystone_target()
-
-        self.s_cloud = cfg.CONF.SOURCE.os_cloud_name
-        self.t_cloud = cfg.CONF.TARGET.os_cloud_name
-
-        self.target_role_names = [role.name for role in
-                                  self.ks_target.roles.list()]
 
     @staticmethod
     def list_roles(keystone_client):
         return keystone_client.roles.list()
 
-    def init_db(self):
-        delete_all_data(TABLE_NAME)
-        print "********************"
-        create_table(TABLE_NAME, TABLE_COLUMNS, False)
-        roles_to_move = self.get_roles_to_move()
+    @staticmethod
+    def list_names(roles):
+        return [role.name for role in roles]
 
-        for role in roles_to_move:
-            record = "'null', '"+role.name+"','"\
-                     + self.s_cloud+"', '"+self.t_cloud+"', 'unknown'"
-            insert_record(TABLE_NAME, [record], False)
+    def get_roles_to_move(self):
+        roles_in_source = self.list_roles(self.ks_source)
+        target_role_names = self.list_names(self.ks_target.roles.list())
+        return [role for role in roles_in_source
+                if role.name not in target_role_names]
 
-    def migrate_one_role(self, source_role):
-        target_role = self.ks_target.roles.create(source_role.name)
-        update_table(TABLE_NAME,
-                     {'state': 'completed'},
-                     {'roleName': source_role.name,
-                      'src_cloud': self.s_cloud,
-                      'dst_cloud': self.t_cloud},
-                     True)
+    def migrate_one_role(self, role_to_move):
+        try:
+            role_moved = self.ks_target.roles.create(role_to_move.name)
+            set_complete(role_moved.name)
+        except:
+            set_error(role_to_move.name)
+            LOG.info("migrating "+role_to_move.name+" failed")
 
     def execute(self):
         LOG.debug('Migrating roles...........')
         roles_to_move = self.get_roles_to_move()
-        roles_in_target = self.list_roles(self.ks_target)
-        moved_roles = []
+        initialise_roles_mapping(self.list_names(roles_to_move))
 
         for role in roles_to_move:
-            found = False
-            for t_role in roles_in_target:
-                if role.name == t_role.name:
-                    found = True
-                    break
-            if not found:
-                self.migrate_one_role(role)
-                moved_roles.append(role.name)
-        LOG.info("Role immigration is finished")
-        return moved_roles
+            self.migrate_one_role(role)
 
-    def get_roles_to_move(self):
-        roles_in_source = self.list_roles(self.ks_source)
-        return [role for role in roles_in_source
-                if role.name not in self.target_role_names]
+        LOG.info("Role Migration is finished")
+
+
 
