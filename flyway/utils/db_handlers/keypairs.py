@@ -72,7 +72,7 @@ def delete_keypairs(values):
     """function to delete a keypair record,
     which has been migrated, into database
 
-    :param keypair_details: relevant data of migrated keypair
+    :param values: data used to filter migrated keypair record
     """
     table_name = "keypairs"
     w_dict = OrderedDict([('name', values[0]),

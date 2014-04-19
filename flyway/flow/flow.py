@@ -56,8 +56,6 @@ def execute():
     #TODO: need to figure out a better way to allow user to specify
     #TODO: specific resource to migrate
     data_required = {'tenants_to_move': ['demo']}
-
     eng = engines.load(flow, store=data_required)
-
-    result = eng.run(engine_conf='parallel')
+    result = eng.run()
     return result

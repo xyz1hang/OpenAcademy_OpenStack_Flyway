@@ -14,10 +14,10 @@ class HttpRequestHandler(object):
         in the x-auth-token header
         """
         self.auth_token = auth_token
-        address = url.split("http://").split(":")
-        self.conn = httplib.HTTPConnection(address[0], address[1])
+        address = url.split("http://")[1].split(":")
+        self.conn = httplib.HTTPConnection(host=address[0], port=address[1])
 
-    def send_request(self, method, url, headers, body,
+    def _send_request(self, method, url, headers, body,
                      ignore_result_body=False):
         """Perform an HTTP request.
 
@@ -30,8 +30,8 @@ class HttpRequestHandler(object):
         if self.auth_token:
             headers.setdefault('x-auth-token', self.auth_token)
 
-        LOG.debug('Request: %(method)s http://%(server)s:%(port)s'
-                  '%(url)s with headers %(headers)s'
+        LOG.debug('\n%(method)s request to: http://%(server)s:%(port)s'
+                  '%(url)s \nheaders: %(headers)s'
                   % {'method': method,
                      'server': self.conn.host,
                      'port': self.conn.port,

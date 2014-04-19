@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 __author__ = 'hydezhang'
 
 from utils.db_base import *
@@ -19,12 +21,14 @@ def initialise_tenants_mapping():
                  new_project_name VARCHAR(32) NOT NULL,
                  dst_uuid VARCHAR(128) NOT NULL,
                  dst_cloud VARCHAR(128) NOT NULL,
-                 image_migrated INT NOT NULL,
+                 images_migrated INT NOT NULL,
                  state VARCHAR(128) NOT NULL,
                  PRIMARY KEY(id, src_uuid, dst_uuid)
               '''
         create_table(table_name, columns, True)
         return
+
+    delete_all_data(table_name)
 
 
 def record_tenant_migrated(tenant_details):
@@ -36,17 +40,26 @@ def record_tenant_migrated(tenant_details):
     table_name = "tenants"
     values_to_insert = []
     for t_details in tenant_details:
-        values_to_insert = "NULL,'" \
-                           + t_details["project_name"] + "','" \
-                           + t_details["src_uuid"] + "','" \
-                           + t_details["src_cloud"] + "','" \
-                           + t_details["new_project_name"] + "','" \
-                           + t_details["dst_uuid"] + "','" \
-                           + t_details["dst_cloud"] + "', " \
-                           + t_details["image_migrated"] + ", '" \
-                           + t_details["state"] + "'"
+        value_to_insert = "NULL,'" \
+                          + t_details["project_name"] + "','" \
+                          + t_details["src_uuid"] + "','" \
+                          + t_details["src_cloud"] + "','" \
+                          + t_details["new_project_name"] + "','" \
+                          + t_details["dst_uuid"] + "','" \
+                          + t_details["dst_cloud"] + "', " \
+                          + t_details["images_migrated"] + ", '" \
+                          + t_details["state"] + "'"
 
-    insert_record(table_name, [values_to_insert], True)
+        # check whether record exists before insert
+        where_dict = {'src_uuid': t_details["src_uuid"],
+                      'src_cloud': t_details["src_cloud"]}
+
+        if not check_record_exist(table_name, where_dict):
+            values_to_insert.append(value_to_insert)
+            # do a update instead
+            update_migration_record(**t_details)
+
+    insert_record(table_name, values_to_insert, True)
 
 
 def get_migrated_tenant(values):
@@ -68,6 +81,7 @@ def get_migrated_tenant(values):
               .format(values[0], values[1]))
         return None
     elif len(data) > 1:
+        #TODO: not handled properly
         print("multiple migration record found for tenant '{0}' in cloud '{1}'"
               .format(values[0], values[1]))
         return None
@@ -79,9 +93,32 @@ def get_migrated_tenant(values):
                    'new_project_name': data[0][4],
                    'dst_uuid': data[0][5],
                    'dst_cloud': data[0][6],
-                   'image_migrated': data[0][7],
+                   'images_migrated': data[0][7],
                    'state': data[0][8]}
     return tenant_data
+
+
+def update_migration_record(**tenant_details):
+    """function to update tenant migration record
+
+    :param tenant_details: data used to update tenant migration record
+    """
+    table_name = "tenants"
+    s_dict = OrderedDict(
+        [('project_name', tenant_details["project_name"]),
+         ('src_uuid', tenant_details["src_uuid"]),
+         ('src_cloud', tenant_details["src_cloud"]),
+         ('new_project_name', tenant_details["new_project_name"]),
+         ('dst_uuid', tenant_details["dst_uuid"]),
+         ('dst_cloud', tenant_details["dst_cloud"]),
+         ('images_migrated', tenant_details["images_migrated"]),
+         ('state', tenant_details["state"])])
+
+    w_dict = OrderedDict([('src_uuid', tenant_details["src_uuid"]),
+                          ('src_cloud', tenant_details["src_cloud"]),
+                          ('dst_cloud', tenant_details["dst_cloud"])])
+
+    update_table(table_name, s_dict, w_dict, True)
 
 
 def delete_migration_record(values):

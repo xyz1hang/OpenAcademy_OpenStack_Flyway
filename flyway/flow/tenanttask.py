@@ -23,6 +23,10 @@ class TenantMigrationTask(task.Task):
         self.ks_source = get_keystone_source()
         self.ks_target = get_keystone_target()
 
+        # create new table if not exists or
+        # delete all data in order to be able to recording new migration
+        tenants.initialise_tenants_mapping()
+
     def migrate_one_tenant(self, tenant_name):
         try:
             s_tenant = self.ks_source.tenants.find(name=tenant_name)
@@ -40,7 +44,9 @@ class TenantMigrationTask(task.Task):
         values = [tenant_name, s_cloud_name]
         m_tenant = tenants.get_migrated_tenant(values)
 
-        if m_tenant is not None and m_tenant['state'] is "completed":
+        # this task is intent to create proxy tenant only. Tenant related
+        # resource can be migrated in separated task. Open to suggestions.
+        if m_tenant is not None and m_tenant['state'] == "proxy_created":
             print("tenant {0} in cloud {1} has already been migrated"
                   .format(m_tenant["project_name"], s_cloud_name))
             return
@@ -48,17 +54,19 @@ class TenantMigrationTask(task.Task):
         # check for tenant name duplication
         new_tenant_name = s_tenant.name
         try:
-            found = self.ks_target.tenants.find(name=s_tenant.name)
-            if found:
-                user_input = \
-                    raw_input("duplicated tenant {0} found on cloud {1}\n"
-                              "Please type in a new name or 'abort':"
-                              .format(found.name, t_cloud_name))
-                if user_input is "abort":
-                    # TODO: implement cleaning up and proper exit
-                    return None
-                elif user_input:
-                    new_tenant_name = user_input
+            found = True
+            while found:
+                found = self.ks_target.tenants.find(name=new_tenant_name)
+                if found:
+                    user_input = \
+                        raw_input("duplicated tenant {0} found on cloud {1}\n"
+                                  "Please type in a new name or 'abort':"
+                                  .format(found.name, t_cloud_name))
+                    if user_input == "abort":
+                        # TODO: implement cleaning up and proper exit
+                        return None
+                    elif user_input:
+                        new_tenant_name = user_input
         except keystone_exceptions.NotFound:
             # irrelevant exception - swallow
             pass
@@ -70,7 +78,7 @@ class TenantMigrationTask(task.Task):
                        'new_project_name': new_tenant_name,
                        'dst_uuid': s_tenant.id,
                        'dst_cloud': t_cloud_name,
-                       'image_migrated': '1',
+                       'images_migrated': '0',
                        'state': "unknown"}
 
         # create a new tenant
@@ -85,10 +93,10 @@ class TenantMigrationTask(task.Task):
         except:
             # TODO: not sure what exactly the exception will be thrown
             # TODO: upon creation failure
-            print "tenant {} migration failure".format(s_tenant.name)
+            print "tenant '{}' migration failure".format(s_tenant.name)
             # update database record
             tenant_data.update({'state': "error"})
-            tenants.record_tenant_migrated(**tenant_data)
+            tenants.record_tenant_migrated([tenant_data])
             return
 
         # add the "admin" as the default user - admin - of
@@ -105,7 +113,7 @@ class TenantMigrationTask(task.Task):
 
         tenants.record_tenant_migrated([tenant_data])
 
-    def execute(self, tenants_to_move=None):
+    def execute(self, tenants_to_move):
 
         """execute the tenant migration task
 
@@ -118,10 +126,6 @@ class TenantMigrationTask(task.Task):
         # one string gets passed in
         if type(tenants_to_move) is str:
             tenants_to_move = [tenants_to_move]
-
-        # create new table if not exists or
-        # delete all data in order to be able to recording new migration
-        tenants.initialise_tenants_mapping()
 
         if not tenants_to_move or len(tenants_to_move) == 0:
             LOG.info("Migrating all tenants ...")

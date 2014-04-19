@@ -49,17 +49,20 @@ class FlavorMigrationTask(task.Task):
             # check for tenant name duplication
             new_flavor_name = s_flavor.name
             try:
-                found = self.nv_target.flavors.find(name=s_flavor.name)
-                if found:
-                    user_input = \
-                        raw_input("duplicated flavor '{0}' found on cloud '{1}'"
-                                  "\nPlease type in a new name or 'abort':"
-                                  .format(found.name, t_cloud_name))
-                    if user_input is "abort":
-                        # TODO: implement cleaning up and proper exit
-                        return None
-                    elif user_input:
-                        new_flavor_name = user_input
+                found = True
+                while found:
+                    found = self.nv_target.flavors.find(name=new_flavor_name)
+                    if found:
+                        user_input = \
+                            raw_input("duplicated flavor '{0}' found on "
+                                      "cloud '{1}'\nPlease type in a new "
+                                      "name or 'abort':"
+                                      .format(found.name, t_cloud_name))
+                        if user_input is "abort":
+                            # TODO: implement cleaning up and proper exit
+                            return None
+                        elif user_input:
+                            new_flavor_name = user_input
 
             except nova_exceptions.NotFound:
                 # irrelevant exception swallow the exception

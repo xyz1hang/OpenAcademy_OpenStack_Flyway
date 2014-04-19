@@ -53,7 +53,7 @@ def create_database(db_name):
         cursor.execute(query_create)
         db.commit()
     except MySQLdb.Error, e:
-        print("MySQL error: {}".format(e))
+        print("MySQL error - Database creation: {}".format(e))
         db.rollback()
 
 
@@ -69,12 +69,12 @@ def create_table(table_name, columns, close):
     cursor = get_cursor(db)
 
     query = "CREATE TABLE IF NOT EXISTS {0} ({1}) ".format(table_name, columns)
-    print query
+
     try:
         cursor.execute(query)
         db.commit()
     except MySQLdb.Error, e:
-        print("MySql Connector error: {}".format(e))
+        print("MySql error - Table creation: {}".format(e))
         db.rollback()
 
     if close:
@@ -99,7 +99,7 @@ def insert_record(table_name, values, close):
             cursor.execute(query)
             db.commit()
         except MySQLdb.Error, e:
-            print("MySql Connector error: {}".format(e))
+            print("MySql error - INSERT: {}".format(e))
             db.rollback()
 
     if close:
@@ -134,7 +134,7 @@ def update_table(table_name, set_dict, where_dict, close):
         cursor.execute(query)
         db.commit()
     except MySQLdb.Error, e:
-        print("MySql error: {}".format(e))
+        print("MySql error - UPDATE: {}".format(e))
         db.rollback()
 
     if close:
@@ -143,6 +143,7 @@ def update_table(table_name, set_dict, where_dict, close):
 
 def build_where_string(where_dict):
     # build "WHERE" string
+    # TODO: needs to allow more complicated filter string e.g with OR, != etc.
     filter_str = ''
     for key in where_dict.keys():
         if key != where_dict.keys()[0]:
@@ -179,7 +180,7 @@ def read_record(table_name, columns, where_dict, close):
         cursor.execute(query)
         data = cursor.fetchall()
     except MySQLdb.Error, e:
-        print("MySQL error: {}".format(e))
+        print("MySQL error - SELECT: {}".format(e))
         db.rollback()
 
     if close:
@@ -201,7 +202,7 @@ def delete_all_data(table_name):
         cursor.execute(query)
         db.commit()
     except MySQLdb.Error, e:
-        print("MySQL error: {}".format(e))
+        print("MySQL error - DELETE ALL: {}".format(e))
         db.rollback()
 
     db.close()
@@ -220,7 +221,7 @@ def delete_record(table_name, where_dict):
         cursor.execute(query)
         db.commit()
     except MySQLdb.Error, e:
-        print("MySQL error: {}".format(e))
+        print("MySQL error - DELETE SOME: {}".format(e))
         db.rollback()
 
     db.close()
@@ -249,12 +250,7 @@ def check_record_exist(table_name, where_dict):
     db = connect(True)
     cursor = get_cursor(db)
 
-    filter_str = ''
-    for key in where_dict.keys():
-        if key != where_dict.keys()[0]:
-            filter_str += ' AND '
-        filter_str += str(key) + " = '" + str(where_dict[key]) + "'"
-
+    filter_str = build_where_string(where_dict)
     query = "SELECT * FROM {0} WHERE {1}".format(table_name, filter_str)
 
     result = cursor.execute(query)

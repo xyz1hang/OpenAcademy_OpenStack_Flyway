@@ -45,7 +45,7 @@ class KeypairMigrationTask(task.Task):
         except:
             # TODO: not sure what exactly the exception will be thrown
             # TODO: upon creation failure
-            print "tenant {} migration failure".format(s_keypair.name)
+            print "Keypair {} migration failure".format(s_keypair.name)
             # update database record
             keypair_data = keypair_data.update({'state': "error"})
             db_handler.update_keypairs(**keypair_data)
@@ -59,7 +59,7 @@ class KeypairMigrationTask(task.Task):
         """execute the keypair migration task
 
         :param keypairs_to_move: the list of keypairs to move.
-        If the not specified or length equals to 0 all tenant will be
+        If the not specified or length equals to 0 all keypair will be
         migrated, otherwise only
         specified keypairs will be migrated
         """
@@ -89,18 +89,21 @@ class KeypairMigrationTask(task.Task):
                 # check for keypair name duplication
                 new_name = keypair_name
                 try:
-                    found = self.nv_target.keypairs.find(name=keypair_name)
-                    if found:
-                        user_input = \
-                            raw_input("duplicated keypair {0} found on cloud "
-                                      "{1}\nPlease type in a new name or "
-                                      "'abort':".format(found.name,
-                                                        self.t_cloud_name))
-                        if user_input is "abort":
-                            # TODO: implement cleaning up and proper exit
-                            return None
-                        elif user_input:
-                            new_name = user_input
+                    found = True
+                    while found:
+                        found = self.nv_target.keypairs.find(name=new_name)
+                        if found:
+                            user_input = \
+                                raw_input("duplicated keypair {0} found on "
+                                          "cloud {1}\nPlease type in a new "
+                                          "name or 'abort':"
+                                          .format(found.name,
+                                                  self.t_cloud_name))
+                            if user_input is "abort":
+                                # TODO: implement cleaning up and proper exit
+                                return None
+                            elif user_input:
+                                new_name = user_input
                 except nova_exceptions.NotFound:
                     # irrelevant exception - swallow
                     pass
