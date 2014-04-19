@@ -30,6 +30,73 @@ def connect(with_db, db_name=None):
     return db
 
 
+def connect_source_db(host, db_name):
+    credentials = {'host': host,
+                   'user': 'root',
+                   'passwd': 'password',
+                   'db': db_name}
+    db = MySQLdb.connect(**credentials)
+    return db
+
+
+def read_source_record(host, db_name, table_name, columns, where_dict, close):
+    # establish connection
+    db = connect_source_db(host, db_name)
+    cursor = get_cursor(db)
+
+    filter_str = build_where_string(where_dict)
+    # build columns list
+    columns_str = ', '.join(columns)
+
+    if len(where_dict.keys()) > 0:
+        query = "SELECT {0} FROM {1} WHERE {2}".format(columns_str,
+                                                       table_name,
+                                                       filter_str)
+    else:
+        query = "SELECT {0} FROM {1} ".format(columns_str, table_name)
+
+    data = None
+    try:
+        cursor.execute(query)
+        data = cursor.fetchall()
+    except MySQLdb.Error, e:
+        print("MySQL error: {}".format(e))
+        db.rollback()
+
+    if close:
+        db.close()
+
+    return data
+
+
+def update_source_record(host, db_name, table_name, set_dict, where_dict,
+                         close):
+    db = connect_source_db(host, db_name)
+    cursor = get_cursor(db)
+
+    # building "SET" string
+    set_str = ''
+    for key in set_dict.keys():
+        if key != set_dict.keys()[0]:
+            set_str += ', '
+        set_str += str(key) + " = '" + str(set_dict[key]) + "'"
+
+    filter_str = build_where_string(where_dict)
+
+    query = "UPDATE {0} SET {1} WHERE {2}" \
+        .format(table_name, set_str, filter_str)
+
+    try:
+        cursor.execute(query)
+        db.commit()
+    except MySQLdb.Error, e:
+        print("MySql error: {}".format(e))
+        db.rollback()
+
+    if close:
+        db.close()
+
+
 def get_cursor(db):
     return db.cursor()
 

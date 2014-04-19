@@ -4,7 +4,7 @@ from tests.flow.test_base import TestBase
 from flyway.common import config
 from utils.db_handlers import tenants as db_handler
 import utils.helper
-from flow.update_projects_quotas_task import UpdateProjectsQuotas
+from flow.update_projects_quotas_task import UpdateProjectsQuotasTask
 from flow.tenanttask import TenantMigrationTask
 from keystoneclient import exceptions as keystone_exceptions
 
@@ -14,7 +14,7 @@ class UpdateProjectsQuotasTest(TestBase):
     def __init__(self, *args, **kwargs):
         super(UpdateProjectsQuotasTest, self).__init__(*args, **kwargs)
         config.parse(['--config-file', '../../etc/flyway.conf'])
-        self.task = UpdateProjectsQuotas('update_projects_quotas')
+        self.task = UpdateProjectsQuotasTask('update_projects_quotas')
         self.migration_task = TenantMigrationTask('tenant_migration_task')
         self.s_cloud_name = utils.helper.cfg.CONF.SOURCE.os_cloud_name
         self.t_cloud_name = utils.helper.cfg.CONF.TARGET.os_cloud_name
