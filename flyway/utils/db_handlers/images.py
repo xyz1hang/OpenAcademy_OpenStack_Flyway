@@ -25,9 +25,6 @@ def initialise_image_mapping():
         create_table(table_name, columns, True)
         return
 
-    # clear all data for a new migration task
-    delete_all_data(table_name)
-
 
 def record_image_migrated(image_details):
     """function to insert the detail of
@@ -56,6 +53,7 @@ def record_image_migrated(image_details):
 
         if not check_record_exist(table_name, where_dict):
             values_to_insert.append(value_to_insert)
+        else:
             # do a update instead
             update_migration_record(**img_details)
 
@@ -74,20 +72,21 @@ def get_migrated_image(values):
     filters = {"src_image_name": values[0],
                "src_uuid": values[1],
                "src_owner_uuid": values[2] if values[2] else 'NULL',
-               "src_cloud": values[3]}
+               "src_cloud": values[3],
+               "dst_cloud": values[4]}
 
     data = read_record(table_name, columns, filters, True)
 
     if not data or len(data) == 0:
         print("no migration record found for image {0} "
-              "[owned_id: {1}] in cloud {2}"
+              "[source_owner_id: {1}] in cloud {2}"
               .format(add_quotes(values[0]),
                       add_quotes(values[2]),
                       add_quotes(values[3])))
         return None
     elif len(data) > 1:
         print("multiple migration record found for image {0} "
-              "[owned_id: {1}] in cloud {2}"
+              "[source_owner_id: {1}] in cloud {2}"
               .format(add_quotes(values[0]),
                       add_quotes(values[2]),
                       add_quotes(values[3])))
@@ -129,3 +128,19 @@ def update_migration_record(**image_details):
                           ('dst_cloud', image_details["dst_cloud"])])
 
     update_table(table_name, s_dict, w_dict, True)
+
+
+def delete_migration_record(values):
+    """function to delete a image migration record in database
+
+    :param values: relevant data of image migration record
+    which is used to filter data
+    """
+    table_name = "images"
+    record_filter = {'src_image_name': values[0],
+                     'src_uuid': values[1],
+                     'src_owner_uuid': values[2],
+                     'src_cloud': values[3],
+                     'dst_cloud': values[4]}
+
+    delete_record(table_name, record_filter)

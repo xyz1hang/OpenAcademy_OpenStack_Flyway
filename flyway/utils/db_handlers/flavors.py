@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 __author__ = 'hydezhang'
 
 from utils.db_base import *
@@ -14,6 +16,7 @@ def initialise_flavor_mapping():
                      dst_flavor_name VARCHAR(32) NOT NULL,
                      dst_uuid VARCHAR(128) NOT NULL,
                      dst_cloud VARCHAR(128) NOT NULL,
+                     state VARCHAR(128) NOT NULL,
                      PRIMARY KEY(id, src_uuid)
                   '''
         create_table(table_name, columns, True)
@@ -36,9 +39,19 @@ def record_flavor_migrated(flavor_details):
                           + f_details["src_cloud"] + "','" \
                           + f_details["dst_flavor_name"] + "','" \
                           + f_details["dst_uuid"] + "','" \
-                          + f_details["dst_cloud"] + "'"
+                          + f_details["dst_cloud"] + "','" \
+                          + f_details["state"] + "'"
 
-        values_to_insert.append(value_to_insert)
+        # check whether record exists before insert
+        where_dict = {'src_uuid': f_details["src_uuid"],
+                      'src_cloud': f_details["src_cloud"],
+                      'dst_cloud': f_details["dst_cloud"]}
+
+        if not check_record_exist(table_name, where_dict):
+            values_to_insert.append(value_to_insert)
+        else:
+            # do a update instead
+            update_migration_record(**f_details)
 
     insert_record(table_name, values_to_insert, True)
 
@@ -54,7 +67,8 @@ def get_migrated_flavor(values):
     columns = ["*"]
     filters = {"src_flavor_name": values[0],
                "src_uuid": values[1],
-               "src_cloud": values[2]}
+               "src_cloud": values[2],
+               "dst_cloud": values[3]}
 
     data = read_record(table_name, columns, filters, True)
 
@@ -76,8 +90,31 @@ def get_migrated_flavor(values):
                    'src_cloud': data[0][3],
                    'dst_flavor_name': data[0][4],
                    'dst_uuid': data[0][5],
-                   'dst_cloud': data[0][6]}
+                   'dst_cloud': data[0][6],
+                   'state': data[0][7]}
     return flavor_data
+
+
+def update_migration_record(**flavor_details):
+    """function to update flavor migration record
+
+    :param flavor_details: data used to update tenant migration record
+    """
+    table_name = "flavors"
+    s_dict = OrderedDict(
+        [('src_flavor_name', flavor_details["src_flavor_name"]),
+         ('src_uuid', flavor_details["src_uuid"]),
+         ('src_cloud', flavor_details["src_cloud"]),
+         ('dst_flavor_name', flavor_details["dst_flavor_name"]),
+         ('dst_uuid', flavor_details["dst_uuid"]),
+         ('dst_cloud', flavor_details["dst_cloud"]),
+         ('state', flavor_details["state"])])
+
+    w_dict = OrderedDict([('src_uuid', flavor_details["src_uuid"]),
+                          ('src_cloud', flavor_details["src_cloud"]),
+                          ('dst_cloud', flavor_details["dst_cloud"])])
+
+    update_table(table_name, s_dict, w_dict, True)
 
 
 def delete_migration_record(values):
@@ -89,6 +126,7 @@ def delete_migration_record(values):
     table_name = "flavors"
     record_filter = {'src_flavor_name': values[0],
                      'src_uuid': values[1],
-                     'src_cloud': values[2]}
+                     'src_cloud': values[2],
+                     'dst_cloud': values[3]}
 
     delete_record(table_name, record_filter)

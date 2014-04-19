@@ -1,13 +1,12 @@
 import logging
+import os
 
 from glanceclient import exc
-
+import sys
 from taskflow import task
 
 from utils.db_handlers import images
-
 from utils.db_handlers import tenants
-from utils.http_client import HttpRequestHandler
 from utils.helper import *
 from utils.db_base import *
 
@@ -27,74 +26,7 @@ class ImageMigrationTask(task.Task):
         self.gl_source = get_glance_source(self.ks_source)
         self.gl_target = get_glance_target(self.ks_target)
 
-        source_glance_server_url = self.gl_source.endpoint
-        source_auth_token = self.gl_source.auth_token
-        self.s_server_client = HttpRequestHandler(
-            source_glance_server_url, source_auth_token)
-
-        target_glance_server_url = self.gl_target.endpoint
-        target_auth_token = self.gl_target.auth_token
-        self.t_server_client = HttpRequestHandler(
-            target_glance_server_url, target_auth_token)
-
         images.initialise_image_mapping()
-
-    # TODO: all these http request related task can be
-    # TODO: restructured into the http_client.py or different modules
-    # TODO: each related to one task
-    @staticmethod
-    def _attr_to_header(image):
-        """Convert image object attributes to required HTTP request header
-        for using glance REST API.
-
-        :param image: the image object from which the attributes are extracted
-        :rtype : A dictionary as HTTP request header for glance API
-        """
-        supperted_headers = ["name", "id", "store", "disk_format",
-                             "properties", "container_format", "size",
-                             "checksum", "is_public", "min_ram", "min_disk"]
-        header = {}
-        for attr in image.__dict__:
-            # skip attributes that not supported by the REST API
-            if attr not in supperted_headers:
-                continue
-
-            if attr is 'properties':
-                for sub_attr in getattr(image, attr):
-                    header['x-image-meta-property-%s' % sub_attr] = \
-                        str(getattr(getattr(image, attr), sub_attr))
-
-            else:
-                header['x-image-meta-%s' % attr] = str(getattr(image, attr))
-
-        # don't supply id. Let glance server generate a new
-        # id for the image. Avoid handling conflict exception
-        if "x-image-meta-id" in header.keys():
-            del header['x-image-meta-id']
-
-        return header
-
-    @staticmethod
-    def _header_to_attr(header):
-        """The reverse operation of attr_to_header()
-        Convert HTTP response header to object attributes stored as dictionary
-
-        :param header: a list of key value pair, which stores
-        HTTP response message header
-        :rtype : image meta data as dictionary
-        """
-        attributes = {}
-        prefix = 'x-image-meta-'
-        property_prefix = 'x-image-meta-property-'
-
-        for (key, value) in header:
-            if key.startswith(property_prefix):
-                sub_attribute = key.replace(property_prefix, '')
-                attributes.setdefault('properties', {})
-                attributes['properties'].update({sub_attribute: value})
-            else:
-                attributes[key.replace(prefix, '')] = value
-        return attributes
 
     def get_image(self, image_id):
         """Fetch image data from glance server directly via http request.
@@ -119,15 +51,19 @@ class ImageMigrationTask(task.Task):
         :rtype : a tuple of (http response headers, http response body)
         """
 
-        image_migrated = self.gl_target.images.create(
-            name=image_meta.name,
-            properties=image_meta.properties, size=image_meta.size,
-            disk_format=image_meta.disk_format,
-            container_format=image_meta.container_format,
-            is_public=image_meta.is_public,
-            checksum=image_meta.checksum, data=image_data,
-            min_ram=image_meta.min_ram, min_disk=image_meta.min_disk,
-            owner=owner_target_id)
+        supported_headers = ["name", "id", "store", "disk_format", "owner"
+                             "properties", "container_format", "size", "data"
+                             "checksum", "is_public", "min_ram", "min_disk"]
+
+        img_meta = {}
+        for attr in image_meta.__dict__:
+            if attr in supported_headers:
+                img_meta[attr] = getattr(image_meta, attr)
+
+        img_meta.update({'owner': owner_target_id})
+        img_meta.update({'data': image_data})
+
+        image_migrated = self.gl_target.images.create(**img_meta)
 
         return image_migrated
 
@@ -164,20 +100,21 @@ class ImageMigrationTask(task.Task):
             # prepare for database record update
             dest_details = {"dst_image_name": m_img_meta.name,
                             "dst_uuid": m_img_meta.id,
-                            "dst_owner_tenant":
-                                getattr(m_img_meta, 'owner', 'NULL'),
+                            "dst_owner_tenant": getattr(m_img_meta, 'owner',
+                                                        'NULL'),
                             "dst_cloud": cfg.CONF.TARGET.os_cloud_name,
                             "checksum": m_img_meta.checksum}
 
-            # check checksum. If the checksum is not correct
+            # check checksum if provided. If the checksum is not correct
             # it will still be stored in the database in order
             # to be later loaded for further checking (improvement is possible)
-            if image_meta.checksum == m_img_meta.checksum:
-                dest_details.update({"state": "Completed"})
-            else:
-                dest_details.update({"state": "Checksum mismatch"})
+            if getattr(image_meta, 'checksum', None):
+                if image_meta.checksum == m_img_meta.checksum:
+                    dest_details.update({"state": "Completed"})
+                else:
+                    dest_details.update({"state": "Checksum mismatch"})
 
-            logging.debug("Image '%s' upload completed"%image_meta.name)
+            logging.debug("Image '%s' upload completed" % image_meta.name)
 
         # catch exception thrown by the http_client
         except exc.InvalidEndpoint as e:
@@ -195,9 +132,11 @@ class ImageMigrationTask(task.Task):
             dest_details = {"state": "Error"}
 
         except Exception as e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            details = str(exc_type + " " + str(e) + " " + exc_tb.tb_lineno)
             print "Fail to processing image [Name: '{0}' ID: '{1}']\n" \
                   "Details: {2}".format(image_meta.name,
-                                        image_meta.id, str(e))
+                                        image_meta.id, details)
             dest_details = {"state": "Error"}
 
         image_migration_record.update(dest_details)
@@ -222,35 +161,35 @@ class ImageMigrationTask(task.Task):
                 new_kernel_id = self.get_and_upload_img(
                     image_meta, owner_target_id)
                 if not new_kernel_id:
-                    print "unable to upload kernel image [Name: '{0}' " \
+                    print "Unable to upload kernel image [Name: '{0}' " \
                           "ID: '{1}'] for image [Name: '{2}' " \
                           "ID: '{3}']".format(image_meta.name, image_meta.id,
                                               image.name, image.id)
                     return None
                 # update the corresponding entry in the original
                 # image meta_data dictionary
-                getattr(image, 'properties')\
-                     .update({'kernel_id': new_kernel_id})
+                getattr(image, 'properties') \
+                    .update({'kernel_id': new_kernel_id})
 
             if ramdisk_id:
                 image_meta = self.gl_source.images.get(ramdisk_id)
                 new_ramdisk_id = self.get_and_upload_img(
                     image_meta, owner_target_id)
                 if not new_ramdisk_id:
-                    print "unable to upload ramdisk image [Name: '{0}' " \
+                    print "Unable to upload ramdisk image [Name: '{0}' " \
                           "ID: '{1}'] for image [Name: '{2}' " \
                           "ID: '{3}']".format(image_meta.name, image_meta.id,
                                               image.name, image.id)
                     return None
                 # update the corresponding entry in the original
                 # image meta_data dictionary
-                getattr(image, 'properties')\
+                getattr(image, 'properties') \
                     .update({'ramdisk_id': new_ramdisk_id})
 
             # upload the image
             new_img_id = self.get_and_upload_img(image, owner_target_id)
             if not new_img_id:
-                print "unable to upload image [Name: '{0}' " \
+                print "Unable to upload image [Name: '{0}' " \
                       "ID: '{1}']".format(image.name, image.id)
                 return None
 
@@ -260,66 +199,96 @@ class ImageMigrationTask(task.Task):
     def check_image_migrated(image):
         # check whether it has been migrated
         filter_values = [image.name, image.id, image.owner,
-                         cfg.CONF.SOURCE.os_cloud_name]
+                         cfg.CONF.SOURCE.os_cloud_name,
+                         cfg.CONF.TARGET.os_cloud_name]
         m_image = images.get_migrated_image(filter_values)
         if m_image and m_image['state'] == 'Completed':
             return True
 
         return False
 
-    def execute(self, tenant_to_process=None):
+    def execute(self, images_to_migrate=None, tenant_to_process=None):
         """execute the image migration task
 
         :param tenant_to_process: list of tenants of which
         all images will be migrated
+        :param images_to_migrate: list of IDs of images to be migrated
         """
-        images.initialise_image_mapping()
 
-        # migrate all public images
-        all_images = self.gl_source.images.list()
-        for image in all_images:
-            if not image.is_public:
-                continue
+        images_to_move = []
 
-            # check whether it has been migrated
-            if self.check_image_migrated(image):
-                continue
+        # migrate given images
+        if images_to_migrate:
+            for img_id in images_to_migrate:
+                try:
+                    img = self.gl_source.images.get(img_id)
+                    img_owner_pair = {'img': img,
+                                      'owner': getattr(img, 'owner', None)}
+                    images_to_move.append(dict(img_owner_pair))
 
-            self.migrate_one_image(image, image.owner)
+                except exc.HTTPNotFound:
+                    print ("Can not find image of id: '{0}' on cloud '{1}'"
+                           .format(img_id, cfg.CONF.SOURCE.os_cloud_name))
 
-        owner_tenants = tenant_to_process
-        if not owner_tenants:
-            LOG.info("Migrating images for all tenants...")
-            owner_tenants = self.ks_source.tenants.list()
+        # migrate images from given tenants or all images
+        else:
+            owner_tenants = tenant_to_process
+            if not owner_tenants:
+                owner_tenants = []
+                LOG.info("Migrating images for all tenants...")
+                for tenant in self.ks_source.tenants.list():
+                    owner_tenants.append(tenant.name)
 
-        for tenant in owner_tenants:
+            # migrate all public images
+            all_images = self.gl_source.images.list()
+            for image in all_images:
+                if not image.is_public:
+                    continue
 
-            tenant_name = tenant.name
-            s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
-
-            LOG.info("Processing tenant '%s'..." % tenant_name)
-            filter_values = [tenant.name, s_cloud_name]
-
-            m_tenants = tenants.get_migrated_tenant(filter_values)
-            migrated_tenant = m_tenants if m_tenants else None
-            if not migrated_tenant:
-                print ("Skipping image migration for tenant '%s', since it "
-                       "hasn't been migrated yet." % tenant.name)
-                continue
-            if migrated_tenant['images_migrated']:
-                # images already migrated for this tenant
-                print ("All images have been migrated for tenant '%s'"
-                       % migrated_tenant['project_name'])
-                return
-
-            images_to_migrate = \
-                self.gl_source.images.list(owner=migrated_tenant['src_uuid'])
-
-            for image in images_to_migrate:
                 # check whether it has been migrated
                 if self.check_image_migrated(image):
                     continue
 
-                self.migrate_one_image(image, migrated_tenant['dst_uuid'])
+                img_owner_pair = {'img': image, 'owner': None}
+                images_to_move.append(dict(img_owner_pair))
 
-                #TODO: update image migration state of corresponding project
+            # migrate images owned by tenants
+            for tenant_name in owner_tenants:
+
+                s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
+                t_cloud_name = cfg.CONF.TARGET.os_cloud_name
+
+                LOG.info("Processing tenant '%s'..." % tenant_name)
+                filter_values = [tenant_name, s_cloud_name, t_cloud_name]
+
+                m_tenants = tenants.get_migrated_tenant(filter_values)
+                migrated_tenant = m_tenants if m_tenants else None
+                if not migrated_tenant:
+                    print ("Skipping image migration for tenant '%s', since it "
+                           "has no migration record." % tenant_name)
+                    continue
+                if migrated_tenant['images_migrated']:
+                    # images already migrated for this tenant
+                    print ("All images have been migrated for tenant '%s'"
+                           % migrated_tenant['project_name'])
+                    return
+
+                owned_images = self.gl_source.images.list(
+                    owner=migrated_tenant['src_uuid'])
+                for img in owned_images:
+                    img_owner_pair = {'img': img,
+                                      'owner': migrated_tenant['dst_uuid']}
+                    images_to_move.append(dict(img_owner_pair))
+
+        for image_owner_pair in images_to_move:
+            # check whether it has been migrated
+            if self.check_image_migrated(image_owner_pair['img']):
+                print ("image [Name: '{0}', ID: '{1}' has been migrated"
+                       .format(image_owner_pair['img'].name,
+                               image_owner_pair['img'].id))
+                continue
+
+            self.migrate_one_image(image_owner_pair['img'],
+                                   image_owner_pair['owner'])
+
+            #TODO: update image migration state of corresponding project

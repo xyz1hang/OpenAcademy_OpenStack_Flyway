@@ -48,9 +48,9 @@ class FlavorTaskTest(TestBase):
     def clean_up(self, flavor_to_migrate, migrated_flavor=None):
         self.migration_task.nv_source.flavors.delete(flavor_to_migrate)
         # clean database
-        filter_values = [flavor_to_migrate.name,
-                         flavor_to_migrate.id,
-                         cfg.CONF.SOURCE.os_cloud_name]
+        filter_values = [flavor_to_migrate.name, flavor_to_migrate.id,
+                         cfg.CONF.SOURCE.os_cloud_name,
+                         cfg.CONF.TARGET.os_cloud_name]
         flavors.delete_migration_record(filter_values)
 
         if migrated_flavor:

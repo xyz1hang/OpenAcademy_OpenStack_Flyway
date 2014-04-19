@@ -24,6 +24,9 @@ class FlavorMigrationTask(task.Task):
         self.nv_source = get_nova_source()
         self.nv_target = get_nova_target()
 
+        # create new table if not exists
+        flavors.initialise_flavor_mapping()
+
     def migrate_one_flavor(self, flavor_name):
         try:
             s_flavor = self.nv_source.flavors.find(name=flavor_name)
@@ -38,7 +41,7 @@ class FlavorMigrationTask(task.Task):
         t_cloud_name = cfg.CONF.TARGET.os_cloud_name
 
         # check whether the tenant has been migrated
-        values = [s_flavor, s_flavor.id, s_cloud_name]
+        values = [s_flavor, s_flavor.id, s_cloud_name, t_cloud_name]
         m_flavor = flavors.get_migrated_flavor(values)
 
         if m_flavor is not None:
@@ -79,18 +82,33 @@ class FlavorMigrationTask(task.Task):
                 'is_public': getattr(s_flavor,
                                      'os-flavor-access:is_public', False)}
 
-            # create a new tenant
-            migrated_flavor = self.nv_target.flavors.create(
-                **new_flavor_details)
-
-            # record in database
+            # preparing record for inserting into database
             flavor_migration_data = {'src_flavor_name': s_flavor.name,
                                      'src_uuid': s_flavor.id,
                                      'src_cloud': s_cloud_name,
                                      'dst_flavor_name': new_flavor_name,
-                                     'dst_uuid': migrated_flavor.id,
-                                     'dst_cloud': t_cloud_name}
+                                     'dst_uuid': "NULL",
+                                     'dst_cloud': t_cloud_name,
+                                     'state': "unknown"}
 
+            # create a new tenant
+            try:
+                migrated_flavor = self.nv_target.flavors.create(
+                    **new_flavor_details)
+
+                flavor_migration_data.update({'dst_uuid': migrated_flavor.id})
+
+            except Exception as e:
+            # TODO: not sure what exactly the exception will be thrown
+            # TODO: upon creation failure
+                print "flavor '{}' migration failure\nDetails:"\
+                    .format(s_flavor.name, e)
+                # update database record
+                flavor_migration_data.update({'state': "error"})
+                flavors.record_flavor_migrated([flavor_migration_data])
+                return
+
+            flavor_migration_data.update({'state': "completed"})
             flavors.record_flavor_migrated([flavor_migration_data])
 
     def execute(self, flavors_to_migrate=None):
@@ -106,9 +124,6 @@ class FlavorMigrationTask(task.Task):
         # one string gets passed in
         if type(flavors_to_migrate) is str:
             flavors_to_migrate = [flavors_to_migrate]
-
-        # create new table if not exists
-        flavors.initialise_flavor_mapping()
 
         flavors_to_move = []
         if not flavors_to_migrate or len(flavors_to_migrate) == 0:

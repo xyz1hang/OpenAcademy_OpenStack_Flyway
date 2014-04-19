@@ -36,7 +36,7 @@ def initialise_users_mapping(ks_source, target_user_names):
 
     init_users = []
     for user in ks_source.users.list():
-        if user.name not in target_user_names and not is_migrated(user):
+        if user.name not in target_user_names and not existed(user):
             init_users.append(
                 init_string.format(user.name, user.email))
             LOG.debug("insert user:")
@@ -45,15 +45,14 @@ def initialise_users_mapping(ks_source, target_user_names):
     insert_record(TABLE_NAME, init_users, True)
 
 
-def is_migrated(user):
+def existed(user):
     filters = {
         "name": user.name,
         "src_cloud": cfg.CONF.SOURCE.os_cloud_name,
-        "dst_cloud": cfg.CONF.TARGET.os_cloud_name,
-        "state": "completed"
+        "dst_cloud": cfg.CONF.TARGET.os_cloud_name
     }
     data = read_record(TABLE_NAME, ["0"], filters, True)
-    return data is not None or len(data) > 0
+    return data is not None and len(data) > 0
 
 
 def delete_migrated_users():

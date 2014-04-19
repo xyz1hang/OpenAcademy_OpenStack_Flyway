@@ -1,8 +1,7 @@
-from collections import OrderedDict
-
 __author__ = 'hydezhang'
 
 from utils.db_base import *
+from collections import OrderedDict
 
 
 def initialise_tenants_mapping():
@@ -22,13 +21,12 @@ def initialise_tenants_mapping():
                  dst_uuid VARCHAR(128) NOT NULL,
                  dst_cloud VARCHAR(128) NOT NULL,
                  images_migrated INT NOT NULL,
+                 quota_updated INT NOT NULL,
                  state VARCHAR(128) NOT NULL,
                  PRIMARY KEY(id, src_uuid, dst_uuid)
               '''
         create_table(table_name, columns, True)
         return
-
-    delete_all_data(table_name)
 
 
 def record_tenant_migrated(tenant_details):
@@ -41,21 +39,24 @@ def record_tenant_migrated(tenant_details):
     values_to_insert = []
     for t_details in tenant_details:
         value_to_insert = "NULL,'" \
-                          + t_details["project_name"] + "','" \
-                          + t_details["src_uuid"] + "','" \
-                          + t_details["src_cloud"] + "','" \
-                          + t_details["new_project_name"] + "','" \
-                          + t_details["dst_uuid"] + "','" \
-                          + t_details["dst_cloud"] + "', " \
-                          + t_details["images_migrated"] + ", '" \
-                          + t_details["state"] + "'"
+                           + t_details["project_name"] + "','" \
+                           + t_details["src_uuid"] + "','" \
+                           + t_details["src_cloud"] + "','" \
+                           + t_details["new_project_name"] + "','" \
+                           + t_details["dst_uuid"] + "','" \
+                           + t_details["dst_cloud"] + "','" \
+                           + t_details["images_migrated"] + "','" \
+                           + t_details["quota_updated"] + "','" \
+                           + t_details["state"] + "'"
 
         # check whether record exists before insert
         where_dict = {'src_uuid': t_details["src_uuid"],
-                      'src_cloud': t_details["src_cloud"]}
+                      'src_cloud': t_details["src_cloud"],
+                      'dst_cloud': t_details["dst_cloud"]}
 
         if not check_record_exist(table_name, where_dict):
             values_to_insert.append(value_to_insert)
+        else:
             # do a update instead
             update_migration_record(**t_details)
 
@@ -72,7 +73,8 @@ def get_migrated_tenant(values):
     columns = ["*"]
 
     filters = {"project_name": values[0],
-               "src_cloud": values[1]}
+               "src_cloud": values[1],
+               "dst_cloud": values[2]}
 
     data = read_record(table_name, columns, filters, True)
 
@@ -94,7 +96,8 @@ def get_migrated_tenant(values):
                    'dst_uuid': data[0][5],
                    'dst_cloud': data[0][6],
                    'images_migrated': data[0][7],
-                   'state': data[0][8]}
+                   'quota_updated': data[0][8],
+                   'state': data[0][9]}
     return tenant_data
 
 
@@ -112,6 +115,7 @@ def update_migration_record(**tenant_details):
          ('dst_uuid', tenant_details["dst_uuid"]),
          ('dst_cloud', tenant_details["dst_cloud"]),
          ('images_migrated', tenant_details["images_migrated"]),
+         ('quota_updated', tenant_details["quota_updated"]),
          ('state', tenant_details["state"])])
 
     w_dict = OrderedDict([('src_uuid', tenant_details["src_uuid"]),
@@ -130,6 +134,7 @@ def delete_migration_record(values):
     table_name = "tenants"
     record_filter = {'project_name': values[0],
                      'src_uuid': values[1],
-                     'src_cloud': values[2]}
+                     'src_cloud': values[2],
+                     'dst_cloud': values[3]}
 
     delete_record(table_name, record_filter)

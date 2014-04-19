@@ -1,6 +1,6 @@
 import logging
 from taskflow import task
-import utils.helper
+from utils.helper import *
 from utils.resourcetype import ResourceType
 from utils.db_handlers import keypairs as db_handler
 from utils import exceptions
@@ -17,35 +17,26 @@ class KeypairMigrationTask(task.Task):
     def __init__(self, *args, **kwargs):
         super(KeypairMigrationTask, self).__init__(*args, **kwargs)
         # config must be ready at this point
-        self.nv_source = utils.helper.get_nova_source()
-        self.nv_target = utils.helper.get_nova_target()
+        self.nv_source = get_nova_source()
+        self.nv_target = get_nova_target()
 
-        self.s_cloud_name = utils.helper.cfg.CONF.SOURCE.os_cloud_name
-        self.t_cloud_name = utils.helper.cfg.CONF.TARGET.os_cloud_name
+        self.s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
+        self.t_cloud_name = cfg.CONF.TARGET.os_cloud_name
 
-    def migrate_one_keypair(self, keypair_name):
-        try:
-            s_keypair = self.nv_source.keypairs.find(name=keypair_name)
-        except nova_exceptions.NotFound:
-            # encapsulate exceptions to make it more understandable
-            # to user. Other exception handling mechanism can be added later
-            raise exceptions.ResourceNotFoundException(
-                ResourceType.keypair, keypair_name,
-                utils.helper.cfg.CONF.SOURCE.os_cloud_name)
-
+    def migrate_one_keypair(self, keypair_id):
         # create a new keypair
-        values = [s_keypair.name, self.s_cloud_name, self.t_cloud_name]
+        values = [keypair_id, self.s_cloud_name, self.t_cloud_name]
         keypair_data = db_handler.get_keypairs(values)
         migrated_keypair = None
         try:
             migrated_keypair = self.nv_target.keypairs.create(
-                s_keypair.name, public_key=s_keypair.public_key)
+                keypair_data['new_name'], public_key=keypair_data['public_key'])
         except IOError as (err_no, strerror):
             print "I/O error({0}): {1}".format(err_no, strerror)
         except:
             # TODO: not sure what exactly the exception will be thrown
             # TODO: upon creation failure
-            print "Keypair {} migration failure".format(s_keypair.name)
+            print "Keypair {} migration failure".format(keypair_data['name'])
             # update database record
             keypair_data = keypair_data.update({'state': "error"})
             db_handler.update_keypairs(**keypair_data)
@@ -60,8 +51,7 @@ class KeypairMigrationTask(task.Task):
 
         :param keypairs_to_move: the list of keypairs to move.
         If the not specified or length equals to 0 all keypair will be
-        migrated, otherwise only
-        specified keypairs will be migrated
+        migrated, otherwise only specified keypairs will be migrated
         """
 
         # in case only one string gets passed in
@@ -75,19 +65,30 @@ class KeypairMigrationTask(task.Task):
             LOG.info("Migrating all keypairs ...")
             keypairs_to_move = []
             for keypair in self.nv_source.keypairs.list():
-                keypairs_to_move.append(keypair.name)
+                keypairs_to_move.append(keypair.id)
+            print keypairs_to_move
         else:
             LOG.info("Migrating given keypairs of size {} ...\n"
                      .format(len(keypairs_to_move)))
 
-        for keypair_name in keypairs_to_move:
-            values = [keypair_name, self.s_cloud_name, self.t_cloud_name]
+        for keypair_id in keypairs_to_move:
+            values = [keypair_id, self.s_cloud_name, self.t_cloud_name]
             m_keypair = db_handler.get_keypairs(values)
 
             # add keypairs that have not been stored in the database
             if m_keypair is None:
+                try:
+                    s_keypair = self.nv_source.keypairs.find(id=keypair_id)
+                except nova_exceptions.NotFound:
+                    # encapsulate exceptions to make it more understandable
+                    # to user. Other exception handling
+                    # mechanism can be added later
+                    raise exceptions.ResourceNotFoundException(
+                        ResourceType.keypair, keypair_id,
+                        cfg.CONF.SOURCE.os_cloud_name)
+
                 # check for keypair name duplication
-                new_name = keypair_name
+                new_name = s_keypair.name
                 try:
                     found = True
                     while found:
@@ -108,33 +109,23 @@ class KeypairMigrationTask(task.Task):
                     # irrelevant exception - swallow
                     pass
 
-                try:
-                    keypair = self.nv_source.keypairs.find(name=keypair_name)
-                except nova_exceptions.NotFound:
-                    # encapsulate exceptions to make it more understandable
-                    # to user. Other exception handling
-                    # mechanism can be added later
-                    raise exceptions.ResourceNotFoundException(
-                        ResourceType.keypair, keypair_name,
-                        utils.helper.cfg.CONF.SOURCE.os_cloud_name)
-
-                keypair_data = {'name': keypair.name,
-                                'public_key': keypair.public_key,
-                                'src_uuid': keypair.id,
+                keypair_data = {'name': s_keypair.name,
+                                'public_key': s_keypair.public_key,
+                                'src_uuid': keypair_id,
                                 'src_cloud': self.s_cloud_name,
                                 'new_name': new_name,
-                                'dst_uuid': keypair.id,
+                                'dst_uuid': s_keypair.id,
                                 'dst_cloud': self.t_cloud_name,
                                 'state': "unknown"}
                 db_handler.record_keypairs([keypair_data])
 
-                LOG.info("Migrating keypair '{}'\n".format(keypair_name))
-                self.migrate_one_keypair(keypair_name)
+                LOG.info("Migrating keypair '{}'\n".format(keypair_id))
+                self.migrate_one_keypair(keypair_id)
 
             else:
-                if m_keypair['state'] is "completed":
+                if m_keypair['state'] == "completed":
                     print("keypair {0} in cloud {1} has already been migrated"
-                          .format(keypair_name, self.s_cloud_name))
+                          .format(keypair_id, self.s_cloud_name))
                 else:
-                    LOG.info("Migrating keypair '{}'\n".format(keypair_name))
-                    self.migrate_one_keypair(keypair_name)
+                    LOG.info("Migrating keypair '{}'\n".format(keypair_id))
+                    self.migrate_one_keypair(keypair_id)

@@ -64,7 +64,14 @@ class UserMigrationTask(task.Task):
         """
         if user.email is not None:
             password = generate_new_password()
-            send_reset_password_email(user.email, password)
+            try:
+                send_reset_password_email(user.email, password)
+            except Exception,e:
+                password = default_password
+                LOG.error("Error happened when \
+                           sending password-resetting email")
+                LOG.error(e.message)
+
         else:
             password = default_password
 
@@ -81,6 +88,7 @@ class UserMigrationTask(task.Task):
             if migrated_user is not None:
                 migrated_users.append(migrated_user)
 
-        delete_migrated_users()
+        # TODO: When to delete the record in Database?
+        #delete_migrated_users()
 
         return migrated_users

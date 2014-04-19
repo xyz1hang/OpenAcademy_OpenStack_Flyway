@@ -1,4 +1,5 @@
 import logging
+import sys
 
 from taskflow import task
 from keystoneclient import exceptions as keystone_exceptions
@@ -41,7 +42,7 @@ class TenantMigrationTask(task.Task):
         t_cloud_name = cfg.CONF.TARGET.os_cloud_name
 
         # check whether the tenant has been migrated
-        values = [tenant_name, s_cloud_name]
+        values = [tenant_name, s_cloud_name, t_cloud_name]
         m_tenant = tenants.get_migrated_tenant(values)
 
         # this task is intent to create proxy tenant only. Tenant related
@@ -79,6 +80,7 @@ class TenantMigrationTask(task.Task):
                        'dst_uuid': s_tenant.id,
                        'dst_cloud': t_cloud_name,
                        'images_migrated': '0',
+                       'quota_updated': '0',
                        'state': "unknown"}
 
         # create a new tenant
@@ -90,10 +92,13 @@ class TenantMigrationTask(task.Task):
                 s_tenant.enabled)
         except IOError as (err_no, strerror):
             print "I/O error({0}): {1}".format(err_no, strerror)
-        except:
+        except Exception as e:
             # TODO: not sure what exactly the exception will be thrown
             # TODO: upon creation failure
-            print "tenant '{}' migration failure".format(s_tenant.name)
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            details = str(exc_type + " " + str(e) + " " + exc_tb.tb_lineno)
+            print "tenant '{}' migration failure\nDetails:"\
+                .format(s_tenant.name, details)
             # update database record
             tenant_data.update({'state': "error"})
             tenants.record_tenant_migrated([tenant_data])
