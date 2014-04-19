@@ -11,13 +11,13 @@ from utils import exceptions
 LOG = logging.getLogger(__name__)
 
 
-class UpdateProjectsQuotas(task.Task):
+class UpdateProjectsQuotasTask(task.Task):
     """
     Task to update quotas for all migrated projects
     """
 
     def __init__(self, *args, **kwargs):
-        super(UpdateProjectsQuotas, self).__init__(*args, **kwargs)
+        super(UpdateProjectsQuotasTask, self).__init__(*args, **kwargs)
 
         self.s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
         self.t_cloud_name = cfg.CONF.TARGET.os_cloud_name

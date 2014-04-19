@@ -23,20 +23,19 @@ class KeypairTaskTest(TestBase):
         keypair_name = "keypair_name_test"
         keypair_to_migrate = self.migration_task.nv_source.keypairs.create(
             keypair_name)
-        keypair_id = keypair_to_migrate.id
 
-        self.migration_task.execute([keypair_id])
+        keypair_fingerprint = keypair_to_migrate.fingerprint
+        self.migration_task.execute([keypair_fingerprint])
 
         migrated_keypair = None
         try:
             # get the tenant data that has been migrated from src to dst
-            values = [keypair_id, self.s_cloud_name, self.t_cloud_name]
+            values = [keypair_fingerprint, self.s_cloud_name,
+                      self.t_cloud_name]
             keypair_data = db_handler.get_keypairs(values)
 
-            new_name = keypair_data['new_name']
-            new_id = keypair_data['dst_uuid']
             migrated_keypair = self.migration_task.nv_target.keypairs.\
-                find(id=new_id)
+                find(fingerprint=keypair_fingerprint)
 
             self.assertIsNotNone(migrated_keypair)
             self.assertEqual("completed", keypair_data['state'])
@@ -48,6 +47,8 @@ class KeypairTaskTest(TestBase):
         finally:
             self.migration_task.nv_source.keypairs.delete(keypair_to_migrate)
             if migrated_keypair is not None:
-                self.migration_task.nv_target.keypairs.delete(migrated_keypair)
-            values = [keypair_id, self.s_cloud_name, self.t_cloud_name]
+                self.migration_task.nv_target.keypairs.\
+                    delete(migrated_keypair)
+            values = [keypair_fingerprint, self.s_cloud_name,
+                      self.t_cloud_name]
             db_handler.delete_keypairs(values)
