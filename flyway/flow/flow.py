@@ -24,6 +24,8 @@ from roletask import RoleMigrationTask
 from imagetask import ImageMigrationTask
 from keypairtask import KeypairMigrationTask
 from instancetask import InstanceMigrationTask
+from keypairtask_nova_db import KeypairNovaDBMigrationTask
+from update_keypair_user_task import UpdateKeypairUserTask
 
 
 def get_flow():
@@ -39,10 +41,12 @@ def get_flow():
         #RoleMigrationTask('role_migration_task'),
         ImageMigrationTask('image_migration_task'),
         #KeypairMigrationTask('keypairs_migration_task')
+        #KeypairNovaDBMigrationTask('Keypairs_migration_task')
         #InstanceMigrationTask('instances_migration_task')
 
         # after resource migration:
         #UpdateProjectsQuotaTask('update_projects_quotas')
+        #UpdateKeypairUserTask('update_keypairs_user_ids')
     )
 
     return flow

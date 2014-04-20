@@ -39,15 +39,15 @@ def record_tenant_migrated(tenant_details):
     values_to_insert = []
     for t_details in tenant_details:
         value_to_insert = "NULL,'" \
-                           + t_details["project_name"] + "','" \
-                           + t_details["src_uuid"] + "','" \
-                           + t_details["src_cloud"] + "','" \
-                           + t_details["new_project_name"] + "','" \
-                           + t_details["dst_uuid"] + "','" \
-                           + t_details["dst_cloud"] + "','" \
-                           + t_details["images_migrated"] + "','" \
-                           + t_details["quota_updated"] + "','" \
-                           + t_details["state"] + "'"
+                          + t_details["project_name"] + "','" \
+                          + t_details["src_uuid"] + "','" \
+                          + t_details["src_cloud"] + "','" \
+                          + t_details["new_project_name"] + "','" \
+                          + t_details["dst_uuid"] + "','" \
+                          + t_details["dst_cloud"] + "','" \
+                          + t_details["images_migrated"] + "','" \
+                          + t_details["quota_updated"] + "','" \
+                          + t_details["state"] + "'"
 
         # check whether record exists before insert
         where_dict = {'src_uuid': t_details["src_uuid"],

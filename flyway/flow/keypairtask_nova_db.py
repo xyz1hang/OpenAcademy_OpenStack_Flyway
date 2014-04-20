@@ -19,17 +19,20 @@ class KeypairNovaDBMigrationTask(task.Task):
 
         self.s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
         self.t_cloud_name = cfg.CONF.TARGET.os_cloud_name
+        self.s_host = cfg.CONF.SOURCE.os_auth_url.split("http://")[1].split(":")[0]
 
     def migrate_one_keypair(self, keypair_fingerprint):
         # create a new keypair
         values = [keypair_fingerprint, self.s_cloud_name, self.t_cloud_name]
         keypair_data = db_handler.get_keypairs(values)
-        migrated_keypair = None
+
         try:
-            migrated_keypair = self.nv_target.keypairs.create(
-                keypair_data['name'], public_key=keypair_data['public_key'])
+            self.nv_target.keypairs.create\
+                (keypair_data['name'], public_key=keypair_data['public_key'])
+
         except IOError as (err_no, strerror):
             print "I/O error({0}): {1}".format(err_no, strerror)
+
         except:
             # TODO: not sure what exactly the exception will be thrown
             # TODO: upon creation failure
@@ -38,28 +41,6 @@ class KeypairNovaDBMigrationTask(task.Task):
             keypair_data = keypair_data.update({'state': "error"})
             db_handler.update_keypairs(**keypair_data)
             return
-
-        # get the corresponding user_id (in targer) of the
-        # keypair using the user_name, which should be the
-        # same as the source
-        user_id = db_handler.\
-            get_info_from_openstack_db(host='192.168.50.5',
-                                       db_name='keystone',
-                                       table_name='user',
-                                       columns=['id'],
-                                       filters={"name":
-                                                keypair_data['user_name']})
-
-        # because the default user to create the keypair is 'admin',
-        # need to update the user_id (in target) of the keypair
-        db_handler.\
-            update_info_on_openstack_db(host='192.168.50.5',
-                                        db_name='nova',
-                                        table_name='key_pairs',
-                                        set_id={"user_id": user_id[0][0]},
-                                        filters={"fingerprint":
-                                                 keypair_fingerprint,
-                                                 "deleted": '0'})
 
         keypair_data.update({'state': 'completed'})
         db_handler.update_keypairs(**keypair_data)
@@ -80,7 +61,7 @@ class KeypairNovaDBMigrationTask(task.Task):
             fingerprints = db_handler.\
                 get_info_from_openstack_db(table_name="key_pairs",
                                            db_name='nova',
-                                           host='192.168.50.4',
+                                           host=self.s_host,
                                            columns=['fingerprint'],
                                            filters={"deleted": '0'})
             for one_fingerprint in fingerprints:
@@ -101,16 +82,17 @@ class KeypairNovaDBMigrationTask(task.Task):
                 result = db_handler.\
                     get_info_from_openstack_db(table_name="key_pairs",
                                                db_name='nova',
-                                               host='192.168.50.4',
+                                               host=self.s_host,
                                                columns=['*'],
                                                filters={"fingerprint":
                                                         keypair_fingerprint})
+
                 # get the corresponding user_name (in source)
                 # of the keypair using user_id
                 user_name = db_handler.\
                     get_info_from_openstack_db(table_name="user",
                                                db_name='keystone',
-                                               host='192.168.50.4',
+                                               host=self.s_host,
                                                columns=['name'],
                                                filters={"id": result[0][5]})
 
@@ -120,7 +102,8 @@ class KeypairNovaDBMigrationTask(task.Task):
                                 'user_name': user_name[0][0],
                                 'src_cloud': self.s_cloud_name,
                                 'dst_cloud': self.t_cloud_name,
-                                'state': "unknown"}
+                                'state': "unknown",
+                                'user_id_updated': "0"}
                 db_handler.record_keypairs([keypair_data])
 
                 LOG.info("Migrating keypair '{}'\n".format(result[0][4]))
@@ -130,6 +113,7 @@ class KeypairNovaDBMigrationTask(task.Task):
                 if m_keypair['state'] == "completed":
                     print("keypair {0} in cloud {1} has already been migrated"
                           .format(m_keypair['name'], self.s_cloud_name))
+
                 else:
                     LOG.info("Migrating keypair '{}'\n".
                              format(m_keypair['name']))

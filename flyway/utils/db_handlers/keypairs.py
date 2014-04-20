@@ -21,6 +21,7 @@ def initialise_keypairs_mapping():
                  src_cloud VARCHAR(128) NOT NULL,
                  dst_cloud VARCHAR(128) NOT NULL,
                  state VARCHAR(128) NOT NULL,
+                 user_id_updated INT NOT NULL,
                  PRIMARY KEY(id, fingerprint)
               '''
     if not check_table_exist(table_name):
@@ -44,20 +45,30 @@ def record_keypairs(keypair_details):
                           + details["user_name"] + "','" \
                           + details["src_cloud"] + "','" \
                           + details["dst_cloud"] + "','" \
-                          + details["state"] + "'"
+                          + details["state"] + "','" \
+                          + details["user_id_updated"] + "'"
         values_to_insert.append(value_to_insert)
 
     insert_record(table_name, values_to_insert, True)
 
 
 def update_keypairs(**keypair_details):
-    """function to update the state of a
+    """function to update a
     keypair record, which has been migrated, into database
 
     :param keypair_details: relevant data of migrated keypair
     """
     table_name = "keypairs"
-    s_dict = OrderedDict([('state', keypair_details["state"])])
+    s_dict = OrderedDict(
+        [('name', keypair_details["name"]),
+         ('public_key', keypair_details["public_key"]),
+         ('fingerprint', keypair_details["fingerprint"]),
+         ('user_name', keypair_details["user_name"]),
+         ('src_cloud', keypair_details["src_cloud"]),
+         ('dst_cloud', keypair_details["dst_cloud"]),
+         ('state', keypair_details["state"]),
+         ('user_id_updated', keypair_details["user_id_updated"])])
+
     w_dict = OrderedDict([('fingerprint', keypair_details["fingerprint"]),
                           ('src_cloud', keypair_details["src_cloud"]),
                           ('dst_cloud', keypair_details["dst_cloud"])])
@@ -110,14 +121,15 @@ def get_keypairs(values):
                     'user_name': data[0][4],
                     'src_cloud': data[0][5],
                     'dst_cloud': data[0][6],
-                    'state': data[0][7]}
+                    'state': data[0][7],
+                    'user_id_updated': data[0][8]}
     return keypair_data
 
 
 def get_info_from_openstack_db(host, db_name, table_name, columns, filters):
-    info_return = read_source_record(host, db_name, table_name, columns, filters, True)
+    info_return = read_openstack_record(host, db_name, table_name, columns, filters, True)
     return info_return
 
 
 def update_info_on_openstack_db(host, db_name, table_name, set_id, filters):
-    update_source_record(host, db_name, table_name, set_id, filters, True)
+    update_openstack_record(host, db_name, table_name, set_id, filters, True)

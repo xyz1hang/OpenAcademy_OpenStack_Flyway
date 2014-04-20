@@ -96,7 +96,8 @@ class KeypairMigrationTask(task.Task):
                                 'user_name': self.s_user_name,
                                 'src_cloud': self.s_cloud_name,
                                 'dst_cloud': self.t_cloud_name,
-                                'state': "unknown"}
+                                'state': "unknown",
+                                'user_id_updated': "0"}
                 db_handler.record_keypairs([keypair_data])
 
                 LOG.info("Migrating keypair '{}'\n".format(s_keypair.name))

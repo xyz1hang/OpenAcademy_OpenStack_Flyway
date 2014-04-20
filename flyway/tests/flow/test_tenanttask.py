@@ -24,7 +24,7 @@ class TenantTaskTest(TestBase):
 
         migrated_tenant = None
         try:
-            self.migration_task.execute([tenant_name])
+            self.migration_task.execute(tenant_name)
 
             # get the tenant data that has been migrated from src to dst
             values = [tenant_name, cfg.CONF.SOURCE.os_cloud_name,

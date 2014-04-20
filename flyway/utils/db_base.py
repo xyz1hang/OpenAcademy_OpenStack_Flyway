@@ -30,7 +30,7 @@ def connect(with_db, db_name=None):
     return db
 
 
-def connect_source_db(host, db_name):
+def connect_openstack_db(host, db_name):
     credentials = {'host': host,
                    'user': 'root',
                    'passwd': 'password',
@@ -39,9 +39,9 @@ def connect_source_db(host, db_name):
     return db
 
 
-def read_source_record(host, db_name, table_name, columns, where_dict, close):
+def read_openstack_record(host, db_name, table_name, columns, where_dict, close):
     # establish connection
-    db = connect_source_db(host, db_name)
+    db = connect_openstack_db(host, db_name)
     cursor = get_cursor(db)
 
     filter_str = build_where_string(where_dict)
@@ -69,9 +69,9 @@ def read_source_record(host, db_name, table_name, columns, where_dict, close):
     return data
 
 
-def update_source_record(host, db_name, table_name, set_dict, where_dict,
+def update_openstack_record(host, db_name, table_name, set_dict, where_dict,
                          close):
-    db = connect_source_db(host, db_name)
+    db = connect_openstack_db(host, db_name)
     cursor = get_cursor(db)
 
     # building "SET" string

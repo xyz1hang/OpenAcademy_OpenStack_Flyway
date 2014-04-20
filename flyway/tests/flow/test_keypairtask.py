@@ -3,7 +3,6 @@ from tests.flow.test_base import TestBase
 __author__ = 'chengxue'
 
 from novaclient import exceptions as nova_exceptions
-
 from flyway.common import config
 from flyway.flow.keypairtask import KeypairMigrationTask
 from utils.db_handlers import keypairs as db_handler
@@ -16,6 +15,7 @@ class KeypairTaskTest(TestBase):
         super(KeypairTaskTest, self).__init__(*args, **kwargs)
         config.parse(['--config-file', '../../etc/flyway.conf'])
         self.migration_task = KeypairMigrationTask('keypair_migration_task')
+
         self.s_cloud_name = utils.helper.cfg.CONF.SOURCE.os_cloud_name
         self.t_cloud_name = utils.helper.cfg.CONF.TARGET.os_cloud_name
 
@@ -41,7 +41,7 @@ class KeypairTaskTest(TestBase):
             self.assertEqual("completed", keypair_data['state'])
 
         except nova_exceptions.NotFound:
-            self.migration_task.ks_source.tenants.delete(keypair_to_migrate)
+            self.migration_task.nv_source.tenants.delete(keypair_to_migrate)
             return
 
         finally:
