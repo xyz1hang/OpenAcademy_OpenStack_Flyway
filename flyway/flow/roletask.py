@@ -55,12 +55,16 @@ class RoleMigrationTask(task.Task):
             set_error(role_to_move.name)
             LOG.info("migrating "+role_to_move.name+" failed")
 
-    def execute(self):
+    def execute(self, name_of_roles_to_move):
         LOG.debug('Migrating roles...........')
         roles_to_move = self.get_roles_to_move()
         initialise_roles_mapping(self.list_names(roles_to_move))
-
-        for role in roles_to_move:
-            self.migrate_one_role(role)
+        if name_of_roles_to_move is None:
+            for role in roles_to_move:
+                self.migrate_one_role(role)
+        else:
+            for role in roles_to_move:
+                if role.name in name_of_roles_to_move:
+                    self.migrate_one_role(role)
 
         LOG.info("Role Migration is finished")
