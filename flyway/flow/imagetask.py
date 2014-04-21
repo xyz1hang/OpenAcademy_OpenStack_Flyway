@@ -207,13 +207,16 @@ class ImageMigrationTask(task.Task):
 
         return False
 
-    def execute(self, images_to_migrate=None, tenant_to_process=None):
+    def execute(self, images_to_migrate, tenant_to_process):
         """execute the image migration task
 
         :param tenant_to_process: list of tenants of which
         all images will be migrated
         :param images_to_migrate: list of IDs of images to be migrated
         """
+
+        if len(images_to_migrate) == 0 and len(tenant_to_process) == 0:
+            return
 
         images_to_move = []
 

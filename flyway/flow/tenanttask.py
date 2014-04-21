@@ -126,13 +126,16 @@ class TenantMigrationTask(task.Task):
         or length equals to 0 all tenant will be migrated, otherwise only
         specified tenant will be migrated
         """
+        # no resources need to be migrated
+        if len(tenants_to_move) == 0:
+            return
 
         # convert tenants_to_move to list in case only
         # one string gets passed in
         if type(tenants_to_move) is str:
             tenants_to_move = [tenants_to_move]
 
-        if not tenants_to_move or len(tenants_to_move) == 0:
+        if not tenants_to_move:
             LOG.info("Migrating all tenants ...")
             tenants_to_move = []
             for tenant in self.ks_source.tenants.list():
