@@ -36,7 +36,7 @@ class UserTaskTest(TestBase):
             self.assertIn(new_user_name, target_user_names)
             self.assertIn(new_user_name2, target_user_names)
         except Exception, e:
-            self.fail(e)
+            self.fail(e.message)
         finally:
             if new_user is not None:
                 self.migration_task.ks_source.users.delete(new_user)
