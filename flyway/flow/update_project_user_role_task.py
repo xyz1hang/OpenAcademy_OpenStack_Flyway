@@ -1,14 +1,10 @@
 from utils.db_base import read_record
 
-__author__ = 'chengxue'
+__author__ = 'liangshang'
 
 from taskflow import task
-from utils.db_handlers import tenants as db_handler
 import logging
 from utils.helper import *
-from keystoneclient import exceptions as keystone_exceptions
-from utils.resourcetype import ResourceType
-from utils import exceptions
 
 LOG = logging.getLogger(__name__)
 

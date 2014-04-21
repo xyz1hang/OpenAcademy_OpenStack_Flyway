@@ -64,6 +64,3 @@ class RoleMigrationTask(task.Task):
             self.migrate_one_role(role)
 
         LOG.info("Role Migration is finished")
-
-
-

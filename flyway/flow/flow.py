@@ -39,7 +39,7 @@ def get_flow():
         ),
         # TODO: Add other tasks to the flow e.g migrate image, private key etc.
         #RoleMigrationTask('role_migration_task'),
-        ImageMigrationTask('image_migration_task'),
+        #ImageMigrationTask('image_migration_task'),
         #KeypairMigrationTask('keypairs_migration_task')
         #KeypairNovaDBMigrationTask('Keypairs_migration_task')
         #InstanceMigrationTask('instances_migration_task')
@@ -62,7 +62,7 @@ def execute():
     # execute(self, woof)
     #TODO: need to figure out a better way to allow user to specify
     #TODO: specific resource to migrate
-    data_required = {'tenants_to_move': ['demo']}
+    data_required = {'tenants_to_move': ['tenant_test']}
     eng = engines.load(flow, store=data_required)
     result = eng.run()
     return result
