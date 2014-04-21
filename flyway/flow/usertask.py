@@ -77,18 +77,27 @@ class UserMigrationTask(task.Task):
 
         return password
 
-    def execute(self):
+    def get_source_users(self, users_to_move):
+        """
+        Get users which are to be moved from self.ks_source.
+        If param users_to_move is None, return all users in source
+        """
+        return self.ks_source.users.list() if users_to_move is None \
+            else [user for user in self.ks_source.users.list()
+                  if user.name in users_to_move]
+
+    def execute(self, users_to_move):
         LOG.info('Migrating all users ...')
 
-        initialise_users_mapping(self.ks_source, self.target_user_names)
+        source_users = self.get_source_users(users_to_move)
+
+        initialise_users_mapping(source_users, self.target_user_names)
 
         migrated_users = []
-        for user in self.ks_source.users.list():
+        for user in source_users:
             migrated_user = self.migrate_one_user(user)
             if migrated_user is not None:
                 migrated_users.append(migrated_user)
 
         # TODO: When to delete the record in Database?
         #delete_migrated_users()
-
-        return migrated_users

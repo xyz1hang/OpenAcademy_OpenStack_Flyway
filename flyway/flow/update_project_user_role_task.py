@@ -1,3 +1,4 @@
+import keystoneclient
 from utils.db_base import read_record
 
 __author__ = 'liangshang'
@@ -40,13 +41,21 @@ class ProjectUserRoleBindingTask(task.Task):
         source_project = project_pair[0]
         target_project = project_pair[1]
         for source_user in self.ks_source.tenants.list_users(source_project):
-            target_user = self.ks_target.users.find(name=source_user.name)
-            for source_roles in self.ks_source.roles.roles_for_user(
-                    user=source_user, tenant=source_project):
-                target_role = self.ks_target.roles.find(name=source_roles.name)
-                self.ks_target.roles.add_user_role(user=target_user,
-                                                   role=target_role,
-                                                   tenant=target_project)
+            try:
+                target_user = self.ks_target.users.find(name=source_user.name)
+            except keystone_exceptions.NotFound as e:
+                continue
+            else:
+                for source_roles in self.ks_source.roles.roles_for_user(
+                        user=source_user, tenant=source_project):
+                    try:
+                        target_role = self.ks_target.roles.find(name=source_roles.name)
+                    except keystone_exceptions.NotFound as e:
+                        continue
+                    else:
+                        self.ks_target.roles.add_user_role(user=target_user,
+                                                           role=target_role,
+                                                           tenant=target_project)
 
     def execute(self):
         LOG.info('bind projects, users and roles ...')

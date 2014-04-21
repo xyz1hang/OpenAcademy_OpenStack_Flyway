@@ -43,7 +43,7 @@ def initialise_roles_mapping(name_of_roles_to_move):
 
     for role in name_of_roles_to_move:
         if not existed(role):
-            record = "'null', '"+role+"','"+s_cloud_name+"', '"+t_cloud_name+"', 'unknown'"
+            record = "null, '"+role+"','"+s_cloud_name+"', '"+t_cloud_name+"', 'unknown'"
             insert_record(TABLE_NAME, [record], False)
 
 

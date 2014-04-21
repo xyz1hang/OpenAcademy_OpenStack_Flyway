@@ -50,7 +50,7 @@ class UpdateProjectUserRoleTest(TestBase):
         try:
             self.tenant_migration_task.execute([tenant_name])
             self.role_migration_task.execute()
-            self.user_migration_task.execute()
+            self.user_migration_task.execute(None)
             self.binding_task.execute()
 
             # get the tenant data that has been migrated from src to dst
@@ -70,6 +70,7 @@ class UpdateProjectUserRoleTest(TestBase):
 
         except keystone_exceptions.NotFound as e:
             print str(e.message)
+            self.fail()
         finally:
             self.clean_up(tenant_to_migrate, migrated_tenant,
                           user_to_migrate, migrated_user,
