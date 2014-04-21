@@ -12,10 +12,11 @@ def set_user_complete(user):
                   'src_cloud': cfg.CONF.SOURCE.os_cloud_name,
                   'dst_cloud': cfg.CONF.TARGET.os_cloud_name},
                  False)
-    LOG.info("User {0} succeeded to migrate, recorded in database".format(user))
+    LOG.info("User {0} succeeded to migrate, recorded in database".
+             format(user))
 
 
-def initialise_users_mapping(ks_source, target_user_names):
+def initialise_users_mapping(source_users, target_user_names):
     if not check_table_exist(TABLE_NAME):
         table_columns = '''id INT NOT NULL AUTO_INCREMENT,
                        name VARCHAR(64) NOT NULL,
@@ -35,8 +36,8 @@ def initialise_users_mapping(ks_source, target_user_names):
     LOG.debug("init_string: " + init_string)
 
     init_users = []
-    for user in ks_source.users.list():
-        if user.name not in target_user_names and not existed(user):
+    for user in source_users:
+        if user.name not in target_user_names and not existed_in_db(user):
             init_users.append(
                 init_string.format(user.name, user.email))
             LOG.debug("insert user:")
@@ -45,7 +46,7 @@ def initialise_users_mapping(ks_source, target_user_names):
     insert_record(TABLE_NAME, init_users, True)
 
 
-def existed(user):
+def existed_in_db(user):
     filters = {
         "name": user.name,
         "src_cloud": cfg.CONF.SOURCE.os_cloud_name,
