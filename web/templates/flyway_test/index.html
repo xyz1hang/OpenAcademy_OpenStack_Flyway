@@ -1,0 +1,40 @@
+
+<html>
+<body>
+
+<div id="container" style="width:800px; margin: 0 auto">
+
+<div id="header" style="background-color:#3399FF;">
+<h1 style="margin-bottom:0; text-align: center">Flyway - Test</h1></div>
+
+<div id="Resources" style="background-color:#33CCFF;height:400px;width:200px;float:left;">
+<b>Resources</b>
+    <br>Tenants
+    <br>Key Pairs
+    <br>Images
+    <br>Users
+    <br>Roles
+    <br>VMs
+    <br>Flavors
+</div>
+
+<div id="content" style="background-color:#CCFFFF;height:400px;width:600px;float:left;">
+    {% if users %}
+    <ul>
+    {% for user in users %}
+        <li><a href="/polls/{{ poll.id }}/">{{ user.name }}</a></li>
+    {% endfor %}
+    </ul>
+    {% else %}
+    <p>No users are available.</p>
+    {% endif %}
+</div>
+
+<div id="footer" style="background-color:#3399FF;clear:both;text-align:center;">
+     Openstack - Flyway
+</div>
+
+</div>
+
+</body>
+</html>
