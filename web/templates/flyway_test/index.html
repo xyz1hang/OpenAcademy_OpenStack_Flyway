@@ -1,40 +1,137 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!-- DW6 -->
+<head>
+<!-- Copyright 2005 Macromedia, Inc. All rights reserved. -->
+<title>Openstack Flyway Testing Page</title>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
+<link rel="stylesheet" href="/static/css/format.css" type="text/css" />
+<link rel="stylesheet" type="text/css" href="/static/css/themes/icon.css">
+<link rel="stylesheet" type="text/css" href="/static/css/themes/default/easyui.css">
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script type="text/javascript" src="/static/js/jquery.easyui.min.js"></script>
+<script type="text/javascript">
 
-<html>
-<body>
+    var data_to_magrate = {
+        'user':new Array(),
+        'role':new Array(),
+        'image':new Array(),
+        'tenant':new Array(),
+        'keypair':new Array(),
+        'flavor':new Array(),
+        'vm':new Array()
+    }
 
-<div id="container" style="width:800px; margin: 0 auto">
+    function get_users(){
 
-<div id="header" style="background-color:#3399FF;">
-<h1 style="margin-bottom:0; text-align: center">Flyway - Test</h1></div>
+        $.ajax({
+            url: "/flyway_test/get_users"
+            }).done(function(return_json) {
+                $('#result').datagrid({
+                    data: eval("(" + return_json + ')'),
+                    columns:[[
+                        {field:'ck',title:'CK', checkbox:true, width:40},
+                        {field:'name',title:'Name',width:150},
+                        {field:'id',title:'Id',width:400}
+                    ]],
+                    onSelect: function(rowIndex, rowData){select_user_row(rowIndex, rowData)},
+                    onUnselect: function(rowIndex, rowData){unselect_user_row(rowIndex, rowData)}
+                });
+            });
+    }
 
-<div id="Resources" style="background-color:#33CCFF;height:400px;width:200px;float:left;">
-<b>Resources</b>
-    <br>Tenants
-    <br>Key Pairs
-    <br>Images
-    <br>Users
-    <br>Roles
-    <br>VMs
-    <br>Flavors
+    function select_user_row(rowIndex, rowData){
+        data_to_magrate['user'].push(rowData.name)
+    }
+
+    function unselect_user_row(rowIndex, rowData){
+        data_to_magrate['user'].splice(data_to_magrate['user'].indexOf(rowData.name), 1)
+    }
+
+    function migrate(){
+        alert(JSON.stringify(data_to_magrate))
+        $.ajax({
+            url: "/flyway_test/migrate",
+            data: {"data_to_migrate": JSON.stringify(data_to_magrate)}
+            }).done(function(return_json) {
+
+            });
+    }
+
+
+</script>
+
+</head>
+<body bgcolor="#FFFFFF">
+<div style="border:medium #000033" >
+<table width="70%" border="0" cellspacing="0" cellpadding="0" align="center">
+
+  <tr bgcolor="#3366CC">
+    <td height="63" colspan="2" align="center" valign="middle" nowrap="nowrap"
+        id="logo" style="color:#FFFFFF">
+        <div align="center"><span class="STYLE2">Openstack Flyway</span></div>
+    </td>
+  </tr>
+
+  <tr bgcolor="#3366CC">
+    <td height="64" colspan="2" id="tagline" valign="middle" align="center">
+        <span class="STYLE4">Testing</span>
+    </td>
+  </tr>
+
+  <tr>
+    <td width="170" valign="top" bgcolor="#E6F3FF">
+	<table border="0" cellspacing="0" cellpadding="0" width="232" id="navigation">
+        <tr>
+          <td width="232"><br><br /></td>
+        </tr>
+        <tr>
+          <td width="232"><a onclick="get_users()" class="navText">Users</a></td>
+        </tr>
+        <tr>
+          <td width="232"><a href="get_roles()" class="navText">Roles</a></td>
+        </tr>
+        <tr>
+          <td width="232"><a href="javascript:;" class="navText">Images</a></td>
+        </tr>
+		<tr>
+          <td width="232"><a href="javascript:;" class="navText">Flavors</a></td>
+        </tr>
+        <tr>
+          <td width="232"><a href="javascript:;" class="navText">Tenants</a></td>
+        </tr>
+        <tr>
+          <td width="232"><a href="javascript:;" class="navText">Key Pairs</a></td>
+        </tr>
+		<tr>
+          <td width="232"><a href="javascript:;" class="navText">VMs</a></td>
+        </tr>
+        <tr>
+          <td width="232"><br><br /></td>
+        </tr>
+    </table>
+  	</td>
+
+    <td>
+    <table id="result" class="easyui-datagrid" width="590" border="0" valign="top" cellspacing="0" bordercolor="#F0F0F0">
+
+    </table>
+
+	<table border="0" cellspacing="0" cellpadding="0" width="590">
+		<tr>
+          <td class="bodyText"><p align="right"><a onclick="migrate()">Migrate Resources &gt;</a></p></td>
+        </tr>
+	</table>
+
+    </td>
+  </tr>
+
+  <tr bgcolor="#3366CC">
+  	<td height="25" colspan="4" align="center" valign="middle" id="footer"
+        style="color:#FFFFFF">Openstack - Flyway
+    </td>
+  </tr>
+
+</table>
 </div>
-
-<div id="content" style="background-color:#CCFFFF;height:400px;width:600px;float:left;">
-    {% if users %}
-    <ul>
-    {% for user in users %}
-        <li><a href="/polls/{{ poll.id }}/">{{ user.name }}</a></li>
-    {% endfor %}
-    </ul>
-    {% else %}
-    <p>No users are available.</p>
-    {% endif %}
-</div>
-
-<div id="footer" style="background-color:#3399FF;clear:both;text-align:center;">
-     Openstack - Flyway
-</div>
-
-</div>
-
 </body>
 </html>
