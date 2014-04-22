@@ -39,12 +39,168 @@
             });
     }
 
+    function get_roles(){
+
+        $.ajax({
+            url: "/flyway_test/get_roles"
+            }).done(function(return_json) {
+                $('#result').datagrid({
+                    data: eval("(" + return_json + ')'),
+                    columns:[[
+                        {field:'ck',title:'CK', checkbox:true, width:40},
+                        {field:'name',title:'Name',width:150},
+                        {field:'id',title:'Id',width:400}
+                    ]],
+                    onSelect: function(rowIndex, rowData){select_role_row(rowIndex, rowData)},
+                    onUnselect: function(rowIndex, rowData){unselect_role_row(rowIndex, rowData)}
+                });
+            });
+    }
+
+    function get_images(){
+
+        $.ajax({
+            url: "/flyway_test/get_images"
+            }).done(function(return_json) {
+                $('#result').datagrid({
+                    data: eval("(" + return_json + ')'),
+                    columns:[[
+                        {field:'ck',title:'CK', checkbox:true, width:40},
+                        {field:'name',title:'Name',width:150},
+                        {field:'id',title:'Id',width:400}
+                    ]],
+                    onSelect: function(rowIndex, rowData){select_image_row(rowIndex, rowData)},
+                    onUnselect: function(rowIndex, rowData){unselect_image_row(rowIndex, rowData)}
+                });
+            });
+    }
+
+    function get_keypairs(){
+
+        $.ajax({
+            url: "/flyway_test/get_keypairs"
+            }).done(function(return_json) {
+                $('#result').datagrid({
+                    data: eval("(" + return_json + ')'),
+                    columns:[[
+                        {field:'ck',title:'CK', checkbox:true, width:40},
+                        {field:'name',title:'Name',width:150},
+                        {field:'fingerprint',title:'Fingerprint',width:400}
+                    ]],
+                    onSelect: function(rowIndex, rowData){select_keypair_row(rowIndex, rowData)},
+                    onUnselect: function(rowIndex, rowData){unselect_keypair_row(rowIndex, rowData)}
+                });
+            });
+    }
+
+    function get_flavors(){
+
+        $.ajax({
+            url: "/flyway_test/get_flavors"
+            }).done(function(return_json) {
+                $('#result').datagrid({
+                    data: eval("(" + return_json + ')'),
+                    columns:[[
+                        {field:'ck',title:'CK', checkbox:true, width:40},
+                        {field:'name',title:'Name',width:150},
+                        {field:'id',title:'Id',width:400}
+                    ]],
+                    onSelect: function(rowIndex, rowData){select_flavor_row(rowIndex, rowData)},
+                    onUnselect: function(rowIndex, rowData){unselect_flavor_row(rowIndex, rowData)}
+                });
+            });
+    }
+
+    function get_vms(){
+
+        $.ajax({
+            url: "/flyway_test/get_vms"
+            }).done(function(return_json) {
+                $('#result').datagrid({
+                    data: eval("(" + return_json + ')'),
+                    columns:[[
+                        {field:'ck',title:'CK', checkbox:true, width:40},
+                        {field:'name',title:'Name',width:150},
+                        {field:'id',title:'Id',width:400}
+                    ]],
+                    onSelect: function(rowIndex, rowData){select_vm_row(rowIndex, rowData)},
+                    onUnselect: function(rowIndex, rowData){unselect_vm_row(rowIndex, rowData)}
+                });
+            });
+    }
+
+    function get_tenants(){
+
+        $.ajax({
+            url: "/flyway_test/get_tenants"
+            }).done(function(return_json) {
+                $('#result').datagrid({
+                    data: eval("(" + return_json + ')'),
+                    columns:[[
+                        {field:'ck',title:'CK', checkbox:true, width:40},
+                        {field:'name',title:'Name',width:150},
+                        {field:'id',title:'Id',width:400}
+                    ]],
+                    onSelect: function(rowIndex, rowData){select_tenant_row(rowIndex, rowData)},
+                    onUnselect: function(rowIndex, rowData){unselect_tenant_row(rowIndex, rowData)}
+                });
+            });
+    }
+
     function select_user_row(rowIndex, rowData){
         data_to_magrate['user'].push(rowData.name)
     }
 
     function unselect_user_row(rowIndex, rowData){
         data_to_magrate['user'].splice(data_to_magrate['user'].indexOf(rowData.name), 1)
+    }
+
+    function select_role_row(rowIndex, rowData){
+        data_to_magrate['role'].push(rowData.name)
+    }
+
+    function unselect_role_row(rowIndex, rowData){
+        data_to_magrate['role'].splice(data_to_magrate['role'].indexOf(rowData.name), 1)
+    }
+
+    function select_image_row(rowIndex, rowData){
+        data_to_magrate['image'].push(rowData.name)
+    }
+
+    function unselect_image_row(rowIndex, rowData){
+        data_to_magrate['image'].splice(data_to_magrate['image'].indexOf(rowData.name), 1)
+    }
+
+    function select_tenant_row(rowIndex, rowData){
+        data_to_magrate['tenant'].push(rowData.name)
+    }
+
+    function unselect_tenant_row(rowIndex, rowData){
+        data_to_magrate['tenant'].splice(data_to_magrate['tenant'].indexOf(rowData.name), 1)
+    }
+
+    function select_flavor_row(rowIndex, rowData){
+        data_to_magrate['flavor'].push(rowData.name)
+    }
+
+    function unselect_flavor_row(rowIndex, rowData){
+        data_to_magrate['flavor'].splice(data_to_magrate['flavor'].indexOf(rowData.name), 1)
+    }
+
+    function select_keypair_row(rowIndex, rowData){
+        data_to_magrate['keypair'].push(rowData.fingerprint)
+    }
+
+    function unselect_keypair_row(rowIndex, rowData){
+        data_to_magrate['keypair'].splice(data_to_magrate['keypair'].indexOf(rowData.fingerprnt), 1)
+    }
+
+    function select_vm_row(rowIndex, rowData){
+        data_to_magrate['vm'].push(rowData.name)
+    }
+
+    function unselect_vm_row(rowIndex, rowData){
+        data_to_magrate['vm'].splice(data_to_magrate['vm'].indexOf(rowData.name), 1)
     }
 
     function migrate(){
@@ -88,22 +244,22 @@
           <td width="232"><a onclick="get_users()" class="navText">Users</a></td>
         </tr>
         <tr>
-          <td width="232"><a href="get_roles()" class="navText">Roles</a></td>
+          <td width="232"><a onclick="get_roles()" class="navText">Roles</a></td>
         </tr>
         <tr>
-          <td width="232"><a href="javascript:;" class="navText">Images</a></td>
+          <td width="232"><a onclick="get_images()" class="navText">Images</a></td>
         </tr>
 		<tr>
-          <td width="232"><a href="javascript:;" class="navText">Flavors</a></td>
+          <td width="232"><a onclick="get_flavors()" class="navText">Flavors</a></td>
         </tr>
         <tr>
-          <td width="232"><a href="javascript:;" class="navText">Tenants</a></td>
+          <td width="232"><a onclick="get_tenants()" class="navText">Tenants</a></td>
         </tr>
         <tr>
-          <td width="232"><a href="javascript:;" class="navText">Key Pairs</a></td>
+          <td width="232"><a onclick="get_keypairs()" class="navText">Key Pairs</a></td>
         </tr>
 		<tr>
-          <td width="232"><a href="javascript:;" class="navText">VMs</a></td>
+          <td width="232"><a onclick="get_vms()" class="navText">VMs</a></td>
         </tr>
         <tr>
           <td width="232"><br><br /></td>

@@ -21,6 +21,8 @@ class KeypairNovaDBMigrationTask(task.Task):
         self.t_cloud_name = cfg.CONF.TARGET.os_cloud_name
         self.s_host = cfg.CONF.SOURCE.os_auth_url.split("http://")[1].split(":")[0]
 
+        self.nv_source = get_nova_source()
+
     def migrate_one_keypair(self, keypair_fingerprint):
         # create a new keypair
         values = [keypair_fingerprint, self.s_cloud_name, self.t_cloud_name]

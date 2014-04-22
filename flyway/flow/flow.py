@@ -42,7 +42,7 @@ def get_flow():
         # TODO: Add other tasks to the flow e.g migrate image, private key etc.
         RoleMigrationTask('role_migration_task'),
         ImageMigrationTask('image_migration_task'),
-        #KeypairMigrationTask('keypairs_migration_task')
+        KeypairMigrationTask('keypairs_migration_task'),
         KeypairNovaDBMigrationTask('Keypairs_migration_task'),
         #InstanceMigrationTask('instances_migration_task')
 
@@ -73,6 +73,8 @@ def execute(values):
                      'keypairs_to_move': values['keypairs_to_move'],
                      'name_of_roles_to_move': values['name_of_roles_to_move'],
                      'users_to_move': values['users_to_move']}
+
+    print values['users_to_move']
 
     eng = engines.load(flow, store=data_required)
     result = eng.run()
