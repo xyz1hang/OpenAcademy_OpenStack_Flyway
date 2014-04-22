@@ -48,13 +48,16 @@ class KeypairMigrationTask(task.Task):
         keypair_data.update({'state': 'completed'})
         db_handler.update_keypairs(**keypair_data)
 
-    def execute(self, keypairs_to_move=None):
+    def execute(self, keypairs_to_move):
         """execute the keypair migration task
 
         :param keypairs_to_move: the list of keypairs to move.
         If the not specified or length equals to 0 all keypair will be
         migrated, otherwise only specified keypairs will be migrated
         """
+        # no resources need to be migrated
+        if len(keypairs_to_move) == 0:
+            return
 
         # in case only one string gets passed in
         if type(keypairs_to_move) is str:
@@ -63,7 +66,7 @@ class KeypairMigrationTask(task.Task):
         # create new table if not exists
         db_handler.initialise_keypairs_mapping()
 
-        if not keypairs_to_move or len(keypairs_to_move) == 0:
+        if not keypairs_to_move:
             LOG.info("Migrating all keypairs ...")
             keypairs_to_move = []
             for keypair in self.nv_source.keypairs.list():

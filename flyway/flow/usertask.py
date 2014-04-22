@@ -87,6 +87,9 @@ class UserMigrationTask(task.Task):
                   if user.name in users_to_move]
 
     def execute(self, users_to_move):
+        if len(users_to_move) == 0:
+            return
+
         LOG.info('Migrating all users ...')
 
         source_users = self.get_source_users(users_to_move)

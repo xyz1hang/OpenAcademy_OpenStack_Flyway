@@ -111,7 +111,7 @@ class FlavorMigrationTask(task.Task):
             flavor_migration_data.update({'state': "completed"})
             flavors.record_flavor_migrated([flavor_migration_data])
 
-    def execute(self, flavors_to_migrate=None):
+    def execute(self, flavors_to_migrate):
 
         """execute the flavor migration task
 
@@ -119,6 +119,9 @@ class FlavorMigrationTask(task.Task):
         specified or length equals to 0 all flavor will be migrated,
         otherwise only specified flavor will be migrated
         """
+        # no resources need to be migrated
+        if len(flavors_to_migrate) == 0:
+            return
 
         # convert flavors_to_migrate to list in case only
         # one string gets passed in
@@ -126,7 +129,7 @@ class FlavorMigrationTask(task.Task):
             flavors_to_migrate = [flavors_to_migrate]
 
         flavors_to_move = []
-        if not flavors_to_migrate or len(flavors_to_migrate) == 0:
+        if not flavors_to_migrate:
             LOG.info("Migrating all flavors ...")
             for flavor in self.nv_source.flavors.list():
                 flavors_to_move.append(flavor.name)

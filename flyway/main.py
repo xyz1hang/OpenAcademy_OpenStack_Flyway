@@ -46,7 +46,7 @@ def main():
         config.setup_logging()
 
     try:
-        flow.execute()
+        flow.execute(values)
     except RuntimeError, e:
         sys.exit("ERROR: %s" % e)
 
