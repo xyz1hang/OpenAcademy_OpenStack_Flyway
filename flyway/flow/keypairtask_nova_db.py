@@ -3,6 +3,8 @@ from taskflow import task
 from utils.helper import *
 from utils.db_handlers import keypairs as db_handler
 from utils.db_base import *
+from novaclient import exceptions as nova_exceptions
+
 
 LOG = logging.getLogger(__name__)
 
@@ -19,16 +21,38 @@ class KeypairNovaDBMigrationTask(task.Task):
 
         self.s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
         self.t_cloud_name = cfg.CONF.TARGET.os_cloud_name
-        self.s_host = cfg.CONF.SOURCE.os_auth_url.split("http://")[1].split(":")[0]
+        self.s_host = cfg.CONF.SOURCE. \
+            os_auth_url.split("http://")[1].split(":")[0]
 
     def migrate_one_keypair(self, keypair_fingerprint):
         # create a new keypair
         values = [keypair_fingerprint, self.s_cloud_name, self.t_cloud_name]
         keypair_data = db_handler.get_keypairs(values)
 
+        # check for name duplication
+        new_name = keypair_data["name"]
         try:
-            self.nv_target.keypairs.create\
-                (keypair_data['name'], public_key=keypair_data['public_key'])
+            found = True
+            while found:
+                found = self.nv_target.keypairs.find(name=new_name)
+                if found:
+                    user_input = \
+                        raw_input("duplicated tenant {0} found on cloud {1}\n"
+                                  "Please type in a new name or 'abort':"
+                                  .format(found.name, self.t_cloud_name))
+                    if user_input == "abort":
+                        # TODO: implement cleaning up and proper exit
+                        return None
+                    elif user_input:
+                        new_name = user_input
+
+        except nova_exceptions.NotFound:
+            # irrelevant exception - swallow
+            pass
+
+        try:
+            self.nv_target.keypairs.\
+                create(new_name, public_key=keypair_data["public_key"])
 
         except IOError as (err_no, strerror):
             print "I/O error({0}): {1}".format(err_no, strerror)
@@ -43,6 +67,7 @@ class KeypairNovaDBMigrationTask(task.Task):
             return
 
         keypair_data.update({'state': 'completed'})
+        keypair_data.update({'new_name': new_name})
         db_handler.update_keypairs(**keypair_data)
 
     def execute(self, keypairs_to_move):
@@ -107,7 +132,8 @@ class KeypairNovaDBMigrationTask(task.Task):
                                 'src_cloud': self.s_cloud_name,
                                 'dst_cloud': self.t_cloud_name,
                                 'state': "unknown",
-                                'user_id_updated': "0"}
+                                'user_id_updated': "0",
+                                'new_name': result[0][4]}
                 db_handler.record_keypairs([keypair_data])
 
                 LOG.info("Migrating keypair '{}'\n".format(result[0][4]))

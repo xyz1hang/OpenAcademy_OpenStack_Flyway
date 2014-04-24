@@ -46,6 +46,7 @@ class KeypairTaskNovaDBTest(TestBase):
             self.assertIsNotNone(migrated_keypair)
             self.assertEqual("completed", keypair_data['state'])
             self.assertEqual(1, keypair_data['user_id_updated'])
+            self.assertEqual(keypair_data["new_name"], migrated_keypair.name)
 
         except nova_exceptions.NotFound:
             self.nv_source.tenants.delete(keypair_to_migrate)

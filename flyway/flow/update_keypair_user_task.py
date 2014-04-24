@@ -38,7 +38,7 @@ class UpdateKeypairUserTask(task.Task):
                 update_info_on_openstack_db(host=self.t_host,
                                             db_name='nova',
                                             table_name='key_pairs',
-                                            set_id={"user_id": user_id[0][0]},
+                                            sets={"user_id": user_id[0][0]},
                                             filters={"fingerprint":
                                                      fingerprint,
                                                      "deleted": '0'})

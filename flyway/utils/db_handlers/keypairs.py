@@ -22,6 +22,7 @@ def initialise_keypairs_mapping():
                  dst_cloud VARCHAR(128) NOT NULL,
                  state VARCHAR(128) NOT NULL,
                  user_id_updated INT NOT NULL,
+                 new_name VARCHAR(64) NOT NULL,
                  PRIMARY KEY(id, fingerprint)
               '''
     if not check_table_exist(table_name):
@@ -46,7 +47,8 @@ def record_keypairs(keypair_details):
                           + details["src_cloud"] + "','" \
                           + details["dst_cloud"] + "','" \
                           + details["state"] + "','" \
-                          + details["user_id_updated"] + "'"
+                          + details["user_id_updated"] + "','" \
+                          + details["new_name"] + "'"
         values_to_insert.append(value_to_insert)
 
     insert_record(table_name, values_to_insert, True)
@@ -67,7 +69,8 @@ def update_keypairs(**keypair_details):
          ('src_cloud', keypair_details["src_cloud"]),
          ('dst_cloud', keypair_details["dst_cloud"]),
          ('state', keypair_details["state"]),
-         ('user_id_updated', keypair_details["user_id_updated"])])
+         ('user_id_updated', keypair_details["user_id_updated"]),
+         ('new_name', keypair_details["new_name"])])
 
     w_dict = OrderedDict([('fingerprint', keypair_details["fingerprint"]),
                           ('src_cloud', keypair_details["src_cloud"]),
@@ -122,7 +125,8 @@ def get_keypairs(values):
                     'src_cloud': data[0][5],
                     'dst_cloud': data[0][6],
                     'state': data[0][7],
-                    'user_id_updated': data[0][8]}
+                    'user_id_updated': data[0][8],
+                    'new_name': data[0][9]}
     return keypair_data
 
 
@@ -131,5 +135,5 @@ def get_info_from_openstack_db(host, db_name, table_name, columns, filters):
     return info_return
 
 
-def update_info_on_openstack_db(host, db_name, table_name, set_id, filters):
-    update_openstack_record(host, db_name, table_name, set_id, filters, True)
+def update_info_on_openstack_db(host, db_name, table_name, sets, filters):
+    update_openstack_record(host, db_name, table_name, sets, filters, True)
