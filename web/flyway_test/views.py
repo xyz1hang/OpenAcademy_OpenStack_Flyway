@@ -10,6 +10,7 @@ from flow.imagetask import ImageMigrationTask
 from flow.keypairtask_nova_db import KeypairNovaDBMigrationTask
 from flow.roletask import RoleMigrationTask
 from flow.tenanttask import TenantMigrationTask
+from utils.db_handlers.keypairs import *
 
 import os
 from flow import flow
@@ -70,11 +71,15 @@ def get_flavors(request):
 def get_keypairs(request):
     cfg.parse(['--config-file', '../flyway/etc/flyway.conf'])
     migration_task = KeypairNovaDBMigrationTask('')
-    keypairs = migration_task.nv_source.keypairs.list()
+    data = get_info_from_openstack_db(table_name="key_pairs",
+                                      db_name='nova',
+                                      host=migration_task.s_host,
+                                      columns=['name', 'fingerprint'],
+                                      filters={"deleted": '0'})
     return_keypairs = [{
-        'name': keypair.name,
-        'fingerprint': keypair.fingerprint
-    } for keypair in keypairs]
+        'name': pair[0],
+        'fingerprint': pair[1]
+    } for pair in data]
     return HttpResponse(json.dumps(return_keypairs, ensure_ascii=False))
 
 
