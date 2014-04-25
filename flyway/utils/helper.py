@@ -146,7 +146,7 @@ def generate_new_password(email=None, default_password='123456'):
     default_password is used if the user has no email
     """
     if email is not None:
-        password = generate_new_password()
+        password = new_password()
         try:
             send_reset_password_email(email, password)
         except Exception, e:
@@ -158,6 +158,17 @@ def generate_new_password(email=None, default_password='123456'):
     else:
         password = default_password
 
+    return password
+
+
+def new_password():
+    """Generate a new password containing 10 letters
+    """
+    letters = 'abcdegfhijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
+    password = ''
+    for i in range(10):
+        random_number = int(random.random() * len(letters))
+        password += letters[random_number]
     return password
 
 
