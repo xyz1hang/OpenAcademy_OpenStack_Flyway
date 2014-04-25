@@ -2,11 +2,13 @@ import base64
 import keystoneclient.v2_0.client as ksclient
 import glanceclient.v1.client as glclient
 import novaclient.v3.client as nvclient
-
+import logging
 import random
 import smtplib
 
 from common import config as cfg
+
+LOG = logging.getLogger(__name__)
 
 
 def get_keystone_source(tenant_name=None):
@@ -138,19 +140,29 @@ def get_credentials(credentials):
     return credentials
 
 
-def generate_new_password():
-    """Generate a new password containing 10 letters
+def generate_new_password(email=None, default_password='123456'):
     """
-    letters = 'abcdegfhijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
-    password = ''
-    for i in range(10):
-        random_number = int(random.random() * len(letters))
-        password += letters[random_number]
+    Generate a random password for the user and email to the user,
+    default_password is used if the user has no email
+    """
+    if email is not None:
+        password = generate_new_password()
+        try:
+            send_reset_password_email(email, password)
+        except Exception, e:
+            password = default_password
+            LOG.error("Error happened when \
+                       sending password-resetting email")
+            LOG.error(e.message)
+
+    else:
+        password = default_password
+
     return password
 
 
 def send_email(from_addr, to_addr_list, cc_addr_list, subject,
-               message, login, password, smtpserver='smtp.gmail.com:587'):
+               message, login, password, smtpserver=cfg.CONF.EMAIL.smtpserver):
     """Send email using gmail
     """
     header = 'From: %s\n' % from_addr
@@ -175,7 +187,7 @@ def send_reset_password_email(email_addr, password):
              'cc_addr_list': [],
              'subject': "Flyway: Please change your password",
              'message': msg_content,
-             'login': "openstack.flyway@gmail.com",
-             'password': "flywaypassword"
+             'login': cfg.CONF.EMAIL.login,
+             'password': cfg.CONF.EMAIL.password
              }
     send_email(**email)
