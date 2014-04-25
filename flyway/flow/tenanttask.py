@@ -127,7 +127,7 @@ class TenantMigrationTask(task.Task):
         specified tenant will be migrated
         """
         # no resources need to be migrated
-        if len(tenants_to_move) == 0:
+        if type(tenants_to_move) is list and len(tenants_to_move) == 0:
             return
 
         # convert tenants_to_move to list in case only

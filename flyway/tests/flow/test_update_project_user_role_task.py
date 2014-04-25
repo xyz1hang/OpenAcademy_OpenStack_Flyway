@@ -42,7 +42,8 @@ class UpdateProjectUserRoleTest(TestBase):
             role_to_migrate,
             tenant_to_migrate)
         self.assertIn(role_to_migrate, self.tenant_migration_task.ks_source.
-                      roles.roles_for_user(user_to_migrate, tenant_to_migrate))
+                      roles.roles_for_user(user_to_migrate,
+                                           tenant_to_migrate))
 
         migrated_tenant = None
         migrated_user = None
@@ -66,7 +67,8 @@ class UpdateProjectUserRoleTest(TestBase):
                 find(name=role_name)
 
             self.assertIn(migrated_role, self.tenant_migration_task.ks_target.
-                          roles.roles_for_user(migrated_user, migrated_tenant))
+                          roles.roles_for_user(migrated_user,
+                                               migrated_tenant))
 
         except keystone_exceptions.NotFound as e:
             print str(e.message)

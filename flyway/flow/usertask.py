@@ -34,7 +34,8 @@ class UserMigrationTask(task.Task):
         self.ks_source = get_keystone_source()
         self.ks_target = get_keystone_target()
 
-        self.target_user_names = [user.name for user in self.ks_target.users.list()]
+        self.target_user_names = \
+            [user.name for user in self.ks_target.users.list()]
 
     def migrate_one_user(self, user):
         LOG.info("Begin to migrate user {0}".format(user))
@@ -87,7 +88,7 @@ class UserMigrationTask(task.Task):
                   if user.name in users_to_move]
 
     def execute(self, users_to_move):
-        if len(users_to_move) == 0:
+        if type(users_to_move) is list and len(users_to_move) == 0:
             return
 
         LOG.info('Migrating all users ...')

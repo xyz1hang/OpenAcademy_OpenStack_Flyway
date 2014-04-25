@@ -31,7 +31,9 @@ class RoleTaskTest(TestCase):
         new_role = self.migration_task.ks_source.roles.create(new_role_name)
         roles_to_move = [new_role]
         self.migration_task.migrate_one_role(roles_to_move[0])
-        self.assertIn(new_role_name, self.migration_task.list_names(self.migration_task.ks_target.roles.list()))
+        self.assertIn(new_role_name,
+                      self.migration_task.
+                      list_names(self.migration_task.ks_target.roles.list()))
         for role in self.migration_task.ks_source.roles.list():
             if role.name == "iamnewrole":
                 self.migration_task.ks_source.roles.delete(role)
