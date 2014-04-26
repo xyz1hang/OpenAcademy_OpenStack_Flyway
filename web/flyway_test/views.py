@@ -7,7 +7,7 @@ import sys
 sys.path.insert(0, '../flyway')
 from flow.flavortask import FlavorMigrationTask
 from flow.imagetask import ImageMigrationTask
-from flow.keypairtask_nova_db import KeypairNovaDBMigrationTask
+from flow.keypairtask import KeypairMigrationTask
 from flow.roletask import RoleMigrationTask
 from flow.tenanttask import TenantMigrationTask
 from utils.db_handlers.keypairs import *
@@ -70,7 +70,7 @@ def get_flavors(request):
 
 def get_keypairs(request):
     cfg.parse(['--config-file', '../flyway/etc/flyway.conf'])
-    migration_task = KeypairNovaDBMigrationTask('')
+    migration_task = KeypairMigrationTask('')
     data = get_info_from_openstack_db(table_name="key_pairs",
                                       db_name='nova',
                                       host=migration_task.s_host,

@@ -1,8 +1,9 @@
 import mox
 
 from flow.usertask import UserMigrationTask
-from common import config as cfg
+from common import config
 from tests.flow.test_base import TestBase
+from utils.db_handlers.users import *
 
 
 class UserTaskTest(TestBase):
@@ -10,7 +11,7 @@ class UserTaskTest(TestBase):
 
     def __init__(self, *args, **kwargs):
         super(UserTaskTest, self).__init__(*args, **kwargs)
-        cfg.parse(['--config-file', '../../etc/flyway.conf'])
+        config.parse(['--config-file', '../../etc/flyway.conf'])
         self.migration_task = UserMigrationTask()
         self.mox_factory = mox.Mox()
 
@@ -70,6 +71,7 @@ class UserTaskTest(TestBase):
         except Exception, e:
             self.fail(e)
         finally:
+            delete_migrated_users()
             if new_user is not None:
                 self.migration_task.ks_source.users.delete(new_user)
             if new_user2 is not None:

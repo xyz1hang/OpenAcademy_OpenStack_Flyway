@@ -22,9 +22,8 @@ from usertask import UserMigrationTask
 from tenanttask import TenantMigrationTask
 from roletask import RoleMigrationTask
 from imagetask import ImageMigrationTask
-from keypairtask import KeypairMigrationTask
 from instancetask import InstanceMigrationTask
-from keypairtask_nova_db import KeypairNovaDBMigrationTask
+from keypairtask import KeypairMigrationTask
 from update_keypair_user_task import UpdateKeypairUserTask
 from update_projects_quotas_task import UpdateProjectsQuotasTask
 from update_project_user_role_task import ProjectUserRoleBindingTask
@@ -39,10 +38,11 @@ def get_flow():
             TenantMigrationTask('tenant_migration_task'),
             FlavorMigrationTask('flavor_migration_task')
         ),
-        # TODO: Add other tasks to the flow e.g migrate image, private key etc.
+        # TODO: Add other tasks to the flow
+        # TODO: e.g migrate image, private key etc.
         RoleMigrationTask('role_migration_task'),
         ImageMigrationTask('image_migration_task'),
-        KeypairNovaDBMigrationTask('Keypairs_migration_task'),
+        KeypairMigrationTask('Keypairs_migration_task'),
         #InstanceMigrationTask('instances_migration_task')
 
         # after resource migration:
@@ -65,6 +65,10 @@ def execute(values):
     #TODO: need to figure out a better way to allow user to specify
     #TODO: specific resource to migrate
 
+    # resources specified to migrate are given through an argument "values",
+    # “values” is a dictionary that all keys correspond to types of resources,
+    # and values are the specified resources (None means migrating all
+    # resources on the source cloud, [] means migrating nothing)
     data_required = {'tenants_to_move': values['tenants_to_move'],
                      'flavors_to_migrate': values['flavors_to_migrate'],
                      'images_to_migrate': values['images_to_migrate'],

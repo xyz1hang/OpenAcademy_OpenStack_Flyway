@@ -17,7 +17,8 @@ class UpdateKeypairUserTask(task.Task):
         super(UpdateKeypairUserTask, self).__init__(*args, **kwargs)
         self.s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
         self.t_cloud_name = cfg.CONF.TARGET.os_cloud_name
-        self.t_host = cfg.CONF.TARGET.os_auth_url.split("http://")[1].split(":")[0]
+        self.t_host = \
+            cfg.CONF.TARGET.os_auth_url.split("http://")[1].split(":")[0]
 
     def update_user_id(self, fingerprint=None, keypair_data=None):
         # get the corresponding user_id (in targer) of the
@@ -47,8 +48,9 @@ class UpdateKeypairUserTask(task.Task):
             db_handler.update_keypairs(**keypair_data)
 
         else:
-            print "User {0} has not been migrated.".\
-                format(keypair_data['user_name'])
+            print "The corresponding user {0} of the key pair {1} has not " \
+                  "been migrated.".format(keypair_data['user_name'],
+                                          keypair_data['new_name'])
 
     def execute(self):
         print "keypair-user updating ..."
@@ -69,13 +71,13 @@ class UpdateKeypairUserTask(task.Task):
             if keypair_data is not None:
                 if keypair_data['user_id_updated'] == "1":
                     print "The user_id of keypair {0} has been updated.".\
-                        format(keypair_data['name'])
+                        format(keypair_data['new_name'])
 
                 elif keypair_data['state'] == "completed":
                     print "Updating user_id of keypair {0}".\
-                        format(keypair_data['name'])
+                        format(keypair_data['new_name'])
                     self.update_user_id(one_fingerprint[0], keypair_data)
 
                 else:
-                    print "Keypair {0} has not been migrated".\
+                    print "Keypair {0} has not been migrated successfully".\
                         format(keypair_data['name'])
