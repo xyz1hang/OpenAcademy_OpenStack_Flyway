@@ -52,7 +52,7 @@ class UserMigrationTask(task.Task):
             except Exception, e:
                 LOG.error("There is an error while migrating user {0}"
                           .format(user))
-                LOG.error("The error is {0}".format(e))
+                LOG.error("The error is {0}".format(e.message))
             else:
                 LOG.info("Succeed to migrate user {0}".format(user))
                 set_user_complete(user)

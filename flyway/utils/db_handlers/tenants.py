@@ -14,17 +14,17 @@ def initialise_tenants_mapping():
 
     if not check_table_exist(table_name):
         columns = '''id INT NOT NULL AUTO_INCREMENT,
-                 project_name VARCHAR(32) NOT NULL,
-                 src_uuid VARCHAR(128) NOT NULL,
-                 src_cloud VARCHAR(128) NOT NULL,
-                 new_project_name VARCHAR(32) NOT NULL,
-                 dst_uuid VARCHAR(128) NOT NULL,
-                 dst_cloud VARCHAR(128) NOT NULL,
-                 images_migrated INT NOT NULL,
-                 quota_updated INT NOT NULL,
-                 state VARCHAR(128) NOT NULL,
-                 PRIMARY KEY(id, src_uuid, dst_uuid)
-              '''
+                     project_name VARCHAR(32) NOT NULL,
+                     src_uuid VARCHAR(128) NOT NULL,
+                     src_cloud VARCHAR(128) NOT NULL,
+                     new_project_name VARCHAR(32) NOT NULL,
+                     dst_uuid VARCHAR(128) NOT NULL,
+                     dst_cloud VARCHAR(128) NOT NULL,
+                     images_migrated INT NOT NULL,
+                     quota_updated INT NOT NULL,
+                     state VARCHAR(128) NOT NULL,
+                     PRIMARY KEY(id, src_uuid, dst_uuid)
+                  '''
         create_table(table_name, columns, True)
         return
 
@@ -38,16 +38,6 @@ def record_tenant_migrated(tenant_details):
     table_name = "tenants"
     values_to_insert = []
     for t_details in tenant_details:
-        value_to_insert = "NULL,'" \
-                          + t_details["project_name"] + "','" \
-                          + t_details["src_uuid"] + "','" \
-                          + t_details["src_cloud"] + "','" \
-                          + t_details["new_project_name"] + "','" \
-                          + t_details["dst_uuid"] + "','" \
-                          + t_details["dst_cloud"] + "','" \
-                          + t_details["images_migrated"] + "','" \
-                          + t_details["quota_updated"] + "','" \
-                          + t_details["state"] + "'"
 
         # check whether record exists before insert
         where_dict = {'src_uuid': t_details["src_uuid"],
@@ -55,7 +45,7 @@ def record_tenant_migrated(tenant_details):
                       'dst_cloud': t_details["dst_cloud"]}
 
         if not check_record_exist(table_name, where_dict):
-            values_to_insert.append(value_to_insert)
+            values_to_insert.append(t_details)
         else:
             # do a update instead
             update_migration_record(**t_details)

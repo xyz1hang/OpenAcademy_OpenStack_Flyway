@@ -1,4 +1,3 @@
-import logging
 import sys
 
 from glanceclient import exc
@@ -99,7 +98,7 @@ class ImageMigrationTask(task.Task):
             # prepare for database record update
             dest_details = {"dst_image_name": m_img_meta.name,
                             "dst_uuid": m_img_meta.id,
-                            "dst_owner_tenant": getattr(m_img_meta, 'owner',
+                            "dst_owner_uuid": getattr(m_img_meta, 'owner',
                                                         'NULL'),
                             "dst_cloud": cfg.CONF.TARGET.os_cloud_name,
                             "checksum": m_img_meta.checksum}
@@ -133,7 +132,8 @@ class ImageMigrationTask(task.Task):
 
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
-            details = str(exc_type + " " + str(e) + " " + exc_tb.tb_lineno)
+            details = str(str(exc_type) + ": " + e.message
+                          + " [line: " + str(exc_tb.tb_lineno) + "]")
             print "Fail to processing image [Name: '{0}' ID: '{1}']\n" \
                   "Details: {2}".format(image_meta.name,
                                         image_meta.id, details)
@@ -214,12 +214,6 @@ class ImageMigrationTask(task.Task):
         all images will be migrated
         :param images_to_migrate: list of IDs of images to be migrated
         """
-        # no resources need to be migrated
-        if type(images_to_migrate) is list and \
-           type(tenant_to_process) is list and \
-           len(images_to_migrate) == 0 and \
-           len(tenant_to_process) == 0:
-            return
 
         images_to_move = []
 

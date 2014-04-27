@@ -35,24 +35,13 @@ def record_image_migrated(image_details):
     table_name = "images"
     values_to_insert = []
     for img_details in image_details:
-        value_to_insert = "NULL,'" \
-                           + img_details["src_image_name"] + "','" \
-                           + img_details["src_uuid"] + "','" \
-                           + img_details["src_owner_uuid"] + "','" \
-                           + img_details["src_cloud"] + "','" \
-                           + img_details["dst_image_name"] + "','" \
-                           + img_details["dst_uuid"] + "','" \
-                           + img_details["dst_owner_uuid"] + "','" \
-                           + img_details["dst_cloud"] + "','" \
-                           + img_details["checksum"] + "','" \
-                           + img_details["state"] + "'"
 
         # check whether record exists before insert
         where_dict = {'src_uuid': img_details["src_uuid"],
                       'src_cloud': img_details["src_cloud"]}
 
         if not check_record_exist(table_name, where_dict):
-            values_to_insert.append(value_to_insert)
+            values_to_insert.append(img_details)
         else:
             # do a update instead
             update_migration_record(**img_details)

@@ -37,17 +37,7 @@ def record_keypairs(keypair_details):
     table_name = "keypairs"
     values_to_insert = []
     for details in keypair_details:
-        value_to_insert = "NULL,'" \
-                          + details["name"] + "','" \
-                          + details["public_key"] + "','" \
-                          + details["fingerprint"] + "','" \
-                          + details["user_name"] + "','" \
-                          + details["src_cloud"] + "','" \
-                          + details["dst_cloud"] + "','" \
-                          + details["state"] + "','" \
-                          + details["user_id_updated"] + "','" \
-                          + details["new_name"] + "'"
-        values_to_insert.append(value_to_insert)
+        values_to_insert.append(details)
 
     insert_record(table_name, values_to_insert, True)
 
@@ -59,22 +49,12 @@ def update_keypairs(**keypair_details):
     :param keypair_details: relevant data of migrated keypair
     """
     table_name = "keypairs"
-    s_dict = OrderedDict(
-        [('name', keypair_details["name"]),
-         ('public_key', keypair_details["public_key"]),
-         ('fingerprint', keypair_details["fingerprint"]),
-         ('user_name', keypair_details["user_name"]),
-         ('src_cloud', keypair_details["src_cloud"]),
-         ('dst_cloud', keypair_details["dst_cloud"]),
-         ('state', keypair_details["state"]),
-         ('user_id_updated', keypair_details["user_id_updated"]),
-         ('new_name', keypair_details["new_name"])])
 
     w_dict = OrderedDict([('fingerprint', keypair_details["fingerprint"]),
                           ('src_cloud', keypair_details["src_cloud"]),
                           ('dst_cloud', keypair_details["dst_cloud"])])
 
-    update_table(table_name, s_dict, w_dict, True)
+    update_table(table_name, keypair_details, w_dict, True)
 
 
 def delete_keypairs(values):

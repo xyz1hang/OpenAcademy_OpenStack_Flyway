@@ -33,14 +33,6 @@ def record_flavor_migrated(flavor_details):
     table_name = "flavors"
     values_to_insert = []
     for f_details in flavor_details:
-        value_to_insert = "NULL,'" \
-                          + f_details["src_flavor_name"] + "','" \
-                          + f_details["src_uuid"] + "','" \
-                          + f_details["src_cloud"] + "','" \
-                          + f_details["dst_flavor_name"] + "','" \
-                          + f_details["dst_uuid"] + "','" \
-                          + f_details["dst_cloud"] + "','" \
-                          + f_details["state"] + "'"
 
         # check whether record exists before insert
         where_dict = {'src_uuid': f_details["src_uuid"],
@@ -48,7 +40,7 @@ def record_flavor_migrated(flavor_details):
                       'dst_cloud': f_details["dst_cloud"]}
 
         if not check_record_exist(table_name, where_dict):
-            values_to_insert.append(value_to_insert)
+            values_to_insert.append(f_details)
         else:
             # do a update instead
             update_migration_record(**f_details)

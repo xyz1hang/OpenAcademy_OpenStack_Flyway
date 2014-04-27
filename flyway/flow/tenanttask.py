@@ -96,7 +96,8 @@ class TenantMigrationTask(task.Task):
             # TODO: not sure what exactly the exception will be thrown
             # TODO: upon creation failure
             exc_type, exc_obj, exc_tb = sys.exc_info()
-            details = str(exc_type + " " + str(e) + " " + exc_tb.tb_lineno)
+            details = str(str(exc_type) + ": " + e.message
+                          + " [line: " + str(exc_tb.tb_lineno) + "]")
             print "tenant '{}' migration failure\nDetails:"\
                 .format(s_tenant.name, details)
             # update database record
@@ -122,27 +123,28 @@ class TenantMigrationTask(task.Task):
 
         """execute the tenant migration task
 
-        :param tenants_to_move: the tenant to move. If the not specified
+        :param tenants_to_move: the tenant to move. If not specified
         or length equals to 0 all tenant will be migrated, otherwise only
         specified tenant will be migrated
         """
-        # no resources need to be migrated
-        if type(tenants_to_move) is list and len(tenants_to_move) == 0:
-            return
-
-        # convert tenants_to_move to list in case only
-        # one string gets passed in
-        if type(tenants_to_move) is str:
-            tenants_to_move = [tenants_to_move]
 
         if not tenants_to_move:
             LOG.info("Migrating all tenants ...")
             tenants_to_move = []
             for tenant in self.ks_source.tenants.list():
                 tenants_to_move.append(tenant.name)
-        else:
+        # convert tenants_to_move to list in case only
+        # one string gets passed in
+        elif type(tenants_to_move) is str:
+            tenants_to_move = [tenants_to_move]
+        elif type(tenants_to_move) is list and len(tenants_to_move) > 0:
             LOG.info("Migrating given tenants of size {} ...\n"
                      .format(len(tenants_to_move)))
+        else:
+            print ("Incorrect parameter '{0}'.\n"
+                   "Expects: a list of tenants names\n"
+                   "Received: '{1}'".format("tenants_to_move", tenants_to_move))
+            return
 
         for source_tenant in tenants_to_move:
             LOG.info("Migrating tenant '{}'\n".format(source_tenant))

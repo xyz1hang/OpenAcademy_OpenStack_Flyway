@@ -153,7 +153,7 @@ def insert_record(table_name, values, close):
     """
     function to do table insert
     :param table_name: name of the table to be effected
-    :param values: dictionary of column and value pair
+    :param values: list of dictionaries of column and value pair
     :param close: flag to indicate whether to close db connection
     """
     # establish connection
@@ -163,13 +163,11 @@ def insert_record(table_name, values, close):
     for item in values:
         # preparing sql statement
         columns = item.keys()
-        columns_str = '(' + columns[0]
-        values_str = '(' + add_quotes(item[columns[0]])
+        columns_str = columns[0]
+        values_str = add_quotes(item[columns[0]])
         for i in xrange(1, len(columns)):
-            columns_str += ',' + columns[i]
-            values_str += ',' + add_quotes(item[columns[i]])
-        columns_str += ')'
-        values_str += ')'
+            columns_str += ', ' + columns[i]
+            values_str += ', ' + add_quotes(item[columns[i]])
 
         query = "INSERT INTO {0} ({1}) VALUES ({2})"\
             .format(table_name, columns_str, values_str)
@@ -198,11 +196,11 @@ def update_table(table_name, set_dict, where_dict, close):
     cursor = get_cursor(db)
 
     # building "SET" string
-    set_str = ''
+    first_key = set_dict.keys()[0]
+    first_value = set_dict[first_key]
+    set_str = str(first_key) + " = " + add_quotes(first_value)
     for key in set_dict.keys():
-        if key != set_dict.keys()[0]:
-            set_str += ', '
-        set_str += str(key) + " = '" + str(set_dict[key]) + "'"
+        set_str += ', ' + str(key) + " = " + add_quotes(str(set_dict[key]))
 
     filter_str = build_where_string(where_dict)
 

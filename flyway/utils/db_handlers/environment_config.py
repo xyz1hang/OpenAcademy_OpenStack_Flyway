@@ -36,18 +36,18 @@ def update_environment():
     table_name = "clouds_info"
 
     t_set_dict = OrderedDict(
-        [('cloud_name', add_quotes(cfg.CONF.TARGET.os_cloud_name)),
-         ('auth_url', add_quotes(cfg.CONF.TARGET.os_auth_url)),
-         ('tenant_name', add_quotes(cfg.CONF.TARGET.os_tenant_name)),
-         ('username', add_quotes(cfg.CONF.TARGET.os_username)),
-         ('password', add_quotes(cfg.CONF.TARGET.os_password))])
+        [('cloud_name', cfg.CONF.TARGET.os_cloud_name),
+         ('auth_url', cfg.CONF.TARGET.os_auth_url),
+         ('tenant_name', cfg.CONF.TARGET.os_tenant_name),
+         ('username', cfg.CONF.TARGET.os_username),
+         ('password', cfg.CONF.TARGET.os_password)])
 
     s_set_dict = OrderedDict(
-        [('cloud_name', add_quotes(cfg.CONF.SOURCE.os_cloud_name)),
-         ('auth_url', add_quotes(cfg.CONF.SOURCE.os_auth_url)),
-         ('tenant_name', add_quotes(cfg.CONF.SOURCE.os_tenant_name)),
-         ('username', add_quotes(cfg.CONF.SOURCE.os_username)),
-         ('password', add_quotes(cfg.CONF.SOURCE.os_password))])
+        [('cloud_name', cfg.CONF.SOURCE.os_cloud_name),
+         ('auth_url', cfg.CONF.SOURCE.os_auth_url),
+         ('tenant_name', cfg.CONF.SOURCE.os_tenant_name),
+         ('username', cfg.CONF.SOURCE.os_username),
+         ('password', cfg.CONF.SOURCE.os_password)])
 
     t_where_dict = {'cloud_name': cfg.CONF.TARGET.os_cloud_name}
     s_where_dict = {'cloud_name': cfg.CONF.SOURCE.os_cloud_name}
@@ -55,19 +55,19 @@ def update_environment():
     if not check_table_exist(table_name):
         create_environment()
 
-    columns = []
-    if not check_record_exist(table_name, t_where_dict):
-        t_columns = "NULL,"
-        t_columns += ", ".join(t_set_dict.values())
-        columns.append(t_columns)
+    values = []
+    if check_record_exist(table_name, t_where_dict):
+        update_table(table_name, t_set_dict, t_where_dict, False)
+    else:
+        values.append(t_set_dict)
 
-    if not check_record_exist(table_name, s_where_dict):
-        s_columns = "NULL,"
-        s_columns += ", ".join(s_set_dict.values())
-        columns.append(s_columns)
+    if check_record_exist(table_name, s_where_dict):
+        update_table(table_name, s_set_dict, s_where_dict, False)
+    else:
+        values.append(s_set_dict)
 
-    if len(columns) is not 0:
-        insert_record(table_name, columns, False)
+    if len(values) is not 0:
+        insert_record(table_name, values, False)
 
 
 def create_environment():
@@ -124,7 +124,3 @@ def config_content(src_config, dst_config):
 def write_to_file(file_path, content):
     with open(file_path, 'w') as file:
         file.write(content)
-
-
-def add_quotes(string):
-    return "'" + str(string) + "'"

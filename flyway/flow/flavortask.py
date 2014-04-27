@@ -44,7 +44,7 @@ class FlavorMigrationTask(task.Task):
         values = [s_flavor, s_flavor.id, s_cloud_name, t_cloud_name]
         m_flavor = flavors.get_migrated_flavor(values)
 
-        if m_flavor is not None:
+        if m_flavor is not None and m_flavor['state'] == "completed":
             print("flavor {0} in cloud {1} has already been migrated"
                   .format(m_flavor["src_flavor_name"], s_cloud_name))
 
@@ -72,7 +72,7 @@ class FlavorMigrationTask(task.Task):
                 pass
 
             new_flavor_details = {
-                'name': s_flavor.name,
+                'name': new_flavor_name,
                 'ram': s_flavor.ram,
                 'vcpus': s_flavor.vcpus,
                 'disk': s_flavor.disk,
@@ -102,7 +102,7 @@ class FlavorMigrationTask(task.Task):
             # TODO: not sure what exactly the exception will be thrown
             # TODO: upon creation failure
                 print "flavor '{}' migration failure\nDetails:"\
-                    .format(s_flavor.name, e)
+                    .format(s_flavor.name, e.message)
                 # update database record
                 flavor_migration_data.update({'state': "error"})
                 flavors.record_flavor_migrated([flavor_migration_data])
@@ -119,25 +119,25 @@ class FlavorMigrationTask(task.Task):
         specified or length equals to 0 all flavor will be migrated,
         otherwise only specified flavor will be migrated
         """
-        # no resources need to be migrated
-        if type(flavors_to_migrate) is list and len(flavors_to_migrate) == 0:
-            return
 
-        # convert flavors_to_migrate to list in case only
-        # one string gets passed in
-        if type(flavors_to_migrate) is str:
-            flavors_to_migrate = [flavors_to_migrate]
-
-        flavors_to_move = []
         if not flavors_to_migrate:
             LOG.info("Migrating all flavors ...")
+            flavors_to_migrate = []
             for flavor in self.nv_source.flavors.list():
-                flavors_to_move.append(flavor.name)
-        else:
-            flavors_to_move = flavors_to_migrate
+                flavors_to_migrate.append(flavor.name)
+        # convert tenants_to_move to list in case only
+        # one string gets passed in
+        elif type(flavors_to_migrate) is str:
+            flavors_to_migrate = [flavors_to_migrate]
+        elif type(flavors_to_migrate) is list and len(flavors_to_migrate) > 0:
             LOG.info("Migrating given flavors of size {} ...\n"
                      .format(len(flavors_to_migrate)))
+        else:
+            print ("Incorrect parameter '{0}'.\n"
+                   "Expects: a list of flavor names\n"
+                   "Received: '{1}'".format("tenants_to_move", flavors_to_migrate))
+            return
 
-        for flavor in flavors_to_move:
+        for flavor in flavors_to_migrate:
             LOG.info("Migrating flavor '{}'\n".format(flavor))
             self.migrate_one_flavor(flavor)

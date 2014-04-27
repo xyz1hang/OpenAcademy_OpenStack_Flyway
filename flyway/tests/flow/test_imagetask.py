@@ -54,9 +54,9 @@ class ImageTaskTest(TestBase):
                              dest_image.is_public)
 
         except exc.HTTPNotFound as e:
-            self.assertTrue(False, str(e))
+            self.assertTrue(False, e.message)
         except Exception as e:
-            self.assertTrue(False, str(e))
+            self.assertTrue(False, e.message)
         finally:
             self.clean_up(image_to_migrate, dest_image)
 

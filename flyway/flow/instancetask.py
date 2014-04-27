@@ -21,8 +21,8 @@ class InstanceMigrationTask(task.Task):
     Task to migrate all instances from the source cloud to the target cloud.
     """
 
-    def __init__(self, **kwargs):
-        super(InstanceMigrationTask, self).__init__(**kwargs)
+    def __init__(self, name, **kwargs):
+        super(InstanceMigrationTask, self).__init__(name, **kwargs)
         self.ks_source = get_keystone_source()
         self.ks_target = get_keystone_target()
 
