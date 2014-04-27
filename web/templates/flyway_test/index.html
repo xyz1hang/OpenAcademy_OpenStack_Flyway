@@ -204,7 +204,7 @@
     }
 
     function migrate(){
-        alert(JSON.stringify(data_to_magrate))
+        //alert(JSON.stringify(data_to_magrate))
         $.ajax({
             url: "/flyway_test/migrate",
             data: {"data_to_migrate": JSON.stringify(data_to_magrate)}
@@ -274,7 +274,7 @@
 
 	<table border="0" cellspacing="0" cellpadding="0" width="590">
 		<tr>
-          <td class="bodyText"><p align="right"><a onclick="migrate()">Migrate Resources &gt;</a></p></td>
+          <td class="bodyText"><p align="right"><a onclick="migrate()">Migrate Resources&gt;</a></p></td>
         </tr>
 	</table>
 

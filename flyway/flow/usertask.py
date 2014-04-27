@@ -15,7 +15,8 @@
 #    under the License.
 
 import logging
-from utils.db_handlers.users import set_user_complete, delete_migrated_users, initialise_users_mapping
+from utils.db_handlers.users import set_user_complete, \
+    delete_migrated_users, initialise_users_mapping
 
 from utils.helper import *
 
@@ -34,13 +35,14 @@ class UserMigrationTask(task.Task):
         self.ks_source = get_keystone_source()
         self.ks_target = get_keystone_target()
 
-        self.target_user_names = [user.name for user in self.ks_target.users.list()]
+        self.target_user_names = [user.name for user in
+                                  self.ks_target.users.list()]
 
     def migrate_one_user(self, user):
         LOG.info("Begin to migrate user {0}".format(user))
         migrated_user = None
         if user.name not in self.target_user_names:
-            password = self.generate_new_password(user)
+            password = generate_new_password(user.email)
 
             try:
                 migrated_user = self.ks_target.users.create(user.name,
@@ -56,27 +58,6 @@ class UserMigrationTask(task.Task):
                 set_user_complete(user)
         return migrated_user
 
-    @staticmethod
-    def generate_new_password(user, default_password='123456'):
-        """
-        Generate a random password for the user and email to the user,
-        default_password is used if the user has no email
-        """
-        if user.email is not None:
-            password = generate_new_password()
-            try:
-                send_reset_password_email(user.email, password)
-            except Exception,e:
-                password = default_password
-                LOG.error("Error happened when \
-                           sending password-resetting email")
-                LOG.error(e.message)
-
-        else:
-            password = default_password
-
-        return password
-
     def get_source_users(self, users_to_move):
         """
         Get users which are to be moved from self.ks_source.
@@ -87,7 +68,8 @@ class UserMigrationTask(task.Task):
                   if user.name in users_to_move]
 
     def execute(self, users_to_move):
-        if len(users_to_move) == 0:
+
+        if type(users_to_move) is list and len(users_to_move) == 0:
             return
 
         LOG.info('Migrating all users ...')

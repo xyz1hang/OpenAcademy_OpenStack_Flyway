@@ -24,7 +24,7 @@ from roletask import RoleMigrationTask
 from imagetask import ImageMigrationTask
 from keypairtask import KeypairMigrationTask
 from instancetask import InstanceMigrationTask
-from keypairtask_nova_db import KeypairNovaDBMigrationTask
+from keypairtask import KeypairMigrationTask
 from update_keypair_user_task import UpdateKeypairUserTask
 from update_projects_quotas_task import UpdateProjectsQuotasTask
 from update_project_user_role_task import ProjectUserRoleBindingTask
@@ -42,8 +42,7 @@ def get_flow():
         ),
         # TODO: Add other tasks to the flow e.g migrate image, private key etc.
         ImageMigrationTask('image_migration_task'),
-        KeypairMigrationTask('keypairs_migration_task'),
-        KeypairNovaDBMigrationTask('Keypairs_migration_task'),
+        KeypairMigrationTask('Keypairs_migration_task'),
         #InstanceMigrationTask('instances_migration_task')
 
         # after resource migration:

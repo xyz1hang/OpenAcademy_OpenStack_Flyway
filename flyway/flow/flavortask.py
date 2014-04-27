@@ -120,7 +120,7 @@ class FlavorMigrationTask(task.Task):
         otherwise only specified flavor will be migrated
         """
         # no resources need to be migrated
-        if len(flavors_to_migrate) == 0:
+        if type(flavors_to_migrate) is list and len(flavors_to_migrate) == 0:
             return
 
         # convert flavors_to_migrate to list in case only

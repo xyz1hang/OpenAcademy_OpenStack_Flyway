@@ -106,7 +106,8 @@ class ImageMigrationTask(task.Task):
 
             # check checksum if provided. If the checksum is not correct
             # it will still be stored in the database in order
-            # to be later loaded for further checking (improvement is possible)
+            # to be later loaded for further checking
+            # (improvement is possible)
             if getattr(image_meta, 'checksum', None):
                 if image_meta.checksum == m_img_meta.checksum:
                     dest_details.update({"state": "Completed"})
@@ -213,8 +214,11 @@ class ImageMigrationTask(task.Task):
         all images will be migrated
         :param images_to_migrate: list of IDs of images to be migrated
         """
-
-        if len(images_to_migrate) == 0 and len(tenant_to_process) == 0:
+        # no resources need to be migrated
+        if type(images_to_migrate) is list and \
+           type(tenant_to_process) is list and \
+           len(images_to_migrate) == 0 and \
+           len(tenant_to_process) == 0:
             return
 
         images_to_move = []
@@ -266,8 +270,8 @@ class ImageMigrationTask(task.Task):
                 m_tenants = tenants.get_migrated_tenant(filter_values)
                 migrated_tenant = m_tenants if m_tenants else None
                 if not migrated_tenant:
-                    print ("Skipping image migration for tenant '%s', since it "
-                           "has no migration record." % tenant_name)
+                    print ("Skipping image migration for tenant '%s', "
+                           "since it has no migration record." % tenant_name)
                     continue
                 if migrated_tenant['images_migrated']:
                     # images already migrated for this tenant
