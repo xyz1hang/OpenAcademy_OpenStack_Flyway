@@ -107,22 +107,12 @@ def update_migration_record(**tenant_details):
     :param tenant_details: data used to update tenant migration record
     """
     table_name = "tenants"
-    s_dict = OrderedDict(
-        [('project_name', tenant_details["project_name"]),
-         ('src_uuid', tenant_details["src_uuid"]),
-         ('src_cloud', tenant_details["src_cloud"]),
-         ('new_project_name', tenant_details["new_project_name"]),
-         ('dst_uuid', tenant_details["dst_uuid"]),
-         ('dst_cloud', tenant_details["dst_cloud"]),
-         ('images_migrated', tenant_details["images_migrated"]),
-         ('quota_updated', tenant_details["quota_updated"]),
-         ('state', tenant_details["state"])])
 
     w_dict = OrderedDict([('src_uuid', tenant_details["src_uuid"]),
                           ('src_cloud', tenant_details["src_cloud"]),
                           ('dst_cloud', tenant_details["dst_cloud"])])
 
-    update_table(table_name, s_dict, w_dict, True)
+    update_table(table_name, tenant_details, w_dict, True)
 
 
 def delete_migration_record(values):

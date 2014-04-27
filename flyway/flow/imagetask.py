@@ -1,8 +1,7 @@
 import logging
-import os
+import sys
 
 from glanceclient import exc
-import sys
 from taskflow import task
 
 from utils.db_handlers import images

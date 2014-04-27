@@ -112,22 +112,12 @@ def update_migration_record(**image_details):
     :param image_details: data used to update image migration record
     """
     table_name = "images"
-    s_dict = OrderedDict([('src_image_name', image_details["src_image_name"]),
-                          ('src_uuid', image_details["src_uuid"]),
-                          ('src_owner_uuid', image_details["src_owner_uuid"]),
-                          ('src_cloud', image_details["src_cloud"]),
-                          ('dst_image_name', image_details["dst_image_name"]),
-                          ('dst_uuid', image_details["dst_uuid"]),
-                          ('dst_owner_uuid', image_details["dst_owner_uuid"]),
-                          ('dst_cloud', image_details["dst_cloud"]),
-                          ('checksum', image_details["checksum"]),
-                          ('state', image_details["state"])])
 
     w_dict = OrderedDict([('src_uuid', image_details["src_uuid"]),
                           ('src_cloud', image_details["src_cloud"]),
                           ('dst_cloud', image_details["dst_cloud"])])
 
-    update_table(table_name, s_dict, w_dict, True)
+    update_table(table_name, image_details, w_dict, True)
 
 
 def delete_migration_record(values):

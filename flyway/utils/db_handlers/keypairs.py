@@ -1,7 +1,5 @@
 __author__ = 'chengxue'
 
-import sys
-sys.path.append('../')
 from utils.db_base import *
 from collections import OrderedDict
 
@@ -106,12 +104,14 @@ def get_keypairs(values):
     data = read_record(table_name, columns, filters, True)
 
     if not data or len(data) == 0:
-        print("no record found for keypair {0} migration from cloud {1} to could {2}"
-              .format(filters['fingerprint'], filters['src_cloud'], filters['dst_cloud']))
+        print("no record found for keypair {0} migration from cloud {1} to "
+              "could {2}".format(filters['fingerprint'], filters['src_cloud'],
+                                 filters['dst_cloud']))
         return None
     elif len(data) > 1:
-        print("multiple record found for keypair {0} migration from cloud {1} to could {2}"
-              .format(filters['fingerprint'], filters['src_cloud'], filters['dst_cloud']))
+        print("multiple record found for keypair {0} migration from cloud {1} "
+              "to could {2}".format(filters['fingerprint'],
+                                    filters['src_cloud'], filters['dst_cloud']))
         return None
 
     # should be only one row
@@ -127,7 +127,8 @@ def get_keypairs(values):
 
 
 def get_info_from_openstack_db(host, db_name, table_name, columns, filters):
-    info_return = read_openstack_record(host, db_name, table_name, columns, filters, True)
+    info_return = read_openstack_record(host, db_name, table_name, columns,
+                                        filters, True)
     return info_return
 
 

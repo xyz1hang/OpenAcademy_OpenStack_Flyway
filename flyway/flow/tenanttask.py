@@ -60,10 +60,10 @@ class TenantMigrationTask(task.Task):
                 found = self.ks_target.tenants.find(name=new_tenant_name)
                 if found:
                     user_input = \
-                        raw_input("duplicated tenant {0} found on cloud {1}\n"
-                                  "Please type in a new name or 'abort':"
+                        raw_input("Tenant of same name '{0}' found on cloud '{"
+                                  "1}'\nPlease enter a new name or 'skip':"
                                   .format(found.name, t_cloud_name))
-                    if user_input == "abort":
+                    if user_input == "skip":
                         # TODO: implement cleaning up and proper exit
                         return None
                     elif user_input:

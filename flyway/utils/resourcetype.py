@@ -9,5 +9,5 @@ class ResourceType(Enum):
     keypair = "keypair"
     resource = "resource"
     flavor = "flavor"
-    vm = "vm"
-    default = "unknown"
+    vm = "VM"
+    default = "unknown resource"

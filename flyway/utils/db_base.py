@@ -39,7 +39,8 @@ def connect_openstack_db(host, db_name):
     return db
 
 
-def read_openstack_record(host, db_name, table_name, columns, where_dict, close):
+def read_openstack_record(host, db_name, table_name, columns, where_dict,
+                          close):
     # establish connection
     db = connect_openstack_db(host, db_name)
     cursor = get_cursor(db)
@@ -70,7 +71,7 @@ def read_openstack_record(host, db_name, table_name, columns, where_dict, close)
 
 
 def update_openstack_record(host, db_name, table_name, set_dict, where_dict,
-                         close):
+                            close):
     db = connect_openstack_db(host, db_name)
     cursor = get_cursor(db)
 
@@ -152,7 +153,7 @@ def insert_record(table_name, values, close):
     """
     function to do table insert
     :param table_name: name of the table to be effected
-    :param values: values columns
+    :param values: dictionary of column and value pair
     :param close: flag to indicate whether to close db connection
     """
     # establish connection
@@ -160,7 +161,18 @@ def insert_record(table_name, values, close):
     cursor = get_cursor(db)
 
     for item in values:
-        query = "INSERT INTO {0} VALUES ({1})".format(table_name, item)
+        # preparing sql statement
+        columns = item.keys()
+        columns_str = '(' + columns[0]
+        values_str = '(' + add_quotes(item[columns[0]])
+        for i in xrange(1, len(columns)):
+            columns_str += ',' + columns[i]
+            values_str += ',' + add_quotes(item[columns[i]])
+        columns_str += ')'
+        values_str += ')'
+
+        query = "INSERT INTO {0} ({1}) VALUES ({2})"\
+            .format(table_name, columns_str, values_str)
 
         try:
             cursor.execute(query)

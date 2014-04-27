@@ -8,7 +8,9 @@ import smtplib
 
 from common import config as cfg
 
-
+#TODO: consider change these "Source", "Target" function
+#TODO: to generic function if we will have to deal with
+#TODO: "one to many" or even "many to many" migration
 def get_keystone_source(tenant_name=None):
     """Get source keystone client
     :param tenant_name: the tenant that this keystone client corresponds to

@@ -101,20 +101,12 @@ def update_migration_record(**flavor_details):
     :param flavor_details: data used to update tenant migration record
     """
     table_name = "flavors"
-    s_dict = OrderedDict(
-        [('src_flavor_name', flavor_details["src_flavor_name"]),
-         ('src_uuid', flavor_details["src_uuid"]),
-         ('src_cloud', flavor_details["src_cloud"]),
-         ('dst_flavor_name', flavor_details["dst_flavor_name"]),
-         ('dst_uuid', flavor_details["dst_uuid"]),
-         ('dst_cloud', flavor_details["dst_cloud"]),
-         ('state', flavor_details["state"])])
 
     w_dict = OrderedDict([('src_uuid', flavor_details["src_uuid"]),
                           ('src_cloud', flavor_details["src_cloud"]),
                           ('dst_cloud', flavor_details["dst_cloud"])])
 
-    update_table(table_name, s_dict, w_dict, True)
+    update_table(table_name, flavor_details, w_dict, True)
 
 
 def delete_migration_record(values):
