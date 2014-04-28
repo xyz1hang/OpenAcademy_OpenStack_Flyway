@@ -14,24 +14,24 @@ Forklift Resources from One Cloud to Another which can be executed in Ubuntu, De
 Configuration
 =============
 
-Configuration has to be made before using Flyway. Please execute the below command for implementing configurations in the 'preconfiguration' directory of project:
+Some dependencies of Flyway have to be installed before running it. Please execute the below command in the 'preconfiguration' directory of project to install relevant libraries if they haven't been installed before:
     
-    1 - sudo sh pythonutils.sh
-    2 - sudo pip install -r openstack_requirements.txt
+    1 - sudo pip install -r requirements.txt
+	2 - sudo sh pythonutils.sh
 
+Notes:
+Below is the solution to one of the common error encounted during the installation of MySQLdb on Mac OS X:
+http://stackoverflow.com/questions/22313407/clang-error-unknown-argument-mno-fused-madd-python-package-installation-fa
 
 Usage
 =====
 
 Execute the command below in the 'flyway' directory of project:
     
-    python flyway.py -src sourcecloudname -dst targetcloudname
+    python main.py -src sourcecloudname -dst targetcloudname
 
-which retrieves the corresponding cloud infos from DNS database.
+which retrieves the corresponding cloud infos from Flyway database.
     
-If sourcecloudname or targetcloudname does not exist in the DNS database, please configure new clouds in the flyway.conf file and execute the command below, the new clouds will be automatically stored in DNS database for future migration.
+If sourcecloudname or targetcloudname does not exist in the Flyway database, please configure new clouds in the flyway.conf file and execute the command below, the new clouds will be automatically stored in Flyway database for future migration.
     
     python main.py --config-file ./etc/flyway.conf
-
-Note: 
-    If vagrant is used as the host of openstack, please configure 'os_bypass_url' in the flyway.conf file and add 'bypass_url' parameter to each nova instantiation

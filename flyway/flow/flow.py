@@ -30,22 +30,25 @@ from update_projects_quotas_task import UpdateProjectsQuotasTask
 from update_project_user_role_task import ProjectUserRoleBindingTask
 
 
-def get_input():
-    #TODO: this is just a demo function for how to pass input data
-    #TODO: into tasks with FunctorTask. Please hook this up with the web UI
-    #TODO: And remove lines that gets commented out when FunctorTask is proven
-    #TODO: to be stable for the application
-    data_required = {'users_to_move': None,
-                     'tenants_to_move': None,
-                     'flavors_to_migrate': None,
-                     'images_to_migrate': None,
-                     'tenant_to_process': None,
-                     'keypairs_to_move': None,
-                     'roles_to_migrate': None}
-    return data_required
+class InputGatheringTask(task.Task):
+    def __init__(self, input_data, **kwargs):
+        super(InputGatheringTask, self).__init__(**kwargs)
+        self.input_data = input_data if input_data else None
+
+    def execute(self):
+        if not self.input_data:
+            self.input_data = {'users_to_move': None,
+                               'tenants_to_move': None,
+                               'flavors_to_migrate': None,
+                               'images_to_migrate': None,
+                               'tenant_to_process': None,
+                               'keypairs_to_move': None,
+                               'roles_to_migrate': None}
+        return self.input_data
 
 
-def get_flow():
+def get_flow(input_data=None):
+    input_task = InputGatheringTask(input_data=input_data)
     user_task = UserMigrationTask('user_migration_task')
     tenant_task = TenantMigrationTask('tenant_migration_task')
     flavor_task = FlavorMigrationTask('flavor_migration_task')
@@ -59,13 +62,13 @@ def get_flow():
     pr_binding_task = ProjectUserRoleBindingTask('project_roles_bind_task')
 
     flow = lf.Flow('main_flow').add(
-        task.FunctorTask(get_input, provides={'users_to_move',
-                                              'tenants_to_move',
-                                              'flavors_to_migrate',
-                                              'images_to_migrate',
-                                              'tenant_to_process',
-                                              'keypairs_to_move',
-                                              'roles_to_migrate'}),
+        task.FunctorTask(input_task.execute, provides={'users_to_move',
+                                                       'tenants_to_move',
+                                                       'flavors_to_migrate',
+                                                       'images_to_migrate',
+                                                       'tenant_to_process',
+                                                       'keypairs_to_move',
+                                                       'roles_to_migrate'}),
         uf.Flow('user_tenant_migration_flow').add(
             # Note that creating users, tenants, flavor and role can happen in
             # parallel and hence it is part of unordered flow
@@ -113,8 +116,8 @@ def get_flow():
     return flow
 
 
-def execute():
-    flow = get_flow()
+def execute(input_data=None):
+    flow = get_flow(input_data)
     # store: a dict for input data of "all tasks" in the flow
     # append the parameter your task needed in this store dict
     # The input data is then injected via execute() function
