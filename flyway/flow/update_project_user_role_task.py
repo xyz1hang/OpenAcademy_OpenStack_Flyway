@@ -73,18 +73,13 @@ class ProjectUserRoleBindingTask(task.Task):
                         # Check whether the role already exists
                         target_role = self.ks_target.roles. \
                             find(name=source_roles.name)
-                        # Check whether the binding already exists
-                        self.ks_target.roles.\
-                            find(user=target_user,
-                                 role=target_role,
-                                 tenant=target_project)
-                    except Exception:
-                        continue
-                    else:
+                        # Add the binding already exists
                         self.ks_target.roles. \
                             add_user_role(user=target_user,
                                           role=target_role,
                                           tenant=target_project)
+                    except Exception:
+                        continue
 
     def execute(self):
         LOG.info('bind projects, users and roles ...')
