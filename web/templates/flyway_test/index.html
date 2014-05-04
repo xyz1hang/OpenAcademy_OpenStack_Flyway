@@ -38,7 +38,16 @@
                         {field:'id',title:'Id',width:430}
                     ]],
                     onSelect: function(rowIndex, rowData){select_user_row(rowIndex, rowData)},
-                    onUnselect: function(rowIndex, rowData){unselect_user_row(rowIndex, rowData)}
+                    onUnselect: function(rowIndex, rowData){unselect_user_row(rowIndex, rowData)},
+                    onLoadSuccess:function(data){
+                        if(data){
+                            $.each(data.rows, function(index, item){
+                                if(data_to_magrate['user'].indexOf(item.name)>=0){
+                                    $('#result').datagrid('checkRow', index);
+                                }
+                            });
+                        }
+                    }
                 });
             });
     }
@@ -56,7 +65,16 @@
                         {field:'id',title:'Id',width:430}
                     ]],
                     onSelect: function(rowIndex, rowData){select_role_row(rowIndex, rowData)},
-                    onUnselect: function(rowIndex, rowData){unselect_role_row(rowIndex, rowData)}
+                    onUnselect: function(rowIndex, rowData){unselect_role_row(rowIndex, rowData)},
+                    onLoadSuccess:function(data){
+                        if(data){
+                            $.each(data.rows, function(index, item){
+                                if(data_to_magrate['role'].indexOf(item.name)>=0){
+                                    $('#result').datagrid('checkRow', index);
+                                }
+                            });
+                        }
+                    }
                 });
             });
     }
@@ -74,7 +92,16 @@
                         {field:'id',title:'Id',width:430}
                     ]],
                     onSelect: function(rowIndex, rowData){select_image_row(rowIndex, rowData)},
-                    onUnselect: function(rowIndex, rowData){unselect_image_row(rowIndex, rowData)}
+                    onUnselect: function(rowIndex, rowData){unselect_image_row(rowIndex, rowData)},
+                    onLoadSuccess:function(data){
+                        if(data){
+                            $.each(data.rows, function(index, item){
+                                if(data_to_magrate['image'].indexOf(item.name)>=0){
+                                    $('#result').datagrid('checkRow', index);
+                                }
+                            });
+                        }
+                    }
                 });
             });
     }
@@ -92,7 +119,16 @@
                         {field:'fingerprint',title:'Fingerprint',width:430}
                     ]],
                     onSelect: function(rowIndex, rowData){select_keypair_row(rowIndex, rowData)},
-                    onUnselect: function(rowIndex, rowData){unselect_keypair_row(rowIndex, rowData)}
+                    onUnselect: function(rowIndex, rowData){unselect_keypair_row(rowIndex, rowData)},
+                    onLoadSuccess:function(data){
+                        if(data){
+                            $.each(data.rows, function(index, item){
+                                if(data_to_magrate['keypair'].indexOf(item.name)>=0){
+                                    $('#result').datagrid('checkRow', index);
+                                }
+                            });
+                        }
+                    }
                 });
             });
     }
@@ -110,7 +146,16 @@
                         {field:'id',title:'Id',width:430}
                     ]],
                     onSelect: function(rowIndex, rowData){select_flavor_row(rowIndex, rowData)},
-                    onUnselect: function(rowIndex, rowData){unselect_flavor_row(rowIndex, rowData)}
+                    onUnselect: function(rowIndex, rowData){unselect_flavor_row(rowIndex, rowData)},
+                    onLoadSuccess:function(data){
+                        if(data){
+                            $.each(data.rows, function(index, item){
+                                if(data_to_magrate['flavor'].indexOf(item.name)>=0){
+                                    $('#result').datagrid('checkRow', index);
+                                }
+                            });
+                        }
+                    }
                 });
             });
     }
@@ -128,7 +173,16 @@
                         {field:'id',title:'Id',width:430}
                     ]],
                     onSelect: function(rowIndex, rowData){select_vm_row(rowIndex, rowData)},
-                    onUnselect: function(rowIndex, rowData){unselect_vm_row(rowIndex, rowData)}
+                    onUnselect: function(rowIndex, rowData){unselect_vm_row(rowIndex, rowData)},
+                    onLoadSuccess:function(data){
+                        if(data){
+                            $.each(data.rows, function(index, item){
+                                if(data_to_magrate['vm'].indexOf(item.name)>=0){
+                                    $('#result').datagrid('checkRow', index);
+                                }
+                            });
+                        }
+                    }
                 });
             });
     }
@@ -146,13 +200,24 @@
                         {field:'id',title:'Id',width:430}
                     ]],
                     onSelect: function(rowIndex, rowData){select_tenant_row(rowIndex, rowData)},
-                    onUnselect: function(rowIndex, rowData){unselect_tenant_row(rowIndex, rowData)}
+                    onUnselect: function(rowIndex, rowData){unselect_tenant_row(rowIndex, rowData)},
+                    onLoadSuccess:function(data){
+                        if(data){
+                            $.each(data.rows, function(index, item){
+                                if(data_to_magrate['tenant'].indexOf(item.name)>=0){
+                                    $('#result').datagrid('checkRow', index);
+                                }
+                            });
+                        }
+                    }
                 });
             });
     }
 
     function select_user_row(rowIndex, rowData){
-        data_to_magrate['user'].push(rowData.name)
+        if (data_to_magrate['user'].indexOf(rowData.name)<0){
+            data_to_magrate['user'].push(rowData.name)
+        }
     }
 
     function unselect_user_row(rowIndex, rowData){
