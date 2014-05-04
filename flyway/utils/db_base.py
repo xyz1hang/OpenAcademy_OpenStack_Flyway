@@ -246,7 +246,7 @@ def read_record(table_name, columns, where_dict, close):
     # build columns list
     columns_str = ', '.join(columns)
 
-    if len(where_dict.keys()) > 0:
+    if where_dict and len(where_dict.keys()) > 0:
         query = "SELECT {0} FROM {1} WHERE {2}".format(columns_str, table_name,
                                                        filter_str)
     else:
@@ -266,25 +266,6 @@ def read_record(table_name, columns, where_dict, close):
     return data
 
 
-def delete_all_data(table_name):
-    """
-    function that delete all data from a table
-    """
-    # establish connection
-    db = connect(True)
-    cursor = get_cursor(db)
-
-    query = "DELETE FROM {0}".format(table_name)
-    try:
-        cursor.execute(query)
-        db.commit()
-    except MySQLdb.Error, e:
-        print("MySQL error - DELETE ALL: {}".format(e))
-        db.rollback()
-
-    db.close()
-
-
 def delete_record(table_name, where_dict):
     """
     function that delete all data from a table
@@ -293,12 +274,17 @@ def delete_record(table_name, where_dict):
     db = connect(True)
     cursor = get_cursor(db)
     where_string = build_where_string(where_dict)
-    query = "DELETE FROM {0} WHERE {1}".format(table_name, where_string)
+
+    if where_dict and len(where_dict.keys()) > 0:
+        query = "DELETE FROM {0} WHERE {1}".format(table_name, where_string)
+    else:
+        query = "DELETE FROM {}".format(table_name)
+
     try:
         cursor.execute(query)
         db.commit()
     except MySQLdb.Error, e:
-        print("MySQL error - DELETE SOME: {}".format(e))
+        print("MySQL error - DELETE: {}".format(e))
         db.rollback()
 
     db.close()

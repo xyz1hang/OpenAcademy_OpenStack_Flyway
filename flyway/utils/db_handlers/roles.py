@@ -63,4 +63,4 @@ if __name__ == '__main__':
     config.parse(['--config-file', '../../etc/flyway.conf'])
     namelist = []
     initialise_roles_mapping(namelist)
-    delete_all_data(TABLE_NAME)
+    delete_record(TABLE_NAME, None)
