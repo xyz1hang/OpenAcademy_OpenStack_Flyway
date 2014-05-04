@@ -20,7 +20,7 @@ def initialise_keypairs_mapping():
                  dst_cloud VARCHAR(128) NOT NULL,
                  state VARCHAR(128) NOT NULL,
                  user_id_updated INT NOT NULL,
-                 new_name VARCHAR(64) NOT NULL,
+                 new_name VARCHAR(64),
                  PRIMARY KEY(id, fingerprint)
               '''
     if not check_table_exist(table_name):

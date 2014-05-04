@@ -55,7 +55,13 @@ class TenantMigrationTask(task.Task):
         # check for tenant name duplication
         new_tenant_name = s_tenant.name
         try:
-            found = True
+            found = self.ks_target.tenants.find(name=new_tenant_name)
+            if found:
+                print ("Skipping Tenant '{0}' duplicates found on cloud '{1}'"
+                       .format(found.name, t_cloud_name))
+                return
+
+            """found = True
             while found:
                 found = self.ks_target.tenants.find(name=new_tenant_name)
                 if found:
@@ -67,7 +73,7 @@ class TenantMigrationTask(task.Task):
                         # TODO: implement cleaning up and proper exit
                         return None
                     elif user_input:
-                        new_tenant_name = user_input
+                        new_tenant_name = user_input"""
         except keystone_exceptions.NotFound:
             # irrelevant exception - swallow
             pass

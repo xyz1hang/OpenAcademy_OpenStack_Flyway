@@ -119,7 +119,8 @@ def migrate(request):
                     'images_to_migrate': images,
                     'keypairs_to_move': keypairs,
                     'roles_to_migrate': roles,
-                    'users_to_move': users}
+                    'users_to_move': users,
+                    'tenant_to_process': None}
     result = flow.execute(refined_data)
     return HttpResponse(json.dumps(result, ensure_ascii=False))
 

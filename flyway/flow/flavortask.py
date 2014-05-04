@@ -52,7 +52,13 @@ class FlavorMigrationTask(task.Task):
             # check for tenant name duplication
             new_flavor_name = s_flavor.name
             try:
-                found = True
+                found = self.nv_target.flavors.find(name=new_flavor_name)
+                if found:
+                    print ("Skipping flavor '{0}' duplicates found on cloud '{1}'"
+                           .format(found.name, t_cloud_name))
+                    return
+
+                """found = True
                 while found:
                     found = self.nv_target.flavors.find(name=new_flavor_name)
                     if found:
@@ -65,7 +71,7 @@ class FlavorMigrationTask(task.Task):
                             # TODO: implement cleaning up and proper exit
                             return None
                         elif user_input:
-                            new_flavor_name = user_input
+                            new_flavor_name = user_input"""
 
             except nova_exceptions.NotFound:
                 # irrelevant exception swallow the exception

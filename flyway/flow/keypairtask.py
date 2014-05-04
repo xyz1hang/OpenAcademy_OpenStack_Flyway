@@ -46,30 +46,9 @@ class KeypairMigrationTask(task.Task):
             # irrelevant exception - swallow
             pass
 
-        # check for resource name duplication
-        new_name = keypair_data["name"]
-        try:
-            found = True
-            while found:
-                found = self.nv_target.keypairs.find(name=new_name)
-                if found:
-                    user_input = \
-                        raw_input("duplicated tenant {0} found on cloud {1}\n"
-                                  "Please type in a new name or 'abort':"
-                                  .format(found.name, self.t_cloud_name))
-                    if user_input == "abort":
-                        # TODO: implement cleaning up and proper exit
-                        return None
-                    elif user_input:
-                        new_name = user_input
-
-        except nova_exceptions.NotFound:
-            # irrelevant exception - swallow
-            pass
-
         try:
             self.nv_target.keypairs.\
-                create(new_name, public_key=keypair_data["public_key"])
+                create(keypair_data["name"], public_key=keypair_data["public_key"])
 
         except IOError as (err_no, strerror):
             print "I/O error({0}): {1}".format(err_no, strerror)
@@ -84,7 +63,6 @@ class KeypairMigrationTask(task.Task):
             return
 
         keypair_data.update({'state': 'completed'})
-        keypair_data.update({'new_name': new_name})
         db_handler.update_keypairs(**keypair_data)
 
     def execute(self, keypairs_to_move):
@@ -150,7 +128,7 @@ class KeypairMigrationTask(task.Task):
                                 'dst_cloud': self.t_cloud_name,
                                 'state': "unknown",
                                 'user_id_updated': "0",
-                                'new_name': result[0][4]}
+                                'new_name': None}
                 db_handler.record_keypairs([keypair_data])
 
                 LOG.info("Migrating keypair '{}'\n".format(result[0][4]))
@@ -158,10 +136,9 @@ class KeypairMigrationTask(task.Task):
 
             else:
                 if m_keypair['state'] == "completed":
-                    print("keypair {0} in cloud {1} has already been migrated"
-                          .format(m_keypair['name'], self.s_cloud_name))
+                    print "keypair {0} in cloud {1} has already been migrated".\
+                        format(m_keypair['name'], self.s_cloud_name)
 
                 else:
-                    LOG.info("Migrating keypair '{}'\n".
-                             format(m_keypair['name']))
+                    print "Migrating keypair '{}'\n".format(m_keypair['name'])
                     self.migrate_one_keypair(keypair_fingerprint)

@@ -23,7 +23,6 @@ from usertask import UserMigrationTask
 from tenanttask import TenantMigrationTask
 from roletask import RoleMigrationTask
 from imagetask import ImageMigrationTask
-from instancetask import InstanceMigrationTask
 from keypairtask import KeypairMigrationTask
 from update_keypair_user_task import UpdateKeypairUserTask
 from update_projects_quotas_task import UpdateProjectsQuotasTask
@@ -31,9 +30,9 @@ from update_project_user_role_task import ProjectUserRoleBindingTask
 
 
 class InputGatheringTask(task.Task):
-    def __init__(self, input_data, **kwargs):
+    def __init__(self, inputs, **kwargs):
         super(InputGatheringTask, self).__init__(**kwargs)
-        self.input_data = input_data if input_data else None
+        self.input_data = inputs if inputs else None
 
     def execute(self):
         if not self.input_data:
@@ -48,13 +47,13 @@ class InputGatheringTask(task.Task):
 
 
 def get_flow(input_data=None):
-    input_task = InputGatheringTask(input_data=input_data)
+    input_task = InputGatheringTask(inputs=input_data)
     user_task = UserMigrationTask('user_migration_task')
     tenant_task = TenantMigrationTask('tenant_migration_task')
     flavor_task = FlavorMigrationTask('flavor_migration_task')
     role_task = RoleMigrationTask('role_migration_task')
     image_task = ImageMigrationTask('image_migration_task')
-    instance_task = InstanceMigrationTask('instances_migration_task')
+    #instance_task = InstanceMigrationTask('instances_migration_task')
     keypair_task = KeypairMigrationTask('Keypairs_migration_task')
 
     proj_quota_task = UpdateProjectsQuotasTask('update_projects_quotas')
@@ -80,11 +79,7 @@ def get_flow(input_data=None):
                              rebind={
                                  'flavors_to_migrate': "flavors_to_migrate"}),
             task.FunctorTask(role_task.execute, name='role_task',
-                             rebind={'roles_to_migrate': "roles_to_migrate"}),
-            # UserMigrationTask('user_migration_task'),
-            # TenantMigrationTask('tenant_migration_task'),
-            # FlavorMigrationTask('flavor_migration_task'),
-            # RoleMigrationTask('role_migration_task')
+                             rebind={'roles_to_migrate': "roles_to_migrate"})
         ),
         # TODO: Add other tasks to the flow e.g migrate image, private key etc.
         task.FunctorTask(image_task.execute, name='image_task',
@@ -92,8 +87,8 @@ def get_flow(input_data=None):
                                  'tenant_to_process': 'tenant_to_process'}),
         task.FunctorTask(keypair_task.execute, name='keypair_task',
                          rebind={'keypairs_to_move': "keypairs_to_move"}),
-        # task.FunctorTask(instance_task.execute, name='instance_task',
-        #                  rebind={'tenant_vm_dicts': "tenant_vm_dicts"}),
+        #task.FunctorTask(instance_task.execute, name='instance_task',
+        #                rebind={'tenant_vm_dicts': "tenant_vm_dicts"}),
 
         # post migration task:
         task.FunctorTask(proj_quota_task.execute,
@@ -102,49 +97,17 @@ def get_flow(input_data=None):
                          name='update_user_keypair_task'),
         task.FunctorTask(pr_binding_task.execute,
                          name='project_role_binding_task')
-
-        # ImageMigrationTask('image_migration_task'),
-        # KeypairMigrationTask('Keypairs_migration_task'),
-        # # InstanceMigrationTask('instances_migration_task')
-        #
-        # # after resource migration:
-        # UpdateProjectsQuotasTask('update_projects_quotas'),
-        # UpdateKeypairUserTask('update_keypairs_user_ids'),
-        # ProjectUserRoleBindingTask('bind project_user_roles')
     )
 
     return flow
 
 
 def execute(input_data=None):
+    print "input Data" + str(input_data) if input_data else "nothing"
     flow = get_flow(input_data)
-    # store: a dict for input data of "all tasks" in the flow
-    # append the parameter your task needed in this store dict
-    # The input data is then injected via execute() function
-    # e.g store={'meow': 'meow_in', 'woof': 'woof_in'}
-    # ...
-    # execute(self, woof)
+
     #TODO: need to figure out a better way to allow user to specify
     #TODO: specific resource to migrate
-
-    # resources specified to migrate are given through an argument "values",
-    # “values” is a dictionary that all keys correspond to types of resources,
-    # and values are the specified resources (None means migrating all
-    # resources on the source cloud, [] means migrating nothing)
-
-    # tenants = values.get('tenants_to_move', None) if values else None
-    # flavors = values.get('flavors_to_migrate', None) if values else None
-    # images = values.get('images_to_migrate', None) if values else None
-    # keypairs = values.get('keypairs_to_move', None) if values else None
-    # image_tenants = values.get('tenant_to_process', None) if values else None
-    # roles = values.get('name_of_roles_to_move', None) if values else None
-    #
-    # data_required = {'tenants_to_move': tenants,
-    #                  'flavors_to_migrate': flavors,
-    #                  'images_to_migrate': images,
-    #                  'tenant_to_process': keypairs,
-    #                  'keypairs_to_move': image_tenants,
-    #                  'name_of_roles_to_move': roles}
 
     eng = engines.load(flow)
     result = eng.run()

@@ -61,7 +61,7 @@ class ProjectUserRoleBindingTask(task.Task):
             try:
                 target_user = self.ks_target.users. \
                     find(name=source_user.name)
-            except exceptions.NotFound:
+            except Exception:
                 continue
             else:
                 for source_roles in self.ks_source.roles.roles_for_user(
@@ -69,7 +69,7 @@ class ProjectUserRoleBindingTask(task.Task):
                     try:
                         target_role = self.ks_target.roles. \
                             find(name=source_roles.name)
-                    except exceptions.NotFound:
+                    except Exception:
                         continue
                     else:
                         self.ks_target.roles. \

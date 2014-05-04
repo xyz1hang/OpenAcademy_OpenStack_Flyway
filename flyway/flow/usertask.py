@@ -39,7 +39,7 @@ class UserMigrationTask(task.Task):
                                   self.ks_target.users.list()]
 
     def migrate_one_user(self, user):
-        LOG.info("Begin to migrate user {0}".format(user))
+        print "Begin to migrate user {0}".format(user)
         migrated_user = None
         if user.name not in self.target_user_names:
             password = generate_new_password(user.email)
@@ -72,7 +72,7 @@ class UserMigrationTask(task.Task):
         if type(users_to_move) is list and len(users_to_move) == 0:
             return
 
-        LOG.info('Migrating all users ...')
+        print 'Migrating all users ...'
 
         source_users = self.get_source_users(users_to_move)
 
