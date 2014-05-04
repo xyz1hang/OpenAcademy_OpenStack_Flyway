@@ -56,20 +56,29 @@ class ProjectUserRoleBindingTask(task.Task):
                                                the_user, the_role)
         """
 
+        #TODO: The catched exception too borad
+        #TODO: How to catch the exception called 'no user found'
         for source_user in self.ks_source.tenants. \
                 list_users(source_project):
             try:
+                # Check whether the user already exists
                 target_user = self.ks_target.users. \
                     find(name=source_user.name)
-            except exceptions.NotFound:
+            except Exception:
                 continue
             else:
                 for source_roles in self.ks_source.roles.roles_for_user(
                         user=source_user, tenant=source_project):
                     try:
+                        # Check whether the role already exists
                         target_role = self.ks_target.roles. \
                             find(name=source_roles.name)
-                    except exceptions.NotFound:
+                        # Check whether the binding already exists
+                        self.ks_target.roles.\
+                            find(user=target_user,
+                                 role=target_role,
+                                 tenant=target_project)
+                    except Exception:
                         continue
                     else:
                         self.ks_target.roles. \
