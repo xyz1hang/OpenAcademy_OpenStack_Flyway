@@ -21,6 +21,10 @@
         'vm':new Array()
     }
 
+    $(function(){
+        get_users();
+    });
+
     function get_users(){
 
         $.ajax({
@@ -204,7 +208,7 @@
     }
 
     function migrate(){
-        //alert(JSON.stringify(data_to_magrate))
+        alert(JSON.stringify(data_to_magrate))
         $.ajax({
             url: "/flyway_test/migrate",
             data: {"data_to_migrate": JSON.stringify(data_to_magrate)}

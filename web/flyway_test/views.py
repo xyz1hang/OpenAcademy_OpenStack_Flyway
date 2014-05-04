@@ -107,23 +107,19 @@ def migrate(request):
 
     cfg.parse(['--config-file', '../flyway/etc/flyway.conf'])
 
-    tenants = data.get('tenants_to_move', None) if data else None
-    flavors = data.get('flavors_to_migrate', None) if data else None
-    images = data.get('images_to_migrate', None) if data else None
-    keypairs = data.get('keypairs_to_move', None) if data else None
-    image_tenants = data.get('tenant_to_process', None) if data else None
-    roles = data.get('roles_to_migrate', None) if data else None
-    users = data.get('users_to_move', None) if data else None
+    tenants = data.get('tenant', None) if data else None
+    flavors = data.get('flavor', None) if data else None
+    images = data.get('image', None) if data else None
+    keypairs = data.get('keypair', None) if data else None
+    roles = data.get('role', None) if data else None
+    users = data.get('user', None) if data else None
 
     refined_data = {'tenants_to_move': tenants,
                     'flavors_to_migrate': flavors,
                     'images_to_migrate': images,
-                    'tenant_to_process': keypairs,
-                    'keypairs_to_move': image_tenants,
+                    'keypairs_to_move': keypairs,
                     'roles_to_migrate': roles,
                     'users_to_move': users}
-    print "data:"
-    print refined_data
     result = flow.execute(refined_data)
     return HttpResponse(json.dumps(result, ensure_ascii=False))
 
