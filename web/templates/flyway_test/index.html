@@ -21,6 +21,7 @@
         'vm':new Array()
     }
 
+
     $(function(){
         get_users();
     });
@@ -50,6 +51,8 @@
                     }
                 });
             });
+
+        $('#resource').html('Users')
     }
 
     function get_roles(){
@@ -77,6 +80,8 @@
                     }
                 });
             });
+
+        $('#resource').html('Roles')
     }
 
     function get_images(){
@@ -96,7 +101,7 @@
                     onLoadSuccess:function(data){
                         if(data){
                             $.each(data.rows, function(index, item){
-                                if(data_to_magrate['image'].indexOf(item.name)>=0){
+                                if(data_to_magrate['image'].indexOf(item.id)>=0){
                                     $('#result').datagrid('checkRow', index);
                                 }
                             });
@@ -104,6 +109,8 @@
                     }
                 });
             });
+
+        $('#resource').html('Images')
     }
 
     function get_keypairs(){
@@ -123,7 +130,7 @@
                     onLoadSuccess:function(data){
                         if(data){
                             $.each(data.rows, function(index, item){
-                                if(data_to_magrate['keypair'].indexOf(item.name)>=0){
+                                if(data_to_magrate['keypair'].indexOf(item.fingerprint)>=0){
                                     $('#result').datagrid('checkRow', index);
                                 }
                             });
@@ -131,6 +138,8 @@
                     }
                 });
             });
+
+        $('#resource').html('Key Pairs')
     }
 
     function get_flavors(){
@@ -158,6 +167,8 @@
                     }
                 });
             });
+
+        $('#resource').html('Flavours')
     }
 
     function get_vms(){
@@ -169,15 +180,16 @@
                     data: eval("(" + return_json + ')'),
                     columns:[[
                         {field:'ck',title:'CK', checkbox:true, width:40},
-                        {field:'name',title:'Name',width:200},
-                        {field:'id',title:'Id',width:430}
+                        {field:'name',title:'Tenant Name',width:150},
+                        {field:'host_name',title:'VM Name',width:150},
+                        {field:'id',title:'VM ID',width:330}
                     ]],
                     onSelect: function(rowIndex, rowData){select_vm_row(rowIndex, rowData)},
                     onUnselect: function(rowIndex, rowData){unselect_vm_row(rowIndex, rowData)},
                     onLoadSuccess:function(data){
                         if(data){
                             $.each(data.rows, function(index, item){
-                                if(data_to_magrate['vm'].indexOf(item.name)>=0){
+                                if(data_to_magrate['vm'].indexOf({key:item.name, value:new Array(item.id)})>=0){
                                     $('#result').datagrid('checkRow', index);
                                 }
                             });
@@ -185,6 +197,8 @@
                     }
                 });
             });
+
+        $('#resource').html('VMs')
     }
 
     function get_tenants(){
@@ -212,12 +226,15 @@
                     }
                 });
             });
+
+        $('#resource').html('Tenants')
     }
 
     function select_user_row(rowIndex, rowData){
-        if (data_to_magrate['user'].indexOf(rowData.name)<0){
+        if(data_to_magrate['user'].indexOf(rowData.name) < 0){
             data_to_magrate['user'].push(rowData.name)
         }
+
     }
 
     function unselect_user_row(rowIndex, rowData){
@@ -225,7 +242,9 @@
     }
 
     function select_role_row(rowIndex, rowData){
-        data_to_magrate['role'].push(rowData.name)
+        if(data_to_magrate['role'].indexOf(rowData.name) < 0 ){
+            data_to_magrate['role'].push(rowData.name)
+        }
     }
 
     function unselect_role_row(rowIndex, rowData){
@@ -233,15 +252,19 @@
     }
 
     function select_image_row(rowIndex, rowData){
-        data_to_magrate['image'].push(rowData.name)
+        if(data_to_magrate['image'].indexOf(rowData.id) < 0){
+            data_to_magrate['image'].push(rowData.id)
+        }
     }
 
     function unselect_image_row(rowIndex, rowData){
-        data_to_magrate['image'].splice(data_to_magrate['image'].indexOf(rowData.name), 1)
+        data_to_magrate['image'].splice(data_to_magrate['image'].indexOf(rowData.id), 1)
     }
 
     function select_tenant_row(rowIndex, rowData){
-        data_to_magrate['tenant'].push(rowData.name)
+        if(data_to_magrate['tenant'].indexOf(rowData.name) < 0){
+            data_to_magrate['tenant'].push(rowData.name)
+        }
     }
 
     function unselect_tenant_row(rowIndex, rowData){
@@ -249,7 +272,9 @@
     }
 
     function select_flavor_row(rowIndex, rowData){
-        data_to_magrate['flavor'].push(rowData.name)
+        if(data_to_magrate['flavor'].indexOf(rowData.name) < 0){
+            data_to_magrate['flavor'].push(rowData.name)
+        }
     }
 
     function unselect_flavor_row(rowIndex, rowData){
@@ -257,7 +282,9 @@
     }
 
     function select_keypair_row(rowIndex, rowData){
-        data_to_magrate['keypair'].push(rowData.fingerprint)
+        if(data_to_magrate['keypair'].indexOf(rowData.fingerprint) < 0){
+            data_to_magrate['keypair'].push(rowData.fingerprint)
+        }
     }
 
     function unselect_keypair_row(rowIndex, rowData){
@@ -265,20 +292,36 @@
     }
 
     function select_vm_row(rowIndex, rowData){
-        data_to_magrate['vm'].push(rowData.name)
+        //var vm_list = data_to_magrate['vm'];
+        var key_value = rowData.name;
+        var value_value = rowData.id;
+        /**
+        var existed = false;
+        for(var i = 0; i < vm_list.length; i++){
+            if(vm_list[i].key === key_value){
+                existed = true;
+                vm_list[i].value.append(value_value);
+            }
+        }*/
+
+        //if(!existed){
+        data_to_magrate['vm'].push({key:key_value, value:new Array(value_value)})
+        //}
     }
 
     function unselect_vm_row(rowIndex, rowData){
-        data_to_magrate['vm'].splice(data_to_magrate['vm'].indexOf(rowData.name), 1)
+        var key_value = rowData.name;
+        var value_value = rowData.id;
+        data_to_magrate['vm'].splice(data_to_magrate['vm'].indexOf({key:key_value, value:new Array(value_value)}), 1)
     }
 
     function migrate(){
-        alert(JSON.stringify(data_to_magrate))
+        //alert(JSON.stringify(data_to_magrate))
         $.ajax({
             url: "/flyway_test/migrate",
             data: {"data_to_migrate": JSON.stringify(data_to_magrate)}
             }).done(function(return_json) {
-
+                alert("Migration completed.")
             });
     }
 
@@ -304,6 +347,7 @@
   </tr>
 
   <tr>
+
     <td width="170" valign="top" bgcolor="#E6F3FF">
 	<table border="0" cellspacing="0" cellpadding="0" width="232" id="navigation">
         <tr>
@@ -337,8 +381,17 @@
   	</td>
 
     <td>
-    <table id="result" class="easyui-datagrid" width="590" border="0" valign="top" cellspacing="0" bordercolor="#F0F0F0">
 
+    <table border="0" cellspacing="0" cellpadding="0" width="590">
+		<tr>
+          <td class="STYLE4"><p align="left"><span id="resource"></span></p></td>
+        </tr>
+        <tr>
+          <td><p></p></td>
+        </tr>
+	</table>
+
+    <table id="result" class="easyui-datagrid" width="590" border="0" valign="top" cellspacing="0" bordercolor="#F0F0F0">
     </table>
 
 	<table border="0" cellspacing="0" cellpadding="0" width="590">
@@ -351,7 +404,7 @@
   </tr>
 
   <tr bgcolor="#3366CC">
-  	<td height="25" colspan="4" align="center" valign="middle" id="footer"
+  	<td height="25" colspan="2" align="center" valign="middle" id="footer"
         style="color:#FFFFFF">Openstack - Flyway
     </td>
   </tr>

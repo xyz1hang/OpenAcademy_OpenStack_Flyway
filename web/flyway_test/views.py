@@ -10,7 +10,9 @@ from flow.imagetask import ImageMigrationTask
 from flow.keypairtask import KeypairMigrationTask
 from flow.roletask import RoleMigrationTask
 from flow.tenanttask import TenantMigrationTask
+from flow.instancetask import InstanceMigrationTask
 from utils.db_handlers.keypairs import *
+from utils.helper import *
 
 from flow import flow
 
@@ -84,11 +86,27 @@ def get_tenants(request):
 
 def get_vms(request):
     cfg.parse(['--config-file', '../flyway/etc/flyway.conf'])
-    # TODO: what task ??
-    migration_task = UserMigrationTask()
-    vms = migration_task.nv_source.vms.list()
-    return_vms = [{'name': vm.name,
-                   'id': vm.id} for vm in vms]
+    s_host = cfg.CONF.SOURCE.os_auth_url.split("http://")[1].split(":")[0]
+    data = get_info_from_openstack_db(table_name="instances",
+                                      db_name='nova',
+                                      host=s_host,
+                                      columns=['project_id', 'uuid',
+                                               'hostname'],
+                                      filters={})
+    tenant_vms = []
+    for one_data in data:
+        tenant_name = get_info_from_openstack_db(table_name="project",
+                                                 db_name='keystone',
+                                                 host=s_host,
+                                                 columns=['name'],
+                                                 filters={'id': one_data[0]})
+        tenant_vms.append({"name": tenant_name[0], "id": one_data[1],
+                           "host_name": one_data[2]})
+
+    return_vms = [{'name': tenant_vm["name"],
+                   'id': tenant_vm["id"],
+                   'host_name':
+                   tenant_vm["host_name"]} for tenant_vm in tenant_vms]
     return HttpResponse(json.dumps(return_vms, ensure_ascii=False))
 
 
@@ -113,6 +131,7 @@ def migrate(request):
     keypairs = data.get('keypair', None) if data else None
     roles = data.get('role', None) if data else None
     users = data.get('user', None) if data else None
+    vms = data.get('vm', None) if data else None
 
     refined_data = {'tenants_to_move': tenants,
                     'flavors_to_migrate': flavors,
@@ -120,6 +139,7 @@ def migrate(request):
                     'keypairs_to_move': keypairs,
                     'roles_to_migrate': roles,
                     'users_to_move': users,
+                    'tenant_vm_dicts': vms,
                     'tenant_to_process': None}
     result = flow.execute(refined_data)
     return HttpResponse(json.dumps(result, ensure_ascii=False))
