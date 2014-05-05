@@ -41,12 +41,12 @@ def initialise_users_mapping(source_users, target_user_names):
     init_users = []
     for user in source_users:
         if user.name not in target_user_names and not existed_in_db(user):
-            init_user['name'] = user.name
-            init_user['email'] = user.email
-            init_users.append(init_user)
+            new_user = init_user.copy()
+            new_user['name'] = user.name
+            new_user['email'] = user.email
+            init_users.append(new_user)
             LOG.debug("insert user:")
             LOG.debug(init_user)
-
     insert_record(TABLE_NAME, init_users, True)
 
 
