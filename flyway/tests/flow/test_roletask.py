@@ -47,7 +47,7 @@ class RoleTaskTest(TestCase):
         new_role_name = "iamnewrole2"
         self.migration_task.ks_source.roles.create(new_role_name)
 
-        self.migration_task.execute()
+        self.migration_task.execute(None)
         assert(not self.migration_task.get_roles_to_move())
 
         for role in self.migration_task.ks_source.roles.list():
