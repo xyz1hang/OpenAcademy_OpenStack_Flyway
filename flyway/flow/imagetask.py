@@ -130,6 +130,10 @@ class ImageMigrationTask(task.Task):
                                         image_meta.id, str(e))
             dest_details = {"state": "Error"}
 
+        except exc.HTTPConflict as e:
+            print e.details
+            dest_details = {"state": "Error"}
+
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             details = str(str(exc_type) + ": " + e.message
@@ -216,7 +220,6 @@ class ImageMigrationTask(task.Task):
         """
 
         images_to_move = []
-
         # migrate given images
         if images_to_migrate:
             for img_id in images_to_migrate:
