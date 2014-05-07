@@ -24,7 +24,6 @@ from tenanttask import TenantMigrationTask
 from roletask import RoleMigrationTask
 from imagetask import ImageMigrationTask
 from keypairtask import KeypairMigrationTask
-from update_keypair_user_task import UpdateKeypairUserTask
 from update_projects_quotas_task import UpdateProjectsQuotasTask
 from update_project_user_role_task import ProjectUserRoleBindingTask
 
@@ -57,7 +56,6 @@ def get_flow(input_data=None):
     keypair_task = KeypairMigrationTask('Keypairs_migration_task')
 
     proj_quota_task = UpdateProjectsQuotasTask('update_projects_quotas')
-    keypair_update_task = UpdateKeypairUserTask('update_keypairs_user_ids')
     pr_binding_task = ProjectUserRoleBindingTask('project_roles_bind_task')
 
     flow = lf.Flow('main_flow').add(
@@ -93,8 +91,6 @@ def get_flow(input_data=None):
         # post migration task:
         task.FunctorTask(proj_quota_task.execute,
                          name='update_project_quota_task'),
-        task.FunctorTask(keypair_update_task.execute,
-                         name='update_user_keypair_task'),
         task.FunctorTask(pr_binding_task.execute,
                          name='project_role_binding_task')
     )
