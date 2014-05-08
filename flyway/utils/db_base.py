@@ -98,6 +98,34 @@ def update_openstack_record(host, db_name, table_name, set_dict, where_dict,
         db.close()
 
 
+def insert_openstack_record(host, db_name, table_name, values, close):
+    # establish connection
+    db = connect_openstack_db(host, db_name)
+    cursor = get_cursor(db)
+
+    for item in values:
+        # preparing sql statement
+        columns = item.keys()
+        columns_str = columns[0]
+        values_str = add_quotes(item[columns[0]])
+        for i in xrange(1, len(columns)):
+            columns_str += ', ' + columns[i]
+            values_str += ', ' + add_quotes(item[columns[i]])
+
+        query = "INSERT INTO {0} ({1}) VALUES ({2})"\
+            .format(table_name, columns_str, values_str)
+
+        try:
+            cursor.execute(query)
+            db.commit()
+        except MySQLdb.Error, e:
+            print("MySql error - INSERT: {}".format(e))
+            db.rollback()
+
+    if close:
+        db.close()
+
+
 def get_cursor(db):
     return db.cursor()
 

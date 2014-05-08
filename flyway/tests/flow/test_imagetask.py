@@ -30,7 +30,7 @@ class ImageTaskTest(TestBase):
         dest_image = None
         try:
             self.migration_task.execute(
-                images_to_migrate=[image_to_migrate.id])
+                images_to_migrate=[image_to_migrate.id], tenant_to_process=None)
 
             # get the image data that has been migrated from src to dst
             values = [image_name, image_to_migrate.id, image_to_migrate.owner,
