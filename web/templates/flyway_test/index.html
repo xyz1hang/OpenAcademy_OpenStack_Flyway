@@ -18,7 +18,7 @@
         'tenant':new Array(),
         'keypair':new Array(),
         'flavor':new Array(),
-        'vm':new Array()
+        'vm':new Object()
     }
 
 
@@ -189,7 +189,10 @@
                     onLoadSuccess:function(data){
                         if(data){
                             $.each(data.rows, function(index, item){
-                                if(data_to_magrate['vm'].indexOf({key:item.name, value:new Array(item.id)})>=0){
+                                var key_value = item.name;
+                                var value_value = item.id;
+                                if(data_to_magrate['vm'][key_value] != undefined
+                                        && data_to_magrate['vm'][key_value].indexOf(value_value)>=0){
                                     $('#result').datagrid('checkRow', index);
                                 }
                             });
@@ -295,24 +298,18 @@
         //var vm_list = data_to_magrate['vm'];
         var key_value = rowData.name;
         var value_value = rowData.id;
-        /**
-        var existed = false;
-        for(var i = 0; i < vm_list.length; i++){
-            if(vm_list[i].key === key_value){
-                existed = true;
-                vm_list[i].value.append(value_value);
-            }
-        }*/
 
-        //if(!existed){
-        data_to_magrate['vm'].push({key:key_value, value:new Array(value_value)})
-        //}
+        if (data_to_magrate['vm'][key_value] == undefined){
+            data_to_magrate['vm'][key_value] = [value_value]
+        }else{
+            data_to_magrate['vm'][key_value].push(value_value)
+        }
     }
 
     function unselect_vm_row(rowIndex, rowData){
         var key_value = rowData.name;
         var value_value = rowData.id;
-        data_to_magrate['vm'].splice(data_to_magrate['vm'].indexOf({key:key_value, value:new Array(value_value)}), 1)
+        data_to_magrate['vm'][key_value].splice(data_to_magrate['vm'][key_value].indexOf(value_value), 1)
     }
 
     function migrate(){
