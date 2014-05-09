@@ -13,7 +13,6 @@ class UpdateProjectsQuotasTest(TestBase):
 
     def __init__(self, *args, **kwargs):
         super(UpdateProjectsQuotasTest, self).__init__(*args, **kwargs)
-        config.parse(['--config-file', '../../etc/flyway.conf'])
         self.task = UpdateProjectsQuotasTask('update_projects_quotas')
         self.migration_task = TenantMigrationTask('tenant_migration_task')
         self.s_cloud_name = utils.helper.cfg.CONF.SOURCE.os_cloud_name

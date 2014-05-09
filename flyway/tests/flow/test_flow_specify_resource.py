@@ -13,7 +13,6 @@ class UpdateProjectsQuotasTest(TestBase):
 
     def __init__(self, *args, **kwargs):
         super(UpdateProjectsQuotasTest, self).__init__(*args, **kwargs)
-        config.parse(['--config-file', '../../etc/flyway.conf'])
 
         self.ks_source = get_keystone_source()
         self.ks_target = get_keystone_target()

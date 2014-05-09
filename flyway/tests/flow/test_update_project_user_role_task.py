@@ -12,7 +12,6 @@ from keystoneclient import exceptions as keystone_exceptions
 class UpdateProjectUserRoleTest(TestBase):
     def __init__(self, *args, **kwargs):
         super(UpdateProjectUserRoleTest, self).__init__(*args, **kwargs)
-        config.parse(['--config-file', '../../etc/flyway.conf'])
         self.binding_task = ProjectUserRoleBindingTask(
             'update_projects_quotas')
         self.tenant_migration_task = TenantMigrationTask(

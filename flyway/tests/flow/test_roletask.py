@@ -11,7 +11,6 @@ class RoleTaskTest(TestBase):
     def __init__(self, *args, **kwargs):
 
         super(RoleTaskTest, self).__init__(*args, **kwargs)
-        config.parse(['--config-file', '../../etc/flyway.conf'])
         self.migration_task = RoleMigrationTask()
 
     def test_list_names(self):

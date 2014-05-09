@@ -13,7 +13,6 @@ class ImageTaskTest(TestBase):
 
     def __init__(self, *args, **kwargs):
         super(ImageTaskTest, self).__init__(*args, **kwargs)
-        config.parse(['--config-file', '../../etc/flyway.conf'])
         self.migration_task = ImageMigrationTask('image_migration_task')
 
     def test_execute(self):
