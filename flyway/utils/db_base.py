@@ -1,9 +1,35 @@
+import threading
 from oslo.config import cfg
 
 __author__ = 'hydezhang'
 
 import MySQLdb
 import base64
+from DBUtils.PooledDB import PooledDB
+
+db_pool = None
+
+
+def create_db_pool(db_name=None):
+    credentials = get_db_credentials()
+
+    db_name = str(cfg.CONF.DATABASE.db_name) if db_name is None else db_name
+    credentials.update({'db': db_name})
+    global db_pool
+    mutex = threading.Lock()
+    mutex.acquire()
+    if db_pool is None:
+        db_pool = PooledDB(MySQLdb, 100, **credentials)
+    mutex.release()
+
+
+def get_db_credentials():
+    password = cfg.CONF.DATABASE.mysql_password
+    password = base64.b64decode(password)
+    credentials = {'host': str(cfg.CONF.DATABASE.host),
+                   'user': str(cfg.CONF.DATABASE.user),
+                   'passwd': str(password)}
+    return credentials
 
 
 def connect(with_db, db_name=None):
@@ -13,19 +39,12 @@ def connect(with_db, db_name=None):
     :param with_db: flag to indicate whether to connect to
     a particular database or not
     """
-    password = cfg.CONF.DATABASE.mysql_password
-    password = base64.b64decode(password)
-    credentials = {'host': str(cfg.CONF.DATABASE.host),
-                   'user': str(cfg.CONF.DATABASE.user),
-                   'passwd': str(password)}
 
     if with_db:
-        if db_name is None:
-            credentials.update({'db': str(cfg.CONF.DATABASE.db_name)})
-        else:
-            credentials.update({'db': db_name})
-
-    db = MySQLdb.connect(**credentials)
+        db = db_pool.connection()
+    else:
+        credentials = get_db_credentials()
+        db = MySQLdb.connect(**credentials)
 
     return db
 
@@ -141,6 +160,7 @@ def create_database(db_name):
 
     if result:
         print("Database {} already exists".format(db_name))
+        cursor.close()
         db.close()
         return
 
@@ -148,6 +168,7 @@ def create_database(db_name):
     try:
         cursor.execute(query_create)
         db.commit()
+        db.close()
     except MySQLdb.Error, e:
         print("MySQL error - Database creation: {}".format(e))
         db.rollback()

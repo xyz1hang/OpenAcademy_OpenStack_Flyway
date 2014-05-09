@@ -3,7 +3,9 @@ from utils.db_base import *
 
 
 def initialize_environment():
-    create_database('flyway')
+    db_name = 'flyway'
+    create_database(db_name)
+    create_db_pool(db_name)
 
 
 def read_environment(*value):

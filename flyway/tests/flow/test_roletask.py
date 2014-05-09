@@ -2,9 +2,10 @@ from testtools import TestCase
 
 from flow.roletask import RoleMigrationTask
 from common import config
+from tests.flow.test_base import TestBase
 
 
-class RoleTaskTest(TestCase):
+class RoleTaskTest(TestBase):
     """Unit test for role migration"""
 
     def __init__(self, *args, **kwargs):
