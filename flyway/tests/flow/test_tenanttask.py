@@ -14,7 +14,6 @@ class TenantTaskTest(TestBase):
 
     def __init__(self, *args, **kwargs):
         super(TenantTaskTest, self).__init__(*args, **kwargs)
-        config.parse(['--config-file', '../../etc/flyway.conf'])
         self.migration_task = TenantMigrationTask('tenant_migration_task')
 
     def test_execute(self):

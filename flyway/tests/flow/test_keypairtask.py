@@ -13,7 +13,6 @@ class KeypairTaskTest(TestBase):
 
     def __init__(self, *args, **kwargs):
         super(KeypairTaskTest, self).__init__(*args, **kwargs)
-        config.parse(['--config-file', '../../etc/flyway.conf'])
         self.migration_task = \
             KeypairMigrationTask('keypair_migration_task')
 

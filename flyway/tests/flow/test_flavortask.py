@@ -14,7 +14,6 @@ class FlavorTaskTest(TestBase):
 
     def __init__(self, *args, **kwargs):
         super(FlavorTaskTest, self).__init__(*args, **kwargs)
-        config.parse(['--config-file', '../../etc/flyway.conf'])
         self.migration_task = FlavorMigrationTask('flavor_migration_task')
 
     def test_execute(self):
