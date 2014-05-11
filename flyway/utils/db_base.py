@@ -1,9 +1,35 @@
+import threading
 from oslo.config import cfg
 
 __author__ = 'hydezhang'
 
 import MySQLdb
 import base64
+from DBUtils.PooledDB import PooledDB
+
+db_pool = None
+
+
+def create_db_pool(db_name=None):
+    credentials = get_db_credentials()
+
+    db_name = str(cfg.CONF.DATABASE.db_name) if db_name is None else db_name
+    credentials.update({'db': db_name})
+    global db_pool
+    mutex = threading.Lock()
+    mutex.acquire()
+    if db_pool is None:
+        db_pool = PooledDB(MySQLdb, 100, **credentials)
+    mutex.release()
+
+
+def get_db_credentials():
+    password = cfg.CONF.DATABASE.mysql_password
+    password = base64.b64decode(password)
+    credentials = {'host': str(cfg.CONF.DATABASE.host),
+                   'user': str(cfg.CONF.DATABASE.user),
+                   'passwd': str(password)}
+    return credentials
 
 
 def connect(with_db, db_name=None):
@@ -13,19 +39,12 @@ def connect(with_db, db_name=None):
     :param with_db: flag to indicate whether to connect to
     a particular database or not
     """
-    password = cfg.CONF.DATABASE.mysql_password
-    password = base64.b64decode(password)
-    credentials = {'host': str(cfg.CONF.DATABASE.host),
-                   'user': str(cfg.CONF.DATABASE.user),
-                   'passwd': str(password)}
 
     if with_db:
-        if db_name is None:
-            credentials.update({'db': str(cfg.CONF.DATABASE.db_name)})
-        else:
-            credentials.update({'db': db_name})
-
-    db = MySQLdb.connect(**credentials)
+        db = db_pool.connection()
+    else:
+        credentials = get_db_credentials()
+        db = MySQLdb.connect(**credentials)
 
     return db
 
@@ -98,6 +117,34 @@ def update_openstack_record(host, db_name, table_name, set_dict, where_dict,
         db.close()
 
 
+def insert_openstack_record(host, db_name, table_name, values, close):
+    # establish connection
+    db = connect_openstack_db(host, db_name)
+    cursor = get_cursor(db)
+
+    for item in values:
+        # preparing sql statement
+        columns = item.keys()
+        columns_str = columns[0]
+        values_str = add_quotes(item[columns[0]])
+        for i in xrange(1, len(columns)):
+            columns_str += ', ' + columns[i]
+            values_str += ', ' + add_quotes(item[columns[i]])
+
+        query = "INSERT INTO {0} ({1}) VALUES ({2})"\
+            .format(table_name, columns_str, values_str)
+
+        try:
+            cursor.execute(query)
+            db.commit()
+        except MySQLdb.Error, e:
+            print("MySql error - INSERT: {}".format(e))
+            db.rollback()
+
+    if close:
+        db.close()
+
+
 def get_cursor(db):
     return db.cursor()
 
@@ -113,6 +160,7 @@ def create_database(db_name):
 
     if result:
         print("Database {} already exists".format(db_name))
+        cursor.close()
         db.close()
         return
 
@@ -120,6 +168,7 @@ def create_database(db_name):
     try:
         cursor.execute(query_create)
         db.commit()
+        db.close()
     except MySQLdb.Error, e:
         print("MySQL error - Database creation: {}".format(e))
         db.rollback()

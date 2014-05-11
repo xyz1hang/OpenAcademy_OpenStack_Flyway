@@ -1,32 +1,34 @@
-<html xmlns="http://www.w3.org/1999/xhtml">
-<!-- DW6 -->
+<!DOCTYPE html>
+<html>
 <head>
-<!-- Copyright 2005 Macromedia, Inc. All rights reserved. -->
-<title>Openstack Flyway Testing Page</title>
+    <title>Openstack Flyway Testing Page</title>
 <meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
-<link rel="stylesheet" href="/static/css/format.css" type="text/css" />
+<link rel="stylesheet" href="/static/css/contentslider.css" type="text/css" />
+<link rel="stylesheet" href="/static/css/templatemo_style.css" type="text/css" />
 <link rel="stylesheet" type="text/css" href="/static/css/themes/icon.css">
 <link rel="stylesheet" type="text/css" href="/static/css/themes/default/easyui.css">
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 <script type="text/javascript" src="/static/js/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="/static/js/contentslider.js"></script>
+
 <script type="text/javascript">
 
-    var data_to_magrate = {
+     var data_to_magrate = {
         'user':new Array(),
         'role':new Array(),
         'image':new Array(),
         'tenant':new Array(),
         'keypair':new Array(),
         'flavor':new Array(),
-        'vm':new Array()
+        'vm':new Object()
     }
 
 
     $(function(){
-        get_users();
+        get_flavors(null, null, null, null, null, null, null);
     });
 
-    function get_users(){
+    function get_users(obj1, obj2, obj3, obj4, obj5, obj6, obj7){
 
         $.ajax({
             url: "/flyway_test/get_users"
@@ -53,9 +55,26 @@
             });
 
         $('#resource').html('Users')
+
+        obj1.style.background='#FFFFFF';
+        obj1.style.color='#000000';
+
+        obj2.style.background='#DDDDDD';
+        obj2.style.color='#777777';
+        obj3.style.background='#DDDDDD';
+        obj3.style.color='#777777';
+        obj4.style.background='#DDDDDD';
+        obj4.style.color='#777777';
+        obj5.style.background='#DDDDDD';
+        obj5.style.color='#777777';
+        obj6.style.background='#DDDDDD';
+        obj6.style.color='#777777';
+        obj7.style.background='#DDDDDD';
+        obj7.style.color='#777777';
+
     }
 
-    function get_roles(){
+    function get_roles(obj1, obj2, obj3, obj4, obj5, obj6, obj7){
 
         $.ajax({
             url: "/flyway_test/get_roles"
@@ -82,9 +101,25 @@
             });
 
         $('#resource').html('Roles')
+
+        obj1.style.background='#FFFFFF';
+        obj1.style.color='#000000';
+
+        obj2.style.background='#DDDDDD';
+        obj2.style.color='#777777';
+        obj3.style.background='#DDDDDD';
+        obj3.style.color='#777777';
+        obj4.style.background='#DDDDDD';
+        obj4.style.color='#777777';
+        obj5.style.background='#DDDDDD';
+        obj5.style.color='#777777';
+        obj6.style.background='#DDDDDD';
+        obj6.style.color='#777777';
+        obj7.style.background='#DDDDDD';
+        obj7.style.color='#777777';
     }
 
-    function get_images(){
+    function get_images(obj1, obj2, obj3, obj4, obj5, obj6, obj7){
 
         $.ajax({
             url: "/flyway_test/get_images"
@@ -111,9 +146,26 @@
             });
 
         $('#resource').html('Images')
+
+        obj1.style.background='#FFFFFF';
+        obj1.style.color='#000000';
+
+        obj2.style.background='#DDDDDD';
+        obj2.style.color='#777777';
+        obj3.style.background='#DDDDDD';
+        obj3.style.color='#777777';
+        obj4.style.background='#DDDDDD';
+        obj4.style.color='#777777';
+        obj5.style.background='#DDDDDD';
+        obj5.style.color='#777777';
+        obj6.style.background='#DDDDDD';
+        obj6.style.color='#777777';
+        obj7.style.background='#DDDDDD';
+        obj7.style.color='#777777';
+
     }
 
-    function get_keypairs(){
+    function get_keypairs(obj1, obj2, obj3, obj4, obj5, obj6, obj7){
 
         $.ajax({
             url: "/flyway_test/get_keypairs"
@@ -140,9 +192,25 @@
             });
 
         $('#resource').html('Key Pairs')
+
+        obj1.style.background='#FFFFFF';
+        obj1.style.color='#000000';
+
+        obj2.style.background='#DDDDDD';
+        obj2.style.color='#777777';
+        obj3.style.background='#DDDDDD';
+        obj3.style.color='#777777';
+        obj4.style.background='#DDDDDD';
+        obj4.style.color='#777777';
+        obj5.style.background='#DDDDDD';
+        obj5.style.color='#777777';
+        obj6.style.background='#DDDDDD';
+        obj6.style.color='#777777';
+        obj7.style.background='#DDDDDD';
+        obj7.style.color='#777777';
     }
 
-    function get_flavors(){
+    function get_flavors(obj1, obj2, obj3, obj4, obj5, obj6, obj7){
 
         $.ajax({
             url: "/flyway_test/get_flavors"
@@ -169,9 +237,28 @@
             });
 
         $('#resource').html('Flavours')
+
+        if (obj1 != null) {
+            obj1.style.background='#FFFFFF';
+            obj1.style.color='#000000';
+
+            obj2.style.background='#DDDDDD';
+            obj2.style.color='#777777';
+            obj3.style.background='#DDDDDD';
+            obj3.style.color='#777777';
+            obj4.style.background='#DDDDDD';
+            obj4.style.color='#777777';
+            obj5.style.background='#DDDDDD';
+            obj5.style.color='#777777';
+            obj6.style.background='#DDDDDD';
+            obj6.style.color='#777777';
+            obj7.style.background='#DDDDDD';
+            obj7.style.color='#777777';
+        }
+
     }
 
-    function get_vms(){
+    function get_vms(obj1, obj2, obj3, obj4, obj5, obj6, obj7){
 
         $.ajax({
             url: "/flyway_test/get_vms"
@@ -189,7 +276,10 @@
                     onLoadSuccess:function(data){
                         if(data){
                             $.each(data.rows, function(index, item){
-                                if(data_to_magrate['vm'].indexOf({key:item.name, value:new Array(item.id)})>=0){
+                                var key_value = item.name;
+                                var value_value = item.id;
+                                if(data_to_magrate['vm'][key_value] != undefined
+                                        && data_to_magrate['vm'][key_value].indexOf(value_value)>=0){
                                     $('#result').datagrid('checkRow', index);
                                 }
                             });
@@ -199,9 +289,25 @@
             });
 
         $('#resource').html('VMs')
+
+        obj1.style.background='#FFFFFF';
+        obj1.style.color='#000000';
+
+        obj2.style.background='#DDDDDD';
+        obj2.style.color='#777777';
+        obj3.style.background='#DDDDDD';
+        obj3.style.color='#777777';
+        obj4.style.background='#DDDDDD';
+        obj4.style.color='#777777';
+        obj5.style.background='#DDDDDD';
+        obj5.style.color='#777777';
+        obj6.style.background='#DDDDDD';
+        obj6.style.color='#777777';
+        obj7.style.background='#DDDDDD';
+        obj7.style.color='#777777';
     }
 
-    function get_tenants(){
+    function get_tenants(obj1, obj2, obj3, obj4, obj5, obj6, obj7){
 
         $.ajax({
             url: "/flyway_test/get_tenants"
@@ -228,6 +334,22 @@
             });
 
         $('#resource').html('Tenants')
+
+        obj1.style.background='#FFFFFF';
+        obj1.style.color='#000000';
+
+        obj2.style.background='#DDDDDD';
+        obj2.style.color='#777777';
+        obj3.style.background='#DDDDDD';
+        obj3.style.color='#777777';
+        obj4.style.background='#DDDDDD';
+        obj4.style.color='#777777';
+        obj5.style.background='#DDDDDD';
+        obj5.style.color='#777777';
+        obj6.style.background='#DDDDDD';
+        obj6.style.color='#777777';
+        obj7.style.background='#DDDDDD';
+        obj7.style.color='#777777';
     }
 
     function select_user_row(rowIndex, rowData){
@@ -292,31 +414,23 @@
     }
 
     function select_vm_row(rowIndex, rowData){
-        //var vm_list = data_to_magrate['vm'];
         var key_value = rowData.name;
         var value_value = rowData.id;
-        /**
-        var existed = false;
-        for(var i = 0; i < vm_list.length; i++){
-            if(vm_list[i].key === key_value){
-                existed = true;
-                vm_list[i].value.append(value_value);
-            }
-        }*/
 
-        //if(!existed){
-        data_to_magrate['vm'].push({key:key_value, value:new Array(value_value)})
-        //}
+        if (data_to_magrate['vm'][key_value] == undefined){
+            data_to_magrate['vm'][key_value] = [value_value]
+        }else{
+            data_to_magrate['vm'][key_value].push(value_value)
+        }
     }
 
     function unselect_vm_row(rowIndex, rowData){
         var key_value = rowData.name;
         var value_value = rowData.id;
-        data_to_magrate['vm'].splice(data_to_magrate['vm'].indexOf({key:key_value, value:new Array(value_value)}), 1)
+        data_to_magrate['vm'][key_value].splice(data_to_magrate['vm'][key_value].indexOf(value_value), 1)
     }
 
     function migrate(){
-        //alert(JSON.stringify(data_to_magrate))
         $.ajax({
             url: "/flyway_test/migrate",
             data: {"data_to_migrate": JSON.stringify(data_to_magrate)}
@@ -329,87 +443,62 @@
 </script>
 
 </head>
-<body bgcolor="#FFFFFF">
-<div style="border:medium #000033" >
-<table width="70%" border="0" cellspacing="0" cellpadding="0" align="center">
+<body>
+<div id="templatemo_container">
 
-  <tr bgcolor="#3366CC">
-    <td height="63" colspan="2" align="center" valign="middle" nowrap="nowrap"
-        id="logo" style="color:#FFFFFF">
-        <div align="center"><span class="STYLE2">Openstack Flyway</span></div>
-    </td>
-  </tr>
+        <div id="templatemo_left_panel">
 
-  <tr bgcolor="#3366CC">
-    <td height="64" colspan="2" id="tagline" valign="middle" align="center">
-        <span class="STYLE4">Testing</span>
-    </td>
-  </tr>
+            <div id="logo">
+            </div>
 
-  <tr>
+            <div id="paginate-slider4" class="pagination">
+                <input type="button" id="button1" onclick="get_flavors(button1, button2, button3, button4, button5, button6, button7)" value="Flavour" onmouseover="button1.className='toc leftbuttonover'" onmouseout="button1.className='toc leftbutton'" class="toc leftbutton">
+                <input type="button" id="button2" onclick="get_images(button2, button1, button3, button4, button5, button6, button7)" value="Image" onmouseover="button2.className='toc leftbuttonover'" onmouseout="button2.className='toc leftbutton'" class="toc leftbutton">
+                <input type="button" id="button3" onclick="get_keypairs(button3, button1, button2, button4, button5, button6, button7)" value="Key Pair" onmouseover="button3.className='toc leftbuttonover'" onmouseout="button3.className='toc leftbutton'" class="toc leftbutton">
+                <input type="button" id="button4" onclick="get_roles(button4, button1, button2, button3, button5, button6, button7)" value="Role" onmouseover="button4.className='toc leftbuttonover'" onmouseout="button4.className='toc leftbutton'" class="toc leftbutton">
+                <input type="button" id="button5" onclick="get_tenants(button5, button1, button2, button3, button4, button6, button7)" value="Tenant" onmouseover="button5.className='toc leftbuttonover'" onmouseout="button5.className='toc leftbutton'" class="toc leftbutton">
+                <input type="button" id="button6" onclick="get_users(button6, button1, button2, button3, button4, button5, button7)" value="User" onmouseover="button6.className='toc leftbuttonover'" onmouseout="button6.className='toc leftbutton'" class="toc leftbutton">
+                <input type="button" id="button7" onclick="get_vms(button7, button1, button2, button3, button4, button5, button6)" value="VM" onmouseover="button7.className='toc leftbuttonover'" onmouseout="button7.className='toc leftbutton'" class="toc leftbutton">
+            </div>
 
-    <td width="170" valign="top" bgcolor="#E6F3FF">
-	<table border="0" cellspacing="0" cellpadding="0" width="232" id="navigation">
-        <tr>
-          <td width="232"><br><br /></td>
-        </tr>
-        <tr>
-          <td width="232"><a onclick="get_users()" class="navText">Users</a></td>
-        </tr>
-        <tr>
-          <td width="232"><a onclick="get_roles()" class="navText">Roles</a></td>
-        </tr>
-        <tr>
-          <td width="232"><a onclick="get_images()" class="navText">Images</a></td>
-        </tr>
-		<tr>
-          <td width="232"><a onclick="get_flavors()" class="navText">Flavors</a></td>
-        </tr>
-        <tr>
-          <td width="232"><a onclick="get_tenants()" class="navText">Tenants</a></td>
-        </tr>
-        <tr>
-          <td width="232"><a onclick="get_keypairs()" class="navText">Key Pairs</a></td>
-        </tr>
-		<tr>
-          <td width="232"><a onclick="get_vms()" class="navText">VMs</a></td>
-        </tr>
-        <tr>
-          <td width="232"><br><br /></td>
-        </tr>
-    </table>
-  	</td>
+        </div>
 
-    <td>
 
-    <table border="0" cellspacing="0" cellpadding="0" width="590">
-		<tr>
-          <td class="STYLE4"><p align="left"><span id="resource"></span></p></td>
-        </tr>
-        <tr>
-          <td><p></p></td>
-        </tr>
-	</table>
+        <div id="slider4" class="sliderwrapper">
 
-    <table id="result" class="easyui-datagrid" width="590" border="0" valign="top" cellspacing="0" bordercolor="#F0F0F0">
-    </table>
+          <div class="contentdiv">
+            <div class="header"><span id="resource"></span></div>
+                <table id="result" class="easyui-datagrid" width="500" border="0" valign="top" cellspacing="0" bordercolor="#F0F0F0">
+                </table>
 
-	<table border="0" cellspacing="0" cellpadding="0" width="590">
-		<tr>
-          <td class="bodyText"><p align="right"><a onclick="migrate()">Migrate Resources&gt;</a></p></td>
-        </tr>
-	</table>
+          </div>
 
-    </td>
-  </tr>
+          <div id="migratebutton">
+                <input type="button" onclick="migrate()" value="Migrate" onmouseover="this.className='toc migratebuttonover'" onmouseout="this.className='toc migratebutton'" class="toc migratebutton">
+          </div>
 
-  <tr bgcolor="#3366CC">
-  	<td height="25" colspan="2" align="center" valign="middle" id="footer"
-        style="color:#FFFFFF">Openstack - Flyway
-    </td>
-  </tr>
+        </div>
 
-</table>
+        <div id="templatemo_content">
+
+            <script type="text/javascript">
+            featuredcontentslider.init({
+                id: "slider4", //id of main slider DIV
+                contentsource: ["inline", ""], //Valid values: ["inline", ""] or ["ajax", "path_to_file"]
+                toc: "markup", //Valid values: "#increment", "markup", ["label1", "label2", etc]
+                nextprev: ["", ""], //labels for "prev" and "next" links. Set to "" to hide.
+                revealtype: "click", //Behavior of pagination links to reveal the slides: "click" or "mouseover"
+                enablefade: [true, 0.1], //[true/false, fadedegree]
+                autorotate: [false, 3000], //[true/false, pausetime]
+                onChange: function(previndex, curindex){ //event handler fired whenever script changes slide
+                //previndex holds index of last slide viewed b4 current (1=1st slide, 2nd=2nd etc)
+                //curindex holds index of currently shown slide (1=1st slide, 2nd=2nd etc)
+                }
+            })
+            </script>
+
+        </div>
+
 </div>
 </body>
 </html>
