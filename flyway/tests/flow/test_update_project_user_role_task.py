@@ -50,7 +50,7 @@ class UpdateProjectUserRoleTest(TestBase):
         migrated_role = None
         try:
             self.tenant_migration_task.execute([tenant_name])
-            self.role_migration_task.execute()
+            self.role_migration_task.execute(None)
             self.user_migration_task.execute(None)
             self.binding_task.execute()
 
@@ -95,8 +95,7 @@ class UpdateProjectUserRoleTest(TestBase):
             self.tenant_migration_task.ks_target.users. \
                 delete(migrated_user)
 
-    """
-    def test_clean_all_data(self):
+    def clean_all_data(self):
         '''This function is used to delete all corresponding data
            in case of duplication'''
         for user in self.tenant_migration_task.ks_source.users.list():
@@ -119,4 +118,3 @@ class UpdateProjectUserRoleTest(TestBase):
         for tenant in self.tenant_migration_task.ks_target.tenants.list():
             if tenant.name == 'tenant_name':
                 self.tenant_migration_task.ks_target.tenants.delete(tenant)
-    """

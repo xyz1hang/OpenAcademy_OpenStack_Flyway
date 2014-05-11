@@ -126,7 +126,7 @@ class FlavorMigrationTask(task.Task):
         otherwise only specified flavor will be migrated
         """
 
-        if not flavors_to_migrate:
+        if flavors_to_migrate is None:
             LOG.info("Migrating all flavors ...")
             flavors_to_migrate = []
             for flavor in self.nv_source.flavors.list():
@@ -138,6 +138,9 @@ class FlavorMigrationTask(task.Task):
         elif type(flavors_to_migrate) is list and len(flavors_to_migrate) > 0:
             LOG.info("Migrating given flavors of size {} ...\n"
                      .format(len(flavors_to_migrate)))
+        elif type(flavors_to_migrate) is list and len(flavors_to_migrate) == 0:
+            LOG.info("No flavour resources to be migrated.\n")
+            return
         else:
             print ("Incorrect parameter '{0}'.\n"
                    "Expects: a list of flavor names\n"

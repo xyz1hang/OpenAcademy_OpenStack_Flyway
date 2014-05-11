@@ -20,8 +20,15 @@
         'tenant':new Array(),
         'keypair':new Array(),
         'flavor':new Array(),
-        'vm':new Array()
+        'vm':new Object()
     }
+
+
+     var old_counter = 0;
+
+     var bar_counter = 0.0;
+     var intvalue;
+     var totalTime = 0.0;
 
 
     $(function(){
@@ -276,7 +283,10 @@
                     onLoadSuccess:function(data){
                         if(data){
                             $.each(data.rows, function(index, item){
-                                if(data_to_magrate['vm'].indexOf({key:item.name, value:new Array(item.id)})>=0){
+                                var key_value = item.name
+                                var value_value = item.id
+                                if(data_to_magrate['vm'][key_value]!=undefined
+                                        && data_to_magrate['vm'][key_value].indexOf(value_value)>=0){
                                     $('#result').datagrid('checkRow', index);
                                 }
                             });
@@ -353,95 +363,148 @@
         if(data_to_magrate['user'].indexOf(rowData.name) < 0){
             data_to_magrate['user'].push(rowData.name)
         }
-
+        old_counter++;
+        totalTime += 2.0;
     }
 
     function unselect_user_row(rowIndex, rowData){
         data_to_magrate['user'].splice(data_to_magrate['user'].indexOf(rowData.name), 1)
+        old_counter--;
+        totalTime -= 2.0;
     }
 
     function select_role_row(rowIndex, rowData){
         if(data_to_magrate['role'].indexOf(rowData.name) < 0 ){
             data_to_magrate['role'].push(rowData.name)
         }
+        old_counter++;
+        totalTime += 2.0;
     }
 
     function unselect_role_row(rowIndex, rowData){
         data_to_magrate['role'].splice(data_to_magrate['role'].indexOf(rowData.name), 1)
+        old_counter--;
+        totalTime -= 2.0;
     }
 
     function select_image_row(rowIndex, rowData){
         if(data_to_magrate['image'].indexOf(rowData.id) < 0){
             data_to_magrate['image'].push(rowData.id)
         }
+        old_counter++;
+        totalTime += 18.0;
     }
 
     function unselect_image_row(rowIndex, rowData){
         data_to_magrate['image'].splice(data_to_magrate['image'].indexOf(rowData.id), 1)
+        old_counter--;
+        totalTime -= 18.0;
     }
 
     function select_tenant_row(rowIndex, rowData){
         if(data_to_magrate['tenant'].indexOf(rowData.name) < 0){
             data_to_magrate['tenant'].push(rowData.name)
         }
+        old_counter++;
+        totalTime += 4.0;
     }
 
     function unselect_tenant_row(rowIndex, rowData){
         data_to_magrate['tenant'].splice(data_to_magrate['tenant'].indexOf(rowData.name), 1)
+        old_counter--;
+        totalTime -= 4.0;
     }
 
     function select_flavor_row(rowIndex, rowData){
         if(data_to_magrate['flavor'].indexOf(rowData.name) < 0){
             data_to_magrate['flavor'].push(rowData.name)
         }
+        old_counter++;
+        totalTime += 2.0;
     }
 
     function unselect_flavor_row(rowIndex, rowData){
         data_to_magrate['flavor'].splice(data_to_magrate['flavor'].indexOf(rowData.name), 1)
+        old_counter--;
+        totalTime -= 2.0;
     }
 
     function select_keypair_row(rowIndex, rowData){
         if(data_to_magrate['keypair'].indexOf(rowData.fingerprint) < 0){
             data_to_magrate['keypair'].push(rowData.fingerprint)
         }
+        old_counter++;
+        totalTime += 2.0;
     }
 
     function unselect_keypair_row(rowIndex, rowData){
         data_to_magrate['keypair'].splice(data_to_magrate['keypair'].indexOf(rowData.fingerprnt), 1)
+        old_counter--;
+        totalTime -= 2.0;
     }
 
     function select_vm_row(rowIndex, rowData){
-        //var vm_list = data_to_magrate['vm'];
         var key_value = rowData.name;
         var value_value = rowData.id;
-        /**
-        var existed = false;
-        for(var i = 0; i < vm_list.length; i++){
-            if(vm_list[i].key === key_value){
-                existed = true;
-                vm_list[i].value.append(value_value);
-            }
-        }*/
-
-        //if(!existed){
-        data_to_magrate['vm'].push({key:key_value, value:new Array(value_value)})
-        //}
+        if(data_to_magrate['vm'][key_value] == undefined){
+            data_to_magrate['vm'][key_value] = [value_value]
+        }else{
+            data_to_magrate['vm'][key_value].push(value_value)
+        }
+        old_counter++
     }
 
     function unselect_vm_row(rowIndex, rowData){
         var key_value = rowData.name;
         var value_value = rowData.id;
-        data_to_magrate['vm'].splice(data_to_magrate['vm'].indexOf({key:key_value, value:new Array(value_value)}), 1)
+        data_to_magrate['vm'][key_value].splice(data_to_magrate['vm'][key_value].indexOf(value_value), 1)
+        old_counter--;
+        // TODO: total time
     }
 
     function migrate(){
-        alert(JSON.stringify(data_to_magrate))
+        if(old_counter == 0) {
+            alert("No resource has been selected.")
+        } else {
+            bar_counter = 0.0;
+            setBarValue("start migrating ", 0);
+            intvalue = setInterval("barAction(totalTime)", 100);
+            $.ajax({
+                url: "/flyway_test/migrate",
+                data: {"data_to_migrate": JSON.stringify(data_to_magrate)}
+                }).done(function(return_json) {
+                    window.clearInterval(intvalue);
+                    setBarValue("finished.  ", 100)
+                });
+
+        }
+    }
+
+    function migrate_all(){
+        bar_counter = 0.0;
+        setBarValue("start migrating ", 0);
+        intvalue = setInterval("barAction(totalTime)", 100);
         $.ajax({
-            url: "/flyway_test/migrate",
-            data: {"data_to_migrate": JSON.stringify(data_to_magrate)}
+            url: "/flyway_test/migrate_all"
             }).done(function(return_json) {
-                alert("Migration completed.")
+                window.clearInterval(intvalue);
+                setBarValue("finished.  ", 100)
             });
+    }
+
+    function setBarValue(output, number){
+	    var progressBar = document.getElementById("progress");
+        progressBar.value = number;
+        $('#progressoutput').html(output + number + "%");
+    }
+
+    function barAction(time){
+        if (bar_counter < time){
+            setBarValue("processing . . .  ", Math.floor(bar_counter / time * 100));
+            bar_counter += time/100.0;
+        } else {
+            window.clearInterval(intvalue);
+        }
     }
 
 
@@ -478,8 +541,14 @@
 
           </div>
 
-          <div id="migratebutton">
+          <div id="migratebuttonlocation">
+                <input type="button" onclick="migrate_all()" value="Migrate All" onmouseover="this.className='toc migratebuttonover'" onmouseout="this.className='toc migratebutton'" class="toc migratebutton">
                 <input type="button" onclick="migrate()" value="Migrate" onmouseover="this.className='toc migratebuttonover'" onmouseout="this.className='toc migratebutton'" class="toc migratebutton">
+          </div>
+
+          <div id="progressbarlocation">
+              <span id="progressoutput"></span>
+              <progress id="progress" class="progressbar" value="0" max="100"></progress>
           </div>
 
         </div>

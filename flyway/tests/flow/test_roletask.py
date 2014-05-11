@@ -2,9 +2,10 @@ from testtools import TestCase
 
 from flow.roletask import RoleMigrationTask
 from common import config
+from tests.flow.test_base import TestBase
 
 
-class RoleTaskTest(TestCase):
+class RoleTaskTest(TestBase):
     """Unit test for role migration"""
 
     def __init__(self, *args, **kwargs):
@@ -17,6 +18,9 @@ class RoleTaskTest(TestCase):
         print 'no need to test list name method'
 
     def test_get_roles_to_move(self):
+        for role in self.migration_task.ks_source.roles.list():
+            if role.name == "iamnewrole" or role.name == "iamnewrole2":
+                self.migration_task.ks_source.roles.delete(role)
         new_role_name = "iamnewrole"
         new_role = self.migration_task.ks_source.roles.create(new_role_name)
         roles_to_move = self.migration_task.get_roles_to_move()

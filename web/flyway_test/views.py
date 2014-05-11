@@ -12,6 +12,7 @@ from flow.roletask import RoleMigrationTask
 from flow.tenanttask import TenantMigrationTask
 from flow.instancetask import InstanceMigrationTask
 from utils.db_handlers.keypairs import *
+from utils.db_base import *
 from utils.helper import *
 
 from flow import flow
@@ -125,13 +126,13 @@ def migrate(request):
 
     cfg.parse(['--config-file', '../flyway/etc/flyway.conf'])
 
-    tenants = data.get('tenant', None) if data else None
-    flavors = data.get('flavor', None) if data else None
-    images = data.get('image', None) if data else None
-    keypairs = data.get('keypair', None) if data else None
-    roles = data.get('role', None) if data else None
-    users = data.get('user', None) if data else None
-    vms = data.get('vm', None) if data else None
+    tenants = data.get('tenant')
+    flavors = data.get('flavor')
+    images = data.get('image')
+    keypairs = data.get('keypair')
+    roles = data.get('role')
+    users = data.get('user')
+    vms = data.get('vm')
 
     refined_data = {'tenants_to_move': tenants,
                     'flavors_to_migrate': flavors,
@@ -140,8 +141,13 @@ def migrate(request):
                     'roles_to_migrate': roles,
                     'users_to_move': users,
                     'tenant_vm_dicts': vms,
-                    'tenant_to_process': None}
+                    'tenant_to_process': []}
+
     result = flow.execute(refined_data)
     return HttpResponse(json.dumps(result, ensure_ascii=False))
 
 
+def migrate_all(request):
+    cfg.parse(['--config-file', '../flyway/etc/flyway.conf'])
+    result = flow.execute(None)
+    return HttpResponse(json.dumps(result, ensure_ascii=False))

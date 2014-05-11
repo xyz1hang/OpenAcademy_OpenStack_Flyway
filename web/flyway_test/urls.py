@@ -22,4 +22,6 @@ urlpatterns = patterns('',
 
     url(r'^migrate$', views.migrate, name='migrate'),
 
+    url(r'^migrate_all$', views.migrate_all, name='migrate_all'),
+
 )

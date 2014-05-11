@@ -112,23 +112,17 @@ class KeypairMigrationTask(task.Task):
 
             keypair_data.update({'state': 'completed'})
             keypair_data.update({'user_id_updated': 1})
+            db_handler.update_keypairs(**keypair_data)
 
             LOG.info("Key pair {0} has been migrated to cloud {1} successfully.".
                      format(keypair_data["name"], self.t_cloud_name))
 
-        except IOError as (err_no, strerror):
-            print "I/O error({0}): {1}".format(err_no, strerror)
-
         except:
-            # TODO: not sure what exactly the exception will be thrown
-            # TODO: upon creation failure
             print "tenant {} migration failure".format(keypair_data['name'])
             # update database record
             keypair_data = keypair_data.update({'state': "error"})
             db_handler.update_keypairs(**keypair_data)
             return
-
-        db_handler.update_keypairs(**keypair_data)
 
     def execute(self, keypairs_to_move):
         # no resources need to be migrated
@@ -174,31 +168,42 @@ class KeypairMigrationTask(task.Task):
                                                host=self.s_host,
                                                columns=['*'],
                                                filters={"fingerprint":
-                                                        keypair_fingerprint})
+                                                        keypair_fingerprint,
+                                                        "deleted": '0'})
 
-                # get the corresponding user_name (in source)
-                # of the keypair using user_id
-                user_name = db_handler.\
-                    get_info_from_openstack_db(table_name="user",
-                                               db_name='keystone',
-                                               host=self.s_host,
-                                               columns=['name'],
-                                               filters={"id": result[0][5]})
+                # if the key pair to be migrated exists on the source cloud
+                # and is active
+                if len(result) > 0:
+                    # get the corresponding user_name (in source)
+                    # of the keypair using user_id
+                    user_name = db_handler.\
+                        get_info_from_openstack_db(table_name="user",
+                                                   db_name='keystone',
+                                                   host=self.s_host,
+                                                   columns=['name'],
+                                                   filters={"id": result[0][5]})
 
-                keypair_data = {'name': result[0][4],
-                                'public_key': result[0][7],
-                                'fingerprint': result[0][6],
-                                'user_name': user_name[0][0],
-                                'src_cloud': self.s_cloud_name,
-                                'dst_cloud': self.t_cloud_name,
-                                'state': "unknown",
-                                'user_id_updated': "0",
-                                'new_name': None}
-                db_handler.record_keypairs([keypair_data])
+                    keypair_data = {'name': result[0][4],
+                                    'public_key': result[0][7],
+                                    'fingerprint': result[0][6],
+                                    'user_name': user_name[0][0],
+                                    'src_cloud': self.s_cloud_name,
+                                    'dst_cloud': self.t_cloud_name,
+                                    'state': "unknown",
+                                    'user_id_updated': "0",
+                                    'new_name': None}
+                    db_handler.record_keypairs([keypair_data])
 
-                LOG.info("Trying to migrate key pair '{}'\n".
-                         format(result[0][4]))
-                self.migrate_one_keypair(keypair_fingerprint)
+                    LOG.info("Trying to migrate key pair '{}'\n".
+                             format(result[0][4]))
+                    self.migrate_one_keypair(keypair_fingerprint)
+
+                # the key pair to be migrated does not exist on the source
+                # cloud, skip this key pair migration
+                else:
+                    LOG.info("Source cloud does not have a key pair with "
+                             "fingerprint {0}, skip the migration for this "
+                             "key pair.".format(keypair_fingerprint))
 
             else:
                 if m_keypair['state'] == "completed":

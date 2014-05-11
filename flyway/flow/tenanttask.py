@@ -134,7 +134,7 @@ class TenantMigrationTask(task.Task):
         specified tenant will be migrated
         """
 
-        if not tenants_to_move:
+        if tenants_to_move is None:
             LOG.info("Migrating all tenants ...")
             tenants_to_move = []
             for tenant in self.ks_source.tenants.list():
@@ -146,6 +146,9 @@ class TenantMigrationTask(task.Task):
         elif type(tenants_to_move) is list and len(tenants_to_move) > 0:
             LOG.info("Migrating given tenants of size {} ...\n"
                      .format(len(tenants_to_move)))
+        elif type(tenants_to_move) is list and len(tenants_to_move) == 0:
+            LOG.info("No tenant resources to be migrated.\n")
+            return
         else:
             print ("Incorrect parameter '{0}'.\n"
                    "Expects: a list of tenants names\n"

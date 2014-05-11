@@ -219,6 +219,12 @@ class ImageMigrationTask(task.Task):
         :param images_to_migrate: list of IDs of images to be migrated
         """
 
+        if type(images_to_migrate) is list and \
+                        len(images_to_migrate) == 0 and \
+                        type(tenant_to_process) is list and \
+                        len(tenant_to_process) == 0:
+            return
+
         images_to_move = []
         # migrate given images
         if images_to_migrate:
