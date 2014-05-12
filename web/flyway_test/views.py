@@ -3,6 +3,7 @@ from django.http import HttpResponse
 
 # Create your views here.
 import sys
+from utils.db_handlers.environment_config import initialize_environment, update_environment
 
 sys.path.insert(0, '../flyway')
 from flow.flavortask import FlavorMigrationTask
@@ -20,6 +21,8 @@ from django.shortcuts import render
 from flow.usertask import UserMigrationTask
 from common import config as cfg
 
+cfg.parse(['--config-file', '../flyway/etc/flyway.conf'])
+
 
 def index(request):
     latest_poll_list = [1, 2, 3, 4, 5]
@@ -28,7 +31,6 @@ def index(request):
 
 
 def find_users(request):
-    cfg.parse(['--config-file', '../flyway/etc/flyway.conf'])
     migration_task = UserMigrationTask()
     users = migration_task.ks_source.users.list()
     context = {'users': users}
@@ -36,7 +38,6 @@ def find_users(request):
 
 
 def get_users(request):
-    cfg.parse(['--config-file', '../flyway/etc/flyway.conf'])
     migration_task = UserMigrationTask()
     users = migration_task.ks_source.users.list()
     return_users = [{'name': user.name,
@@ -45,7 +46,6 @@ def get_users(request):
 
 
 def get_roles(request):
-    cfg.parse(['--config-file', '../flyway/etc/flyway.conf'])
     migration_task = RoleMigrationTask()
     roles = migration_task.ks_source.roles.list()
     return_roles = [{'name': role.name,
@@ -54,7 +54,6 @@ def get_roles(request):
 
 
 def get_flavors(request):
-    cfg.parse(['--config-file', '../flyway/etc/flyway.conf'])
     migration_task = FlavorMigrationTask('')
     flavors = migration_task.nv_source.flavors.list()
     return_flavors = [{'name': flavor.name,
@@ -63,7 +62,6 @@ def get_flavors(request):
 
 
 def get_keypairs(request):
-    cfg.parse(['--config-file', '../flyway/etc/flyway.conf'])
     migration_task = KeypairMigrationTask('')
     data = get_info_from_openstack_db(table_name="key_pairs",
                                       db_name='nova',
@@ -76,7 +74,6 @@ def get_keypairs(request):
 
 
 def get_tenants(request):
-    cfg.parse(['--config-file', '../flyway/etc/flyway.conf'])
     migration_task = TenantMigrationTask('')
     tenants = migration_task.ks_source.tenants.list()
     return_tenants = [{'name': tenant.name,
@@ -85,7 +82,6 @@ def get_tenants(request):
 
 
 def get_vms(request):
-    cfg.parse(['--config-file', '../flyway/etc/flyway.conf'])
     s_host = cfg.CONF.SOURCE.os_auth_url.split("http://")[1].split(":")[0]
     data = get_info_from_openstack_db(table_name="instances",
                                       db_name='nova',
@@ -111,7 +107,6 @@ def get_vms(request):
 
 
 def get_images(request):
-    cfg.parse(['--config-file', '../flyway/etc/flyway.conf'])
     migration_task = ImageMigrationTask('')
     images = migration_task.gl_source.images.list()
     return_images = [{'name': image.name,
@@ -123,7 +118,9 @@ def migrate(request):
     json_data = request.GET.get('data_to_migrate')
     data = json.loads(json_data)
 
-    cfg.parse(['--config-file', '../flyway/etc/flyway.conf'])
+    cfg.setup_logging()
+    initialize_environment()
+    update_environment()
 
     tenants = data.get('tenant', None) if data else None
     flavors = data.get('flavor', None) if data else None
