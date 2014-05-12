@@ -55,7 +55,13 @@ class TenantMigrationTask(task.Task):
         # check for tenant name duplication
         new_tenant_name = s_tenant.name
         try:
-            found = True
+            found = self.ks_target.tenants.find(name=new_tenant_name)
+            if found:
+                print ("Skipping Tenant '{0}' duplicates found on cloud '{1}'"
+                       .format(found.name, t_cloud_name))
+                return
+
+            """found = True
             while found:
                 found = self.ks_target.tenants.find(name=new_tenant_name)
                 if found:
@@ -67,7 +73,7 @@ class TenantMigrationTask(task.Task):
                         # TODO: implement cleaning up and proper exit
                         return None
                     elif user_input:
-                        new_tenant_name = user_input
+                        new_tenant_name = user_input"""
         except keystone_exceptions.NotFound:
             # irrelevant exception - swallow
             pass
@@ -128,7 +134,7 @@ class TenantMigrationTask(task.Task):
         specified tenant will be migrated
         """
 
-        if not tenants_to_move:
+        if tenants_to_move is None:
             LOG.info("Migrating all tenants ...")
             tenants_to_move = []
             for tenant in self.ks_source.tenants.list():
@@ -140,6 +146,9 @@ class TenantMigrationTask(task.Task):
         elif type(tenants_to_move) is list and len(tenants_to_move) > 0:
             LOG.info("Migrating given tenants of size {} ...\n"
                      .format(len(tenants_to_move)))
+        elif type(tenants_to_move) is list and len(tenants_to_move) == 0:
+            LOG.info("No tenant resources to be migrated.\n")
+            return
         else:
             print ("Incorrect parameter '{0}'.\n"
                    "Expects: a list of tenants names\n"

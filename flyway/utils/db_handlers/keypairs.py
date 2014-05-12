@@ -20,7 +20,7 @@ def initialise_keypairs_mapping():
                  dst_cloud VARCHAR(128) NOT NULL,
                  state VARCHAR(128) NOT NULL,
                  user_id_updated INT NOT NULL,
-                 new_name VARCHAR(64) NOT NULL,
+                 new_name VARCHAR(64),
                  PRIMARY KEY(id, fingerprint)
               '''
     if not check_table_exist(table_name):
@@ -120,3 +120,10 @@ def get_info_from_openstack_db(host, db_name, table_name, columns, filters):
 
 def update_info_on_openstack_db(host, db_name, table_name, sets, filters):
     update_openstack_record(host, db_name, table_name, sets, filters, True)
+
+
+def insert_info_to_openstack_db(host, db_name, table_name, values):
+    values_to_insert = []
+    for details in values:
+        values_to_insert.append(details)
+    insert_openstack_record(host, db_name, table_name, values_to_insert, True)

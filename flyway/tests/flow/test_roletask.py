@@ -2,21 +2,24 @@ from testtools import TestCase
 
 from flow.roletask import RoleMigrationTask
 from common import config
+from tests.flow.test_base import TestBase
 
 
-class RoleTaskTest(TestCase):
+class RoleTaskTest(TestBase):
     """Unit test for role migration"""
 
     def __init__(self, *args, **kwargs):
 
         super(RoleTaskTest, self).__init__(*args, **kwargs)
-        config.parse(['--config-file', '../../etc/flyway.conf'])
         self.migration_task = RoleMigrationTask()
 
     def test_list_names(self):
         print 'no need to test list name method'
 
     def test_get_roles_to_move(self):
+        for role in self.migration_task.ks_source.roles.list():
+            if role.name == "iamnewrole" or role.name == "iamnewrole2":
+                self.migration_task.ks_source.roles.delete(role)
         new_role_name = "iamnewrole"
         new_role = self.migration_task.ks_source.roles.create(new_role_name)
         roles_to_move = self.migration_task.get_roles_to_move()
@@ -47,7 +50,7 @@ class RoleTaskTest(TestCase):
         new_role_name = "iamnewrole2"
         self.migration_task.ks_source.roles.create(new_role_name)
 
-        self.migration_task.execute()
+        self.migration_task.execute(None)
         assert(not self.migration_task.get_roles_to_move())
 
         for role in self.migration_task.ks_source.roles.list():

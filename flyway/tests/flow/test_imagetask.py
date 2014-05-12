@@ -13,7 +13,6 @@ class ImageTaskTest(TestBase):
 
     def __init__(self, *args, **kwargs):
         super(ImageTaskTest, self).__init__(*args, **kwargs)
-        config.parse(['--config-file', '../../etc/flyway.conf'])
         self.migration_task = ImageMigrationTask('image_migration_task')
 
     def test_execute(self):
@@ -30,7 +29,7 @@ class ImageTaskTest(TestBase):
         dest_image = None
         try:
             self.migration_task.execute(
-                images_to_migrate=[image_to_migrate.id])
+                images_to_migrate=[image_to_migrate.id], tenant_to_process=None)
 
             # get the image data that has been migrated from src to dst
             values = [image_name, image_to_migrate.id, image_to_migrate.owner,

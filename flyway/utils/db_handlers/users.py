@@ -31,18 +31,22 @@ def initialise_users_mapping(source_users, target_user_names):
 
     s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
     t_cloud_name = cfg.CONF.TARGET.os_cloud_name
-    init_string = "null, '{0}', '{1}', '" + s_cloud_name + "', '" + \
-                  t_cloud_name + "', 'unknown'"
-    LOG.debug("init_string: " + init_string)
+    init_user = {
+        'src_cloud': s_cloud_name,
+        'dst_cloud': t_cloud_name,
+        'state': 'unknown'
+    }
+    LOG.debug("init_user: " + str(init_user))
 
     init_users = []
     for user in source_users:
         if user.name not in target_user_names and not existed_in_db(user):
-            init_users.append(
-                init_string.format(user.name, user.email))
+            new_user = init_user.copy()
+            new_user['name'] = user.name
+            new_user['email'] = user.email
+            init_users.append(new_user)
             LOG.debug("insert user:")
-            LOG.debug(init_string.format(user.name, user.email))
-
+            LOG.debug(init_user)
     insert_record(TABLE_NAME, init_users, True)
 
 

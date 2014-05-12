@@ -41,10 +41,22 @@ def initialise_roles_mapping(name_of_roles_to_move):
     s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
     t_cloud_name = cfg.CONF.TARGET.os_cloud_name
 
+    init_role = {
+        'src_cloud': s_cloud_name,
+        'dst_cloud': t_cloud_name,
+        'state': 'unknown'
+    }
+    LOG.debug("init_role: " + str(init_role))
+
+    init_roles = []
     for role in name_of_roles_to_move:
         if not existed(role):
-            record = "null, '"+role+"','"+s_cloud_name+"', '"+t_cloud_name+"', 'unknown'"
-            insert_record(TABLE_NAME, [record], False)
+            new_role = init_role.copy()
+            new_role['roleName'] = role
+            init_roles.append(new_role)
+            LOG.debug("insert role:")
+            LOG.debug(init_roles)
+    insert_record(TABLE_NAME, init_roles, True)
 
 
 def existed(role_name):

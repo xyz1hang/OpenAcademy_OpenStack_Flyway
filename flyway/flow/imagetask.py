@@ -130,6 +130,10 @@ class ImageMigrationTask(task.Task):
                                         image_meta.id, str(e))
             dest_details = {"state": "Error"}
 
+        except exc.HTTPConflict as e:
+            print e.details
+            dest_details = {"state": "Error"}
+
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             details = str(str(exc_type) + ": " + e.message
@@ -215,8 +219,13 @@ class ImageMigrationTask(task.Task):
         :param images_to_migrate: list of IDs of images to be migrated
         """
 
-        images_to_move = []
+        if type(images_to_migrate) is list and \
+                        len(images_to_migrate) == 0 and \
+                        type(tenant_to_process) is list and \
+                        len(tenant_to_process) == 0:
+            return
 
+        images_to_move = []
         # migrate given images
         if images_to_migrate:
             for img_id in images_to_migrate:

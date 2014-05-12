@@ -31,9 +31,9 @@ from update_project_user_role_task import ProjectUserRoleBindingTask
 
 
 class InputGatheringTask(task.Task):
-    def __init__(self, input_data, **kwargs):
+    def __init__(self, inputs, **kwargs):
         super(InputGatheringTask, self).__init__(**kwargs)
-        self.input_data = input_data if input_data else None
+        self.input_data = inputs if inputs else None
 
     def execute(self):
         if not self.input_data:
@@ -49,7 +49,7 @@ class InputGatheringTask(task.Task):
 
 
 def get_flow(input_data=None):
-    input_task = InputGatheringTask(input_data=input_data)
+    input_task = InputGatheringTask(inputs=input_data)
     user_task = UserMigrationTask('user_migration_task')
     tenant_task = TenantMigrationTask('tenant_migration_task')
     flavor_task = FlavorMigrationTask('flavor_migration_task')
@@ -59,7 +59,6 @@ def get_flow(input_data=None):
     keypair_task = KeypairMigrationTask('Keypairs_migration_task')
 
     proj_quota_task = UpdateProjectsQuotasTask('update_projects_quotas')
-    keypair_update_task = UpdateKeypairUserTask('update_keypairs_user_ids')
     pr_binding_task = ProjectUserRoleBindingTask('project_roles_bind_task')
 
     flow = lf.Flow('main_flow').add(
@@ -78,6 +77,11 @@ def get_flow(input_data=None):
             #                  rebind={'users_to_move': "users_to_move"}),
             task.FunctorTask(tenant_task.execute, name='tenant_task',
                              rebind={'tenants_to_move': "tenants_to_move"}),
+            task.FunctorTask(flavor_task.execute, name='flavor_task',
+                             rebind={
+                                 'flavors_to_migrate': "flavors_to_migrate"}),
+            task.FunctorTask(role_task.execute, name='role_task',
+                             rebind={'roles_to_migrate': "roles_to_migrate"})
             # task.FunctorTask(flavor_task.execute, name='flavor_task',
             #                  rebind={
             #                      'flavors_to_migrate': "flavors_to_migrate"}),
@@ -100,54 +104,20 @@ def get_flow(input_data=None):
         # post migration task:
         task.FunctorTask(proj_quota_task.execute,
                          name='update_project_quota_task'),
-        # task.FunctorTask(keypair_update_task.execute,
-        #                  name='update_user_keypair_task'),
-        # task.FunctorTask(pr_binding_task.execute,
-        #                  name='project_role_binding_task')
-
-        # ImageMigrationTask('image_migration_task'),
-        # KeypairMigrationTask('Keypairs_migration_task'),
-        # # InstanceMigrationTask('instances_migration_task')
-        #
-        # # after resource migration:
-        # UpdateProjectsQuotasTask('update_projects_quotas'),
-        # UpdateKeypairUserTask('update_keypairs_user_ids'),
-        # ProjectUserRoleBindingTask('bind project_user_roles')
+        task.FunctorTask(pr_binding_task.execute,
+                         name='project_role_binding_task')
     )
 
     return flow
 
 
 def execute(input_data=None):
+    print "input Data" + str(input_data) if input_data else "nothing"
     flow = get_flow(input_data)
-    # store: a dict for input data of "all tasks" in the flow
-    # append the parameter your task needed in this store dict
-    # The input data is then injected via execute() function
-    # e.g store={'meow': 'meow_in', 'woof': 'woof_in'}
-    # ...
-    # execute(self, woof)
+
     #TODO: need to figure out a better way to allow user to specify
     #TODO: specific resource to migrate
 
-    # resources specified to migrate are given through an argument "values",
-    # “values” is a dictionary that all keys correspond to types of resources,
-    # and values are the specified resources (None means migrating all
-    # resources on the source cloud, [] means migrating nothing)
-
-    # tenants = values.get('tenants_to_move', None) if values else None
-    # flavors = values.get('flavors_to_migrate', None) if values else None
-    # images = values.get('images_to_migrate', None) if values else None
-    # keypairs = values.get('keypairs_to_move', None) if values else None
-    # image_tenants = values.get('tenant_to_process', None) if values else None
-    # roles = values.get('name_of_roles_to_move', None) if values else None
-    #
-    # data_required = {'tenants_to_move': tenants,
-    #                  'flavors_to_migrate': flavors,
-    #                  'images_to_migrate': images,
-    #                  'tenant_to_process': keypairs,
-    #                  'keypairs_to_move': image_tenants,
-    #                  'name_of_roles_to_move': roles}
-
-    eng = engines.load(flow)
+    eng = engines.load(flow, engine_conf='parallel')
     result = eng.run()
     return result
