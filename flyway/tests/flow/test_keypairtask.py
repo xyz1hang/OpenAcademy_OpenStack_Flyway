@@ -3,7 +3,6 @@ from tests.flow.test_base import TestBase
 __author__ = 'chengxue'
 
 from novaclient import exceptions as nova_exceptions
-from flyway.common import config
 from flyway.flow.keypairtask import KeypairMigrationTask
 from utils.db_handlers import keypairs
 from utils.helper import *

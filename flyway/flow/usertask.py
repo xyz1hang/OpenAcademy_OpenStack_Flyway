@@ -14,7 +14,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
 from utils.db_handlers.users import set_user_complete, \
     delete_migrated_users, initialise_users_mapping
 

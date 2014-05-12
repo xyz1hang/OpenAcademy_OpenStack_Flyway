@@ -3,9 +3,9 @@ from django.http import HttpResponse
 
 # Create your views here.
 import sys
-from utils.db_handlers.environment_config import initialize_environment, update_environment
-
 sys.path.insert(0, '../flyway')
+
+from utils.db_handlers.environment_config import initialize_environment, update_environment
 from flow.flavortask import FlavorMigrationTask
 from flow.imagetask import ImageMigrationTask
 from flow.keypairtask import KeypairMigrationTask
@@ -23,6 +23,9 @@ from flow.usertask import UserMigrationTask
 from common import config as cfg
 
 cfg.parse(['--config-file', '../flyway/etc/flyway.conf'])
+cfg.setup_logging()
+initialize_environment()
+update_environment()
 
 
 def index(request):
@@ -119,10 +122,6 @@ def migrate(request):
     json_data = request.GET.get('data_to_migrate')
     data = json.loads(json_data)
 
-    cfg.setup_logging()
-    initialize_environment()
-    update_environment()
-
     tenants = data.get('tenant')
     flavors = data.get('flavor')
     images = data.get('image')
@@ -145,6 +144,5 @@ def migrate(request):
 
 
 def migrate_all(request):
-    cfg.parse(['--config-file', '../flyway/etc/flyway.conf'])
     result = flow.execute(None)
     return HttpResponse(json.dumps(result, ensure_ascii=False))
