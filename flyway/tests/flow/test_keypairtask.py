@@ -22,12 +22,12 @@ class KeypairTaskTest(TestBase):
         self.nv_target = get_nova_target()
 
     def test_execute(self):
-        keypair_name = "keypair_update_test"
+        keypair_name = "keypair_test"
         keypair_to_migrate = self.nv_source.keypairs.create(
             keypair_name)
 
         keypair_fingerprint = keypair_to_migrate.fingerprint
-        self.migration_task.execute([keypair_fingerprint, '52:08:9b:96:9e:e5:87:08:6c:0b:c7:82:37:fd:7f:57'])
+        self.migration_task.execute([keypair_fingerprint])
 
         migrated_keypair = None
         try:

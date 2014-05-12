@@ -50,7 +50,7 @@ width: 320px; /*Width of pagination DIV. Total width should equal slider's outer
 }
 
 .migratebutton {
-	width: 80px;
+	width: 90px;
     height: 20px;
 	font-size: 14px;
 	font-family: Cambria, "Hoefler Text", "Liberation Serif", Times, "Times New Roman", serif;
@@ -59,13 +59,18 @@ width: 320px; /*Width of pagination DIV. Total width should equal slider's outer
 }
 
 .migratebuttonover {
-	width: 80px;
+	width: 90px;
     height: 20px;
 	font-size: 14px;
 	font-family: Cambria, "Hoefler Text", "Liberation Serif", Times, "Times New Roman", serif;
 	margin-bottom: 10px;
 	color: #000000;
     cursor: pointer;
+}
+
+.progressbar{
+	width:100%;
+	height:10px;
 }
 
 #slider4{
@@ -76,9 +81,15 @@ width: 320px; /*Width of pagination DIV. Total width should equal slider's outer
 	width: 250px;
 }
 
-#migratebutton{
+#migratebuttonlocation{
 	width: 560px;
-    bottom: 10px;
+    bottom: 30px;
     position: absolute;
-    left: 430px;
+    left: 350px;
+}
+
+#progressbarlocation{
+	width: 560px;
+	bottom: 0;
+	position: absolute;
 }

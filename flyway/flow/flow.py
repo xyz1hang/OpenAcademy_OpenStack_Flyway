@@ -105,6 +105,6 @@ def execute(input_data=None):
     #TODO: need to figure out a better way to allow user to specify
     #TODO: specific resource to migrate
 
-    eng = engines.load(flow)
+    eng = engines.load(flow, engine_conf='parallel')
     result = eng.run()
     return result

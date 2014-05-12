@@ -36,20 +36,21 @@ class RoleMigrationTask(task.Task):
     @staticmethod
     def list_roles(keystone_client):
         """
-        :param role_to_move: metadata of the image as a dictionary
+        :param keystone_client:
         """
         return keystone_client.roles.list()
 
     @staticmethod
     def list_names(roles):
         """
-        :param roles: metadata of the image as a dictionary
+        return a list of names of with respect to roles
+        :param roles: a list of roles
         """
         return [role.name for role in roles]
 
     def get_roles_to_move(self):
         """
-
+        return a list of roles should be migrated to the target cloud
         """
         roles_in_source = self.list_roles(self.ks_source)
         target_role_names = self.list_names(self.ks_target.roles.list())
@@ -58,7 +59,8 @@ class RoleMigrationTask(task.Task):
 
     def migrate_one_role(self, role_to_move):
         """
-        :param role_to_move: metadata of the image as a dictionary
+        migrate a single role to the target cloud
+        :param role_to_move: the role to be migrated
         """
         try:
             role_moved = self.ks_target.roles.create(role_to_move.name)
@@ -69,7 +71,9 @@ class RoleMigrationTask(task.Task):
 
     def execute(self, roles_to_migrate):
         """
-        :param roles_to_migrate: roles to be migrated to the target cloud
+        migrate specified roles to the target cloud
+        :param roles_to_migrate: roles to be migrated to the target cloud.
+        if None, then all roles exist on source but not on target will be migrated
         """
         if type(roles_to_migrate) is list and \
            len(roles_to_migrate) == 0:
