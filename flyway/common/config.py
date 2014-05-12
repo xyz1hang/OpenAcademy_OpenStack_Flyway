@@ -28,7 +28,8 @@ opts = [
     cfg.StrOpt('os_tenant_name', default='admin'),
     cfg.StrOpt('os_username', default='admin'),
     cfg.StrOpt('os_password'),
-    cfg.StrOpt('os_cloud_name')
+    cfg.StrOpt('os_cloud_name'),
+    cfg.StrOpt('os_host_username')
 ]
 
 log_opts = [

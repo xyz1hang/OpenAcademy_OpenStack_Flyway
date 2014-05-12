@@ -43,7 +43,8 @@ class InputGatheringTask(task.Task):
                                'images_to_migrate': None,
                                'tenant_to_process': None,
                                'keypairs_to_move': None,
-                               'roles_to_migrate': None}
+                               'roles_to_migrate': None,
+                               'tenant_vm_dicts': None}
         return self.input_data
 
 
@@ -68,19 +69,20 @@ def get_flow(input_data=None):
                                                        'images_to_migrate',
                                                        'tenant_to_process',
                                                        'keypairs_to_move',
-                                                       'roles_to_migrate'}),
+                                                       'roles_to_migrate',
+                                                       'tenant_vm_dicts'}),
         uf.Flow('user_tenant_migration_flow').add(
             # Note that creating users, tenants, flavor and role can happen in
             # parallel and hence it is part of unordered flow
-            task.FunctorTask(user_task.execute, name='user_task',
-                             rebind={'users_to_move': "users_to_move"}),
+            # task.FunctorTask(user_task.execute, name='user_task',
+            #                  rebind={'users_to_move': "users_to_move"}),
             task.FunctorTask(tenant_task.execute, name='tenant_task',
                              rebind={'tenants_to_move': "tenants_to_move"}),
-            task.FunctorTask(flavor_task.execute, name='flavor_task',
-                             rebind={
-                                 'flavors_to_migrate': "flavors_to_migrate"}),
-            task.FunctorTask(role_task.execute, name='role_task',
-                             rebind={'roles_to_migrate': "roles_to_migrate"}),
+            # task.FunctorTask(flavor_task.execute, name='flavor_task',
+            #                  rebind={
+            #                      'flavors_to_migrate': "flavors_to_migrate"}),
+            # task.FunctorTask(role_task.execute, name='role_task',
+            #                  rebind={'roles_to_migrate': "roles_to_migrate"}),
             # UserMigrationTask('user_migration_task'),
             # TenantMigrationTask('tenant_migration_task'),
             # FlavorMigrationTask('flavor_migration_task'),
@@ -92,16 +94,16 @@ def get_flow(input_data=None):
                                  'tenant_to_process': 'tenant_to_process'}),
         task.FunctorTask(keypair_task.execute, name='keypair_task',
                          rebind={'keypairs_to_move': "keypairs_to_move"}),
-        # task.FunctorTask(instance_task.execute, name='instance_task',
-        #                  rebind={'tenant_vm_dicts': "tenant_vm_dicts"}),
+        task.FunctorTask(instance_task.execute, name='instance_task',
+                         rebind={'tenant_vm_dicts': "tenant_vm_dicts"}),
 
         # post migration task:
         task.FunctorTask(proj_quota_task.execute,
                          name='update_project_quota_task'),
-        task.FunctorTask(keypair_update_task.execute,
-                         name='update_user_keypair_task'),
-        task.FunctorTask(pr_binding_task.execute,
-                         name='project_role_binding_task')
+        # task.FunctorTask(keypair_update_task.execute,
+        #                  name='update_user_keypair_task'),
+        # task.FunctorTask(pr_binding_task.execute,
+        #                  name='project_role_binding_task')
 
         # ImageMigrationTask('image_migration_task'),
         # KeypairMigrationTask('Keypairs_migration_task'),

@@ -48,48 +48,26 @@ def record_vm_migrated(**instances_details):
     insert_record(table_name, values_to_insert, True)
 
 
-def get_migrated_vm(*values):
+def get_migrated_vm(**filters):
     """function to return detail of vm migration
-    :param values: tenant name and cloud name that used to filter data
+    :param filters: tenant name and cloud name that used to filter data
     :return: vm migrate detail
     """
     # parameters for "SELECT"
     table_name = "instances"
     columns = ["*"]
-    filters = {"src_server_name": values[0],
-               "src_uuid": values[1],
-               "src_tenant": values[2],
-               "src_cloud": values[3],
-               "dst_cloud": values[4]}
 
     data = read_record(table_name, columns, filters, True)
 
     if len(data) == 0:
         print('no migration record found for '
               'instance {0} from tenant {1} in cloud {2}'
-              .format(add_quotes(values[0]),
-                      add_quotes(values[2]),
-                      add_quotes(values[3])))
-        return None
-    elif len(data) > 1:
-        print('multiple migration records found for '
-              'instance {0} from tenant {1} in cloud {2}'
-              .format(add_quotes(values[0]),
-                      add_quotes(values[2]),
-                      add_quotes(values[3])))
+              .format(add_quotes(filters['src_server_name']),
+                      add_quotes(filters['src_tenant']),
+                      add_quotes(filters['src_cloud'])))
         return None
 
-    # should be only one row
-    vm_data = {'src_server_name': data[0][1],
-               'src_uuid': data[0][2],
-               'src_tenant': data[0][3],
-               'src_cloud': data[0][4],
-               'dst_server_name': data[0][5],
-               'dst_uuid': data[0][6],
-               'dst_tenant': data[0][7],
-               'dst_cloud': data[0][8],
-               'migration_state': data[0][9]}
-    return vm_data
+    return data
 
 
 def update_migration_record(**instance_details):
