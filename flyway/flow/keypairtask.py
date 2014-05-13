@@ -213,3 +213,50 @@ class KeypairMigrationTask(task.Task):
                     LOG.info("Migrating key pair '{}'\n".
                              format(m_keypair['name']))
                     self.migrate_one_keypair(keypair_fingerprint)
+
+    def revert(self, keypairs_to_move):
+         # no resources need to be migrated
+        if type(keypairs_to_move) is list and len(keypairs_to_move) == 0:
+            LOG.info("No key pair resources to be reverted.")
+            return
+
+        # in case only one string gets passed in
+        if type(keypairs_to_move) is str:
+            keypairs_to_move = [keypairs_to_move]
+
+        if keypairs_to_move is None:
+            keypairs_to_move = []
+
+            fingerprints = db_handler.\
+                get_info_from_openstack_db(table_name="key_pairs",
+                                           db_name='nova',
+                                           host=self.s_host,
+                                           columns=['fingerprint'],
+                                           filters={"deleted": '0'})
+
+            for one_fingerprint in fingerprints:
+                keypairs_to_move.append(one_fingerprint[0])
+
+        for keypair_fingerprint in keypairs_to_move:
+            values = [keypair_fingerprint, self.s_cloud_name,
+                      self.t_cloud_name]
+            m_keypair = db_handler.get_keypairs(values)
+
+            # add keypairs that have not been stored in the database
+            if m_keypair is not None:
+                if m_keypair["state"] == "completed" and \
+                                m_keypair["user_id_updated"] == 1:
+
+                    # delete key pair on target cloud
+                    LOG.info("Revert: Database openstack - Delete key pair "
+                             "{0}".format(keypair_fingerprint))
+                    where_value = [keypair_fingerprint, '0']
+                    db_handler.delete_info_from_openstack_db(host=self.t_host,
+                                                             db_name="nova",
+                                                             table_name="key_pairs",
+                                                             where_dict=where_value)
+
+                # delete this key pair migration record from flyway
+                LOG.info("Revert: Database flyway - Delete key pair {0}"
+                         .format(keypair_fingerprint))
+                db_handler.delete_keypairs(values)
