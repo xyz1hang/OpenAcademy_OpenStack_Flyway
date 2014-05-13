@@ -33,6 +33,7 @@ class UserMigrationTask(task.Task):
         super(UserMigrationTask, self).__init__(*args, **kwargs)
         self.ks_source = get_keystone_source()
         self.ks_target = get_keystone_target()
+        self.source_users = None
 
         self.target_user_names = [user.name for user in
                                   self.ks_target.users.list()]
@@ -71,12 +72,12 @@ class UserMigrationTask(task.Task):
         if type(users_to_move) is list and len(users_to_move) == 0:
             return
 
-        source_users = self.get_source_users(users_to_move)
+        self.source_users = self.get_source_users(users_to_move)
 
-        initialise_users_mapping(source_users, self.target_user_names)
+        initialise_users_mapping(self.source_users, self.target_user_names)
 
         migrated_users = []
-        for user in source_users:
+        for user in self.source_users:
             migrated_user = self.migrate_one_user(user)
             if migrated_user is not None:
                 migrated_users.append(migrated_user)
@@ -87,8 +88,8 @@ class UserMigrationTask(task.Task):
                 self.ks_target.users.delete(user)
 
     def revert(self, *args, **kwargs):
-        #Firstly delete the migrated data in target
-        self.revert_users()
-        #Then delete the records in DB
-        delete_all_users_mapping()
-        pass
+        if self.source_users is not None:
+            #Firstly delete the migrated data in target
+            self.revert_users()
+            #Then delete the records in DB
+            delete_all_users_mapping(self.source_users)
