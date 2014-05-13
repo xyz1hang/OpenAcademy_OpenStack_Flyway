@@ -1,3 +1,5 @@
+__author__ = 'tianchen'
+
 import logging
 from utils.db_base import *
 from common import config
@@ -7,7 +9,7 @@ TABLE_NAME = 'roles'
 LOG = logging.getLogger(__name__)
 
 
-def set_complete(role_name):
+def update_complete(role_name):
     update_table(TABLE_NAME,
                  {'state': 'completed'},
                  {'roleName': role_name,
@@ -16,9 +18,18 @@ def set_complete(role_name):
                  False)
 
 
-def set_error(role_name):
+def update_error(role_name):
     update_table(TABLE_NAME,
                  {'state': 'error'},
+                 {'roleName': role_name,
+                  'src_cloud': cfg.CONF.SOURCE.os_cloud_name,
+                  'dst_cloud': cfg.CONF.TARGET.os_cloud_name},
+                 False)
+
+
+def update_cancel(role_name):
+    update_table(TABLE_NAME,
+                 {'state': 'cancel'},
                  {'roleName': role_name,
                   'src_cloud': cfg.CONF.SOURCE.os_cloud_name,
                   'dst_cloud': cfg.CONF.TARGET.os_cloud_name},
