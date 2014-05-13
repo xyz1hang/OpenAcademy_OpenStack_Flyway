@@ -144,6 +144,5 @@ def migrate(request):
 
 
 def migrate_all(request):
-    cfg.parse(['--config-file', '../flyway/etc/flyway.conf'])
     result = flow.execute(None)
     return HttpResponse(json.dumps(result, ensure_ascii=False))

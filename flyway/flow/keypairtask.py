@@ -1,13 +1,10 @@
-import logging
 from taskflow import task
 from utils.helper import *
 from utils.db_handlers import keypairs as db_handler
 from utils.db_base import *
 from time import localtime, time, strftime
 
-
 LOG = logging.getLogger(__name__)
-
 
 class KeypairMigrationTask(task.Task):
     """
@@ -41,7 +38,7 @@ class KeypairMigrationTask(task.Task):
                                                 keypair_fingerprint})
 
         if len(duplicated) > 0:
-            LOG.info("Key pair {0} has been existed in cloud {1}, stop " \
+            LOG.info("Key pair {0} has been existed in cloud {1}, skip " \
                   "migrating this key pair.".format(keypair_data["name"],
                                              keypair_data["dst_cloud"]))
             # delete the corresponding assertion in the flyway database
@@ -61,7 +58,7 @@ class KeypairMigrationTask(task.Task):
 
         if len(user_id_on_target) < 1:
             LOG.info("The owner {0} has not been migrated to "
-                     "the target, stop migrating key pair {1}".
+                     "the target, skip migrating key pair {1}".
                      format(keypair_data['user_name'], keypair_data['name']))
             # delete the corresponding assertion in the flyway database
             db_handler.delete_keypairs(values)
@@ -87,7 +84,7 @@ class KeypairMigrationTask(task.Task):
                                                filters={"id": one_id[0]})
                 if keypair_data["user_name"] == user_name[0][0]:
                     LOG.info("The user {0} has already own the key pair {1}, "
-                             "stop migrating this key pair.".
+                             "skip migrating this key pair.".
                              format(user_name[0][0], keypair_data["name"]))
                     # delete the corresponding assertion in the flyway database
                     db_handler.delete_keypairs(values)
@@ -118,7 +115,7 @@ class KeypairMigrationTask(task.Task):
                      format(keypair_data["name"], self.t_cloud_name))
 
         except:
-            print "tenant {} migration failure".format(keypair_data['name'])
+            LOG.error("tenant {} migration failure".format(keypair_data['name']))
             # update database record
             keypair_data = keypair_data.update({'state': "error"})
             db_handler.update_keypairs(**keypair_data)
@@ -127,6 +124,7 @@ class KeypairMigrationTask(task.Task):
     def execute(self, keypairs_to_move):
         # no resources need to be migrated
         if type(keypairs_to_move) is list and len(keypairs_to_move) == 0:
+            LOG.info("No key pair resources to be migrated.")
             return
 
         # in case only one string gets passed in
@@ -136,7 +134,7 @@ class KeypairMigrationTask(task.Task):
         # create new table if not exists
         db_handler.initialise_keypairs_mapping()
 
-        if not keypairs_to_move:
+        if keypairs_to_move is None:
             LOG.info("Start to migrate all key pairs ...")
             keypairs_to_move = []
 

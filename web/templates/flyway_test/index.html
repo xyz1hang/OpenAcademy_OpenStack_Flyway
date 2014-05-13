@@ -274,9 +274,9 @@
                     data: eval("(" + return_json + ')'),
                     columns:[[
                         {field:'ck',title:'CK', checkbox:true, width:40},
-                        {field:'name',title:'Tenant Name',width:150},
-                        {field:'host_name',title:'VM Name',width:150},
-                        {field:'id',title:'VM ID',width:330}
+                        {field:'name',title:'Tenant Name',width:100},
+                        {field:'host_name',title:'VM Name',width:100},
+                        {field:'id',title:'VM ID',width:430}
                     ]],
                     onSelect: function(rowIndex, rowData){select_vm_row(rowIndex, rowData)},
                     onUnselect: function(rowIndex, rowData){unselect_vm_row(rowIndex, rowData)},
@@ -364,13 +364,13 @@
             data_to_magrate['user'].push(rowData.name)
         }
         old_counter++;
-        totalTime += 2.0;
+        totalTime += 1.0;
     }
 
     function unselect_user_row(rowIndex, rowData){
         data_to_magrate['user'].splice(data_to_magrate['user'].indexOf(rowData.name), 1)
         old_counter--;
-        totalTime -= 2.0;
+        totalTime -= 1.0;
     }
 
     function select_role_row(rowIndex, rowData){
@@ -378,13 +378,13 @@
             data_to_magrate['role'].push(rowData.name)
         }
         old_counter++;
-        totalTime += 2.0;
+        totalTime += 1.0;
     }
 
     function unselect_role_row(rowIndex, rowData){
         data_to_magrate['role'].splice(data_to_magrate['role'].indexOf(rowData.name), 1)
         old_counter--;
-        totalTime -= 2.0;
+        totalTime -= 1.0;
     }
 
     function select_image_row(rowIndex, rowData){
@@ -406,13 +406,13 @@
             data_to_magrate['tenant'].push(rowData.name)
         }
         old_counter++;
-        totalTime += 4.0;
+        totalTime += 2.0;
     }
 
     function unselect_tenant_row(rowIndex, rowData){
         data_to_magrate['tenant'].splice(data_to_magrate['tenant'].indexOf(rowData.name), 1)
         old_counter--;
-        totalTime -= 4.0;
+        totalTime -= 2.0;
     }
 
     function select_flavor_row(rowIndex, rowData){
@@ -420,13 +420,13 @@
             data_to_magrate['flavor'].push(rowData.name)
         }
         old_counter++;
-        totalTime += 2.0;
+        totalTime += 1.0;
     }
 
     function unselect_flavor_row(rowIndex, rowData){
         data_to_magrate['flavor'].splice(data_to_magrate['flavor'].indexOf(rowData.name), 1)
         old_counter--;
-        totalTime -= 2.0;
+        totalTime -= 1.0;
     }
 
     function select_keypair_row(rowIndex, rowData){
@@ -468,26 +468,29 @@
         } else {
             bar_counter = 0.0;
             setBarValue("start migrating ", 0);
-            intvalue = setInterval("barAction(totalTime)", 100);
+            intvalue = setInterval("barAction(totalTime)", 300);
+            $('#waiting').html("<img src='../static/css/images/waiting.gif'>");
             $.ajax({
                 url: "/flyway_test/migrate",
                 data: {"data_to_migrate": JSON.stringify(data_to_magrate)}
                 }).done(function(return_json) {
                     window.clearInterval(intvalue);
+                    $('#waiting').html("");
                     setBarValue("finished.  ", 100)
                 });
-
         }
     }
 
     function migrate_all(){
         bar_counter = 0.0;
         setBarValue("start migrating ", 0);
-        intvalue = setInterval("barAction(totalTime)", 100);
+        intvalue = setInterval("barAction(30.0)", 300);
+        $('#waiting').html("<img src='../static/css/images/waiting.gif'>");
         $.ajax({
             url: "/flyway_test/migrate_all"
             }).done(function(return_json) {
                 window.clearInterval(intvalue);
+                $('#waiting').html("");
                 setBarValue("finished.  ", 100)
             });
     }
@@ -495,12 +498,13 @@
     function setBarValue(output, number){
 	    var progressBar = document.getElementById("progress");
         progressBar.value = number;
-        $('#progressoutput').html(output + number + "%");
+        //$('#progressoutput').html(output + number + "%");
+        $('#progressoutput').html(output);
     }
 
     function barAction(time){
-        if (bar_counter < time){
-            setBarValue("processing . . .  ", Math.floor(bar_counter / time * 100));
+        if (bar_counter < time-1.0){
+            setBarValue("migrating . . .  ", Math.floor(bar_counter / time * 100));
             bar_counter += time/100.0;
         } else {
             window.clearInterval(intvalue);
@@ -548,6 +552,7 @@
 
           <div id="progressbarlocation">
               <span id="progressoutput"></span>
+              <img id="waiting">
               <progress id="progress" class="progressbar" value="0" max="100"></progress>
           </div>
 
