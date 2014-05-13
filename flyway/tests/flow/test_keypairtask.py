@@ -2,10 +2,10 @@ from tests.flow.test_base import TestBase
 
 __author__ = 'chengxue'
 
-from novaclient import exceptions as nova_exceptions
 from flyway.flow.keypairtask import KeypairMigrationTask
-from utils.db_handlers import keypairs
+from utils.db_handlers import keypairs as db_handler
 from utils.helper import *
+from time import localtime, time, strftime
 
 
 class KeypairTaskTest(TestBase):
@@ -17,40 +17,125 @@ class KeypairTaskTest(TestBase):
 
         self.s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
         self.t_cloud_name = cfg.CONF.TARGET.os_cloud_name
-        self.nv_source = get_nova_source()
-        self.nv_target = get_nova_target()
+
+        self.s_host = cfg.CONF.SOURCE. \
+            os_auth_url.split("http://")[1].split(":")[0]
+        self.t_host = cfg.CONF.TARGET. \
+            os_auth_url.split("http://")[1].split(":")[0]
 
     def test_execute(self):
-        keypair_name = "keypair_test"
-        keypair_to_migrate = self.nv_source.keypairs.create(
-            keypair_name)
+        user_admin_s = db_handler.\
+            get_info_from_openstack_db(host=self.s_host,
+                                       db_name='keystone',
+                                       table_name='user',
+                                       columns=['id'],
+                                       filters={"name": "admin"})
+        user_demo_s = db_handler.\
+            get_info_from_openstack_db(host=self.s_host,
+                                       db_name='keystone',
+                                       table_name='user',
+                                       columns=['id'],
+                                       filters={"name": "demo"})
 
-        keypair_fingerprint = keypair_to_migrate.fingerprint
-        self.migration_task.execute([keypair_fingerprint])
+        user_admin_t = db_handler.\
+            get_info_from_openstack_db(host=self.t_host,
+                                       db_name='keystone',
+                                       table_name='user',
+                                       columns=['id'],
+                                       filters={"name": "admin"})
+        user_demo_t = db_handler.\
+            get_info_from_openstack_db(host=self.t_host,
+                                       db_name='keystone',
+                                       table_name='user',
+                                       columns=['id'],
+                                       filters={"name": "demo"})
 
-        migrated_keypair = None
-        try:
-            # get the tenant data that has been migrated from src to dst
-            values = [keypair_fingerprint, self.s_cloud_name,
-                      self.t_cloud_name]
-            keypair_data = keypairs.get_keypairs(values)
+        keypair_name_1 = "admin_keypair_test"
+        fingerprint_1 = "1d_2e_3f_4g"
+        user_id_1 = user_admin_s[0][0]
+        public_key_1 = "abcde"
 
-            migrated_keypair = self.nv_target.keypairs.\
-                find(fingerprint=keypair_fingerprint)
+        insert_value1 = {'created_at': strftime('%Y-%m-%d %H-%M-%S', localtime(time())),
+                         'name': keypair_name_1,
+                         'user_id': user_id_1,
+                         'fingerprint': fingerprint_1,
+                         'public_key': public_key_1,
+                         'deleted': '0'}
 
-            self.assertIsNotNone(migrated_keypair)
-            self.assertEqual("completed", keypair_data['state'])
-            self.assertEqual(1, keypair_data['user_id_updated'])
-            self.assertEqual(keypair_data["name"], migrated_keypair.name)
+        db_handler.insert_info_to_openstack_db(host=self.s_host,
+                                               db_name='nova',
+                                               table_name='key_pairs',
+                                               values=[insert_value1])
 
-        except nova_exceptions.NotFound:
-            self.nv_source.keypairs.delete(keypair_to_migrate)
-            return
+        keypair_name_2 = "demo_keypair_test"
+        fingerprint_2 = "3e_4f_5g_6h"
+        user_id_2 = user_demo_s[0][0]
+        public_key_2 = "fghic"
 
-        finally:
-            self.nv_source.keypairs.delete(keypair_to_migrate)
-            if migrated_keypair is not None:
-                self.nv_target.keypairs.delete(migrated_keypair)
-            values = [keypair_fingerprint, self.s_cloud_name,
-                      self.t_cloud_name]
-            keypairs.delete_keypairs(values)
+        insert_value2 = {'created_at': strftime('%Y-%m-%d %H-%M-%S', localtime(time())),
+                         'name': keypair_name_2,
+                         'user_id': user_id_2,
+                         'fingerprint': fingerprint_2,
+                         'public_key': public_key_2,
+                         'deleted': '0'}
+
+        db_handler.insert_info_to_openstack_db(host=self.s_host,
+                                               db_name='nova',
+                                               table_name='key_pairs',
+                                               values=[insert_value2])
+
+        self.migration_task.execute([fingerprint_1, fingerprint_2])
+
+        # check
+        value_1 = db_handler.\
+            get_info_from_openstack_db(host=self.t_host,
+                                       db_name='nova',
+                                       table_name='key_pairs',
+                                       columns=['user_id'],
+                                       filters={"deleted": '0',
+                                                "name": keypair_name_1,
+                                                "fingerprint":
+                                                fingerprint_1})
+
+        self.assertEqual(1, len(value_1))
+        self.assertEqual(user_admin_t[0][0], value_1[0][0])
+
+        value_2 = db_handler.\
+            get_info_from_openstack_db(host=self.t_host,
+                                       db_name='nova',
+                                       table_name='key_pairs',
+                                       columns=['user_id'],
+                                       filters={"deleted": '0',
+                                                "name": keypair_name_2,
+                                                "fingerprint":
+                                                fingerprint_2})
+
+        self.assertEqual(1, len(value_2))
+        self.assertEqual(user_demo_t[0][0], value_2[0][0])
+
+        # clear all data created for testing
+        where_value1 = [fingerprint_1, '0']
+        db_handler.delete_info_from_openstack_db(host=self.s_host,
+                                                 db_name="nova",
+                                                 table_name="key_pairs",
+                                                 where_dict=where_value1)
+        db_handler.delete_info_from_openstack_db(host=self.t_host,
+                                                 db_name="nova",
+                                                 table_name="key_pairs",
+                                                 where_dict=where_value1)
+        
+
+        where_value2 = [fingerprint_2, '0']
+        db_handler.delete_info_from_openstack_db(host=self.s_host,
+                                                 db_name="nova",
+                                                 table_name="key_pairs",
+                                                 where_dict=where_value2)
+        db_handler.delete_info_from_openstack_db(host=self.t_host,
+                                                 db_name="nova",
+                                                 table_name="key_pairs",
+                                                 where_dict=where_value2)
+
+        db_handler.delete_keypairs([fingerprint_1, self.s_cloud_name,
+                                    self.t_cloud_name])
+        db_handler.delete_keypairs([fingerprint_2, self.s_cloud_name,
+                                    self.t_cloud_name])

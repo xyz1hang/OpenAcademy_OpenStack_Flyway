@@ -87,16 +87,9 @@ def get_keypairs(values):
     data = read_record(table_name, columns, filters, True)
 
     if not data or len(data) == 0:
-        print("no record found for keypair {0} migration from cloud {1} to "
-              "could {2}".format(filters['fingerprint'],
-                                 filters['src_cloud'],
-                                 filters['dst_cloud']))
         return None
+
     elif len(data) > 1:
-        print("multiple record found for keypair {0} migration from cloud {1}"
-              " to could {2}".format(filters['fingerprint'],
-                                     filters['src_cloud'],
-                                     filters['dst_cloud']))
         return None
 
     # should be only one row
@@ -127,3 +120,9 @@ def insert_info_to_openstack_db(host, db_name, table_name, values):
     for details in values:
         values_to_insert.append(details)
     insert_openstack_record(host, db_name, table_name, values_to_insert, True)
+
+
+def delete_info_from_openstack_db(host, db_name, table_name, where_dict):
+    value = OrderedDict([('fingerprint', where_dict[0]),
+                         ('deleted', where_dict[1])])
+    delete_openstack_record(host, db_name, table_name, value, True)
