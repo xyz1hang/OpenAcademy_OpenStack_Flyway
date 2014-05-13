@@ -65,15 +65,8 @@ def get_migrated_flavor(values):
     data = read_record(table_name, columns, filters, True)
 
     if not data or len(data) == 0:
-        print("no migration record found for flavor {0} in cloud {1}"
-              .format(add_quotes(values[0]),
-                      add_quotes(values[2])))
         return None
     elif len(data) > 1:
-        print("multiple migration records found for " +
-              "flavor {0} from in cloud {1}"
-              .format(add_quotes(values[0]),
-                      add_quotes(values[2])))
         return None
 
     # should be only one row

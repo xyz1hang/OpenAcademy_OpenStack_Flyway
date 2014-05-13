@@ -2,7 +2,6 @@ __author__ = 'chengxue'
 
 from taskflow import task
 from utils.db_handlers import tenants as db_handler
-import logging
 from utils.helper import *
 from keystoneclient import exceptions as keystone_exceptions
 
@@ -87,7 +86,9 @@ class UpdateProjectsQuotasTask(task.Task):
                         # get source project quota
                         src_quota = self.nv_source.quotas.get(tenant.id)
                         # update destination project quota
-                        self.update_quota(new_name_dst, src_quota, tenant_data)
+                        self.update_quota(new_name_dst,
+                                          src_quota,
+                                          tenant_data)
 
                 else:
                     LOG.info("The corresponding project {0} has not been "

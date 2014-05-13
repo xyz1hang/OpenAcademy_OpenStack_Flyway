@@ -1,7 +1,6 @@
 __author__ = 'chengxue'
 
 from tests.flow.test_base import TestBase
-from flyway.common import config
 from utils.db_handlers import tenants as db_handler
 import utils.helper
 from flow.update_projects_quotas_task import UpdateProjectsQuotasTask

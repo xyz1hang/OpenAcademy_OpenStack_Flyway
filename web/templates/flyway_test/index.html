@@ -473,11 +473,17 @@
             $.ajax({
                 url: "/flyway_test/migrate",
                 data: {"data_to_migrate": JSON.stringify(data_to_magrate)}
-                }).done(function(return_json) {
+                })
+                    .done(function(return_json) {
                     window.clearInterval(intvalue);
                     $('#waiting').html("");
-                    setBarValue("finished.  ", 100)
-                });
+                    setBarValue("migration finished.  ", 100)
+                })
+                    .fail(function() {
+                    window.clearInterval(intvalue);
+                    $('#waiting').html("");
+                    setBarValue("migration failed.  ", 100)
+                    });
         }
     }
 
@@ -488,11 +494,17 @@
         $('#waiting').html("<img src='../static/css/images/waiting.gif'>");
         $.ajax({
             url: "/flyway_test/migrate_all"
-            }).done(function(return_json) {
+            })
+                .done(function(return_json) {
                 window.clearInterval(intvalue);
                 $('#waiting').html("");
                 setBarValue("finished.  ", 100)
-            });
+            })
+                .fail(function() {
+                window.clearInterval(intvalue);
+                $('#waiting').html("");
+                setBarValue("migration failed.  ", 100)
+                });
     }
 
     function setBarValue(output, number){
