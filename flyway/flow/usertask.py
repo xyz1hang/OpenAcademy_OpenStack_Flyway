@@ -38,7 +38,7 @@ class UserMigrationTask(task.Task):
                                   self.ks_target.users.list()]
 
     def migrate_one_user(self, user):
-        print "Begin to migrate user {0}".format(user)
+        LOG.info("Begin to migrate user {0}".format(user.name))
         migrated_user = None
         if user.name not in self.target_user_names:
             password = generate_new_password(user.email)
@@ -53,7 +53,7 @@ class UserMigrationTask(task.Task):
                           .format(user))
                 LOG.error("The error is {0}".format(e.message))
             else:
-                LOG.info("Succeed to migrate user {0}".format(user))
+                LOG.info("Succeed to migrate user {0}".format(user.name))
                 set_user_complete(user)
         return migrated_user
 
@@ -80,9 +80,6 @@ class UserMigrationTask(task.Task):
             migrated_user = self.migrate_one_user(user)
             if migrated_user is not None:
                 migrated_users.append(migrated_user)
-
-        # TODO: When to delete the record in Database?
-        #delete_migrated_users()
 
     def revert_users(self):
         for user in self.ks_target.users.list():

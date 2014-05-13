@@ -72,13 +72,12 @@ def get_migrated_user(values):
     data = read_record(table_name, columns, filters, True)
 
     if not data or len(data) == 0:
-        print("no migration record found for user '{0}' in cloud '{1}'"
-              .format(values[0], values[1]))
+        LOG.info("no migration record found for user '{0}' in cloud '{1}'"
+                 .format(values[0], values[1]))
         return None
     elif len(data) > 1:
-        #TODO: not handled properly
-        print("multiple migration record found for user '{0}' in cloud '{1}'"
-              .format(values[0], values[1]))
+        LOG.info("multiple migration record found for user '{0}' in cloud '{1}'"
+                 .format(values[0], values[1]))
         return None
 
     # should be only one row
@@ -94,6 +93,7 @@ def delete_migrated_users():
     delete_record(TABLE_NAME, {"src_cloud": cfg.CONF.SOURCE.os_cloud_name,
                                "dst_cloud": cfg.CONF.TARGET.os_cloud_name,
                                "state": "completed"})
+
 
 def delete_all_users_mapping():
     delete_record(TABLE_NAME, {"src_cloud": cfg.CONF.SOURCE.os_cloud_name,
