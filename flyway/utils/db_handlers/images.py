@@ -67,18 +67,8 @@ def get_migrated_image(values):
     data = read_record(table_name, columns, filters, True)
 
     if not data or len(data) == 0:
-        print("no migration record found for image {0} "
-              "[source_owner_id: {1}] in cloud {2}"
-              .format(add_quotes(values[0]),
-                      add_quotes(values[2]),
-                      add_quotes(values[3])))
         return None
     elif len(data) > 1:
-        print("multiple migration record found for image {0} "
-              "[source_owner_id: {1}] in cloud {2}"
-              .format(add_quotes(values[0]),
-                      add_quotes(values[2]),
-                      add_quotes(values[3])))
         return None
 
     # should be only one row

@@ -5,6 +5,7 @@ from time import localtime, time, strftime
 
 LOG = logging.getLogger(__name__)
 
+
 class KeypairMigrationTask(task.Task):
     """
     Task to migrate all keypairs from the source cloud to the target cloud.
@@ -219,18 +220,18 @@ class KeypairMigrationTask(task.Task):
                              format(m_keypair['name']))
                     self.migrate_one_keypair(keypair_fingerprint)
 
-    def revert(self, keypairs_to_move):
+    def revert(self, keypairs_to_revert):
          # no resources need to be migrated
-        if type(keypairs_to_move) is list and len(keypairs_to_move) == 0:
+        if type(keypairs_to_revert) is list and len(keypairs_to_revert) == 0:
             LOG.info("No key pair resources to be reverted.")
             return
 
         # in case only one string gets passed in
-        if type(keypairs_to_move) is str:
-            keypairs_to_move = [keypairs_to_move]
+        if type(keypairs_to_revert) is str:
+            keypairs_to_revert = [keypairs_to_revert]
 
-        if keypairs_to_move is None:
-            keypairs_to_move = []
+        if keypairs_to_revert is None:
+            keypairs_to_revert = []
 
             fingerprints = db_handler.\
                 get_info_from_openstack_db(table_name="key_pairs",
@@ -240,14 +241,13 @@ class KeypairMigrationTask(task.Task):
                                            filters={"deleted": '0'})
 
             for one_fingerprint in fingerprints:
-                keypairs_to_move.append(one_fingerprint[0])
+                keypairs_to_revert.append(one_fingerprint[0])
 
-        for keypair_fingerprint in keypairs_to_move:
+        for keypair_fingerprint in keypairs_to_revert:
             values = [keypair_fingerprint, self.s_cloud_name,
                       self.t_cloud_name]
             m_keypair = db_handler.get_keypairs(values)
 
-            # add keypairs that have not been stored in the database
             if m_keypair is not None:
                 if m_keypair["state"] == "completed" and \
                                 m_keypair["user_id_updated"] == 1:
