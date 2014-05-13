@@ -16,7 +16,7 @@
 
 import logging
 from utils.db_handlers.users import set_user_complete, \
-    delete_migrated_users, initialise_users_mapping
+    delete_migrated_users, initialise_users_mapping, delete_all_users_mapping
 
 from utils.helper import *
 
@@ -84,3 +84,15 @@ class UserMigrationTask(task.Task):
 
         # TODO: When to delete the record in Database?
         #delete_migrated_users()
+
+    def revert_users(self):
+        for user in self.ks_target.users.list():
+            if user.name in self.target_user_names:
+                self.ks_target.users.delete(user)
+
+    def revert(self, *args, **kwargs):
+        #Firstly delete the migrated data in target
+        self.revert_users()
+        #Then delete the records in DB
+        delete_all_users_mapping()
+        pass

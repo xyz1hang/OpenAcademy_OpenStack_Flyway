@@ -94,3 +94,7 @@ def delete_migrated_users():
     delete_record(TABLE_NAME, {"src_cloud": cfg.CONF.SOURCE.os_cloud_name,
                                "dst_cloud": cfg.CONF.TARGET.os_cloud_name,
                                "state": "completed"})
+
+def delete_all_users_mapping():
+    delete_record(TABLE_NAME, {"src_cloud": cfg.CONF.SOURCE.os_cloud_name,
+                               "dst_cloud": cfg.CONF.TARGET.os_cloud_name})
