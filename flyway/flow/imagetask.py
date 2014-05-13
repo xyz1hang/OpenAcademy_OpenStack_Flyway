@@ -2,6 +2,7 @@ import sys
 
 from glanceclient import exc
 from taskflow import task
+from task_scheduler.scheduler import image_scheduler
 
 from utils.db_handlers import images
 from utils.db_handlers import tenants
@@ -292,6 +293,9 @@ class ImageMigrationTask(task.Task):
                     img_owner_pair = {'img': img,
                                       'owner': migrated_tenant['dst_uuid']}
                     images_to_move.append(dict(img_owner_pair))
+
+        if image_scheduler is not None:
+            images_to_move = image_scheduler.sort(images_to_move)
 
         for image_owner_pair in images_to_move:
             # check whether it has been migrated
