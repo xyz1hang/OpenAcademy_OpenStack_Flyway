@@ -14,9 +14,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
 from utils.db_handlers.users import set_user_complete, \
-    delete_migrated_users, initialise_users_mapping
+    delete_migrated_users, initialise_users_mapping, delete_all_users_mapping
 
 from utils.helper import *
 
@@ -34,12 +33,13 @@ class UserMigrationTask(task.Task):
         super(UserMigrationTask, self).__init__(*args, **kwargs)
         self.ks_source = get_keystone_source()
         self.ks_target = get_keystone_target()
+        self.source_users = None
 
         self.target_user_names = [user.name for user in
                                   self.ks_target.users.list()]
 
     def migrate_one_user(self, user):
-        print "Begin to migrate user {0}".format(user)
+        LOG.info("Begin to migrate user {0}".format(user.name))
         migrated_user = None
         if user.name not in self.target_user_names:
             password = generate_new_password(user.email)
@@ -54,7 +54,7 @@ class UserMigrationTask(task.Task):
                           .format(user))
                 LOG.error("The error is {0}".format(e.message))
             else:
-                LOG.info("Succeed to migrate user {0}".format(user))
+                LOG.info("Succeed to migrate user {0}".format(user.name))
                 set_user_complete(user)
         return migrated_user
 
@@ -72,15 +72,24 @@ class UserMigrationTask(task.Task):
         if type(users_to_move) is list and len(users_to_move) == 0:
             return
 
-        source_users = self.get_source_users(users_to_move)
+        self.source_users = self.get_source_users(users_to_move)
 
-        initialise_users_mapping(source_users, self.target_user_names)
+        initialise_users_mapping(self.source_users, self.target_user_names)
 
         migrated_users = []
-        for user in source_users:
+        for user in self.source_users:
             migrated_user = self.migrate_one_user(user)
             if migrated_user is not None:
                 migrated_users.append(migrated_user)
 
-        # TODO: When to delete the record in Database?
-        #delete_migrated_users()
+    def revert_users(self):
+        for user in self.ks_target.users.list():
+            if user.name in self.target_user_names:
+                self.ks_target.users.delete(user)
+
+    def revert(self, *args, **kwargs):
+        if self.source_users is not None:
+            #Firstly delete the migrated data in target
+            self.revert_users()
+            #Then delete the records in DB
+            delete_all_users_mapping(self.source_users)

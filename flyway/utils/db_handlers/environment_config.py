@@ -1,8 +1,12 @@
 from collections import OrderedDict
+from task_scheduler.scheduler import setup_scheduler
 from utils.db_base import *
 
 
 def initialize_environment():
+
+    setup_scheduler()
+
     db_name = 'flyway'
     create_database(db_name)
     create_db_pool(db_name)

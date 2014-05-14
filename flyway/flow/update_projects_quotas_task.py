@@ -1,13 +1,9 @@
 __author__ = 'chengxue'
 
 from taskflow import task
-from keystoneclient import exceptions as keystone_exceptions
-
 from utils.db_handlers import tenants as db_handler
 from utils.helper import *
-from utils.resourcetype import ResourceType
-from utils import exceptions
-
+from keystoneclient import exceptions as keystone_exceptions
 
 LOG = logging.getLogger(__name__)
 
@@ -27,23 +23,24 @@ class UpdateProjectsQuotasTask(task.Task):
         self.nv_source = get_nova_source()
         self.nv_target = get_nova_target()
 
-    def update_quota(self, tenant_name=None, quota=None):
-        if not quota:
-            LOG.info('Nothing to be updated.')
+    def update_quota(self, tenant_name=None, quota=None, t_data=None):
+        if tenant_name is None:
+            LOG.error("Tenant name cannot be null, skip Updating.")
             return
 
-        if not tenant_name:
-            raise Exception("Tenant name cannot be null.")
+        if quota is None:
+            LOG.info("Nothing to be updated for tenant {0}."
+                     .format(tenant_name))
+            return
 
         ks = get_keystone_target()
         try:
             tenant = ks.tenants.find(name=tenant_name)
 
         except keystone_exceptions.NotFound:
-            # encapsulate exceptions to make it more understandable
-            # to user. Other exception handling mechanism can be added later
-            raise exceptions.ResourceNotFoundException(
-                ResourceType.tenant, tenant_name, self.t_cloud_name)
+            LOG.error("Tenant {0} cannot be found in cloud {1}"
+                      .format(tenant_name, self.s_cloud_name))
+            return
 
         if tenant is not None:
             self.nv_target.quotas.update(tenant.id,
@@ -60,8 +57,14 @@ class UpdateProjectsQuotasTask(task.Task):
                                          security_groups=None,
                                          security_group_rules=None)
 
+            t_data.update({'quota_updated': '1'})
+            db_handler.update_migration_record(**t_data)
+
+            LOG.info("The quota for tenant {0} has been updated successfully."
+                     .format(tenant_name))
+
     def execute(self):
-        print "project quota updating ..."
+        LOG.info("Start Project quota updating ...")
         tenants = self.ks_source.tenants.list()
 
         for tenant in tenants:
@@ -74,8 +77,8 @@ class UpdateProjectsQuotasTask(task.Task):
             if tenant_data is not None:
                 if tenant_data['state'] == "proxy_created":
                     if tenant_data['quota_updated'] == '1':
-                        print "The quota of project {0} has been updated.".\
-                            format(tenant_data['project_name'])
+                        LOG.info("The quota of project {0} has been updated."
+                                 .format(tenant_data['project_name']))
 
                     else:
                         new_name_dst = tenant_data['new_project_name']
@@ -83,12 +86,14 @@ class UpdateProjectsQuotasTask(task.Task):
                         # get source project quota
                         src_quota = self.nv_source.quotas.get(tenant.id)
                         # update destination project quota
-                        self.update_quota(new_name_dst, src_quota)
-
-                        tenant_data.update({'quota_updated': '1'})
-                        db_handler.update_migration_record(**tenant_data)
+                        self.update_quota(new_name_dst,
+                                          src_quota,
+                                          tenant_data)
 
                 else:
-                    print "The corresponding project {0} " \
-                          "has not been migrated.".\
-                        format(tenant_data['project_name'])
+                    LOG.info("The corresponding project {0} has not been "
+                             "migrated.".format(tenant_data['project_name']))
+
+            else:
+                LOG.info("Tenant {} in could {} has not been migrated."
+                         .format(tenant.name, self.s_cloud_name))

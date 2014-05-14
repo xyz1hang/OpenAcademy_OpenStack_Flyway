@@ -13,8 +13,6 @@ from flow.roletask import RoleMigrationTask
 from flow.tenanttask import TenantMigrationTask
 from flow.instancetask import InstanceMigrationTask
 from utils.db_handlers.keypairs import *
-from utils.db_base import *
-from utils.helper import *
 
 from flow import flow
 
@@ -144,6 +142,5 @@ def migrate(request):
 
 
 def migrate_all(request):
-    cfg.parse(['--config-file', '../flyway/etc/flyway.conf'])
     result = flow.execute(None)
     return HttpResponse(json.dumps(result, ensure_ascii=False))

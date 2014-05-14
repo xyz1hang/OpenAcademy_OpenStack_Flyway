@@ -2,6 +2,7 @@ import sys
 
 from glanceclient import exc
 from taskflow import task
+from task_scheduler.scheduler import image_scheduler
 
 from utils.db_handlers import images
 from utils.db_handlers import tenants
@@ -94,8 +95,8 @@ class ImageMigrationTask(task.Task):
             #TODO: it could be (the ID of) a tenant or user
             image_data = self.get_image(image_meta.id)
 
-            print ("Uploading image [Name: '{0}', ID: '{1}']..."
-                   .format(image_meta.name, image_meta.id))
+            LOG.info("Uploading image [Name: '{0}', ID: '{1}']..."
+                     .format(image_meta.name, image_meta.id))
             m_img_meta = self.upload_image(image_meta, image_data,
                                            owner_target_id)
 
@@ -121,30 +122,30 @@ class ImageMigrationTask(task.Task):
 
         # catch exception thrown by the http_client
         except exc.InvalidEndpoint as e:
-            print "Invalid endpoint used to connect to glance server,\n" \
-                  "while processing image [Name: '{0}' ID: '{1}']\n" \
-                  "Details: {2}".format(image_meta.name,
-                                        image_meta.id, str(e))
+            LOG.errot("Invalid endpoint used to connect to glance server,\n"
+                      "while processing image [Name: '{0}' ID: '{1}']\n"
+                      "Details: {2}".format(image_meta.name,
+                                            image_meta.id, str(e)))
             dest_details.update({"state": "Error"})
 
         except exc.CommunicationError as e:
-            print "Problem communicating with glance server,\n" \
-                  "while processing image [Name: '{0}' ID: '{1}']\n" \
-                  "Details: {2}".format(image_meta.name,
-                                        image_meta.id, str(e))
+            LOG.error("Problem communicating with glance server,\n"
+                      "while processing image [Name: '{0}' ID: '{1}']\n"
+                      "Details: {2}".format(image_meta.name,
+                                            image_meta.id, str(e)))
             dest_details.update({"state": "Error"})
 
         except exc.HTTPConflict as e:
-            print e.details
+            LOG.error(e.details)
             dest_details.update({"state": "Error"})
 
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             details = str(str(exc_type) + ": " + e.message
                           + " [line: " + str(exc_tb.tb_lineno) + "]")
-            print "Fail to processing image [Name: '{0}' ID: '{1}']\n" \
-                  "Details: {2}".format(image_meta.name,
-                                        image_meta.id, details)
+            LOG.error("Fail to processing image [Name: '{0}' ID: '{1}']\n"
+                      "Details: {2}".format(image_meta.name,
+                                            image_meta.id, details))
             dest_details.update({"state": "Error"})
 
         image_migration_record.update(dest_details)
@@ -169,10 +170,11 @@ class ImageMigrationTask(task.Task):
                 new_kernel_id = self.get_and_upload_img(
                     image_meta, owner_target_id)
                 if not new_kernel_id:
-                    print "Unable to upload kernel image [Name: '{0}' " \
-                          "ID: '{1}'] for image [Name: '{2}' " \
-                          "ID: '{3}']".format(image_meta.name, image_meta.id,
-                                              image.name, image.id)
+                    LOG.info("Unable to upload kernel image [Name: '{0}' "
+                             "ID: '{1}'] for image [Name: '{2}' "
+                             "ID: '{3}']".format(image_meta.name,
+                                                 image_meta.id,
+                                                 image.name, image.id))
                     return None
                 # update the corresponding entry in the original
                 # image meta_data dictionary
@@ -184,10 +186,11 @@ class ImageMigrationTask(task.Task):
                 new_ramdisk_id = self.get_and_upload_img(
                     image_meta, owner_target_id)
                 if not new_ramdisk_id:
-                    print "Unable to upload ramdisk image [Name: '{0}' " \
-                          "ID: '{1}'] for image [Name: '{2}' " \
-                          "ID: '{3}']".format(image_meta.name, image_meta.id,
-                                              image.name, image.id)
+                    LOG.info("Unable to upload ramdisk image [Name: '{0}' "
+                             "ID: '{1}'] for image [Name: '{2}' "
+                             "ID: '{3}']".format(image_meta.name,
+                                                 image_meta.id,
+                                                 image.name, image.id))
                     return None
                 # update the corresponding entry in the original
                 # image meta_data dictionary
@@ -197,8 +200,8 @@ class ImageMigrationTask(task.Task):
             # upload the image
             new_img_id = self.get_and_upload_img(image, owner_target_id)
             if not new_img_id:
-                print "Unable to upload image [Name: '{0}' " \
-                      "ID: '{1}']".format(image.name, image.id)
+                LOG.info("Unable to upload image [Name: '{0}' "
+                         "ID: '{1}']".format(image.name, image.id))
                 return None
 
         return new_img_id
@@ -225,8 +228,11 @@ class ImageMigrationTask(task.Task):
         :param images_to_migrate: list of IDs of images to be migrated
         """
 
-        if type(images_to_migrate) is list and len(images_to_migrate) == 0 and \
-           type(tenant_to_process) is list and len(tenant_to_process) == 0:
+        if type(images_to_migrate) is list \
+                and len(images_to_migrate) == 0 \
+                and type(tenant_to_process) is list \
+                and len(tenant_to_process) == 0:
+            LOG.info("No image resource needs to be migrated.")
             return
 
         images_to_move = []
@@ -240,8 +246,8 @@ class ImageMigrationTask(task.Task):
                     images_to_move.append(dict(img_owner_pair))
 
                 except exc.HTTPNotFound:
-                    print ("Can not find image of id: '{0}' on cloud '{1}'"
-                           .format(img_id, cfg.CONF.SOURCE.os_cloud_name))
+                    LOG.error("Can not find image of id: '{0}' on cloud '{1}'"
+                              .format(img_id, cfg.CONF.SOURCE.os_cloud_name))
 
         # migrate images from given tenants or all images
         else:
@@ -277,13 +283,14 @@ class ImageMigrationTask(task.Task):
                 m_tenants = tenants.get_migrated_tenant(filter_values)
                 migrated_tenant = m_tenants if m_tenants else None
                 if not migrated_tenant:
-                    print ("Skipping image migration for tenant '%s', "
-                           "since it has no migration record." % tenant_name)
+                    LOG.info("Skipping image migration for tenant '%s'"
+                             "since it has no migration record."
+                             % tenant_name)
                     continue
                 if migrated_tenant['images_migrated']:
                     # images already migrated for this tenant
-                    print ("All images have been migrated for tenant '%s'"
-                           % migrated_tenant['project_name'])
+                    LOG.info("All images have been migrated for tenant '%s'"
+                             % migrated_tenant['project_name'])
                     return
 
                 owned_images = self.gl_source.images.list(
@@ -293,15 +300,99 @@ class ImageMigrationTask(task.Task):
                                       'owner': migrated_tenant['dst_uuid']}
                     images_to_move.append(dict(img_owner_pair))
 
+        if image_scheduler is not None:
+            images_to_move = image_scheduler.sort(images_to_move)
+
         for image_owner_pair in images_to_move:
             # check whether it has been migrated
             if self.check_image_migrated(image_owner_pair['img']):
-                print ("image [Name: '{0}', ID: '{1}' has been migrated"
-                       .format(image_owner_pair['img'].name,
-                               image_owner_pair['img'].id))
+                LOG.info("image [Name: '{0}', ID: '{1}' has been migrated"
+                         .format(image_owner_pair['img'].name,
+                                 image_owner_pair['img'].id))
                 continue
 
             self.migrate_one_image(image_owner_pair['img'],
                                    image_owner_pair['owner'])
 
             #TODO: update image migration state of corresponding project
+
+    def revert(self, images_to_migrate, tenant_to_process):
+
+        if type(images_to_migrate) is list \
+                and len(images_to_migrate) == 0 \
+                and type(tenant_to_process) is list \
+                and len(tenant_to_process) == 0:
+            LOG.info("No image resource needs to be reverted.")
+            return
+
+        images_to_revert = []
+        # revert given images
+        if images_to_migrate:
+            for img_id in images_to_migrate:
+                try:
+                    img = self.gl_source.images.get(img_id)
+                    if img:
+                        images_to_revert.append(img_id)
+
+                except exc.HTTPNotFound:
+                    LOG.error("Can not find image of id: '{0}' on cloud '{1}'"
+                              .format(img_id, cfg.CONF.SOURCE.os_cloud_name))
+
+        else:
+            owner_tenants = tenant_to_process
+            if not owner_tenants:
+                owner_tenants = []
+                for tenant in self.ks_source.tenants.list():
+                    owner_tenants.append(tenant.name)
+
+            all_images = self.gl_source.images.list()
+            for image in all_images:
+                if not image.is_public:
+                    continue
+                images_to_revert.append(image.id)
+
+            for tenant_name in owner_tenants:
+
+                s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
+                t_cloud_name = cfg.CONF.TARGET.os_cloud_name
+
+                filter_values = [tenant_name, s_cloud_name, t_cloud_name]
+
+                m_tenants = tenants.get_migrated_tenant(filter_values)
+                migrated_tenant = m_tenants if m_tenants else None
+                if not migrated_tenant:
+                    LOG.info("Skipping image migration for tenant '%s'"
+                             "since it has no migration record."
+                             % tenant_name)
+                    continue
+
+                owned_images = self.gl_source.images.list(
+                    owner=migrated_tenant['src_uuid'])
+                for img in owned_images:
+                    images_to_revert.append(img.id)
+
+        for img_id in images_to_revert:
+            # delete image from the target cloud
+            try:
+                img = self.gl_target.images.get(img_id)
+                if img:
+                    self.gl_target.images.delete(img)
+            except exc.HTTPNotFound:
+                LOG.info("Can not find image of id: '{0}' on cloud '{1}'"
+                         .format(img_id, cfg.CONF.TARGET.os_cloud_name))
+
+            # delete image record from flyway database
+            try:
+                img = self.gl_source.images.get(img_id)
+                if img:
+                    filter_values = [img.name, img.id, img.owner,
+                                     cfg.CONF.SOURCE.os_cloud_name,
+                                     cfg.CONF.TARGET.os_cloud_name]
+                    m_image = images.get_migrated_image(filter_values)
+
+                    if m_image is not None:
+                        images.delete_migration_record(filter_values)
+
+            except exc.HTTPNotFound:
+                LOG.info("Can not find image of id: '{0}' on cloud '{1}'"
+                         .format(img_id, cfg.CONF.SOURCE.os_cloud_name))

@@ -56,6 +56,11 @@ email_opts = [
     cfg.StrOpt('password')
 ]
 
+scheduler_opts = [
+    cfg.StrOpt('image_scheduler', default='DefaultImageScheduler'),
+    cfg.StrOpt('vm_scheduler', default='DefaultVMScheduler')
+]
+
 CONF = cfg.CONF
 
 source_group = cfg.OptGroup(name='SOURCE', title='Source OpenStack Options')
@@ -76,6 +81,10 @@ CONF.register_opts(db_opts, db_group)
 email_group = cfg.OptGroup(name='EMAIL', title='Email Credentials')
 CONF.register_group(email_group)
 CONF.register_opts(email_opts, email_group)
+
+scheduler_group = cfg.OptGroup(name='SCHEDULER', title='Scheduler')
+CONF.register_group(scheduler_group)
+CONF.register_opts(scheduler_opts, scheduler_group)
 
 
 def parse(args):
