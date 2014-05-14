@@ -68,7 +68,7 @@ class UserMigrationTask(task.Task):
             if users_to_move is None \
             else [user for user in self.ks_source.users.list()
                   if user.name in users_to_move
-                  and user.nane not in self.target_user_names]
+                  and user.name not in self.target_user_names]
 
     def execute(self, users_to_move):
 
