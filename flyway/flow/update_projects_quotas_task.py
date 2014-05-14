@@ -1,12 +1,13 @@
 __author__ = 'chengxue'
 
 from taskflow import task
-from utils.db_handlers import tenants as db_handler
-import logging
-from utils.helper import *
 from keystoneclient import exceptions as keystone_exceptions
+
+from utils.db_handlers import tenants as db_handler
+from utils.helper import *
 from utils.resourcetype import ResourceType
 from utils import exceptions
+
 
 LOG = logging.getLogger(__name__)
 

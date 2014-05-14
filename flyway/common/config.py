@@ -29,7 +29,8 @@ opts = [
     cfg.StrOpt('os_username', default='admin'),
     cfg.StrOpt('os_password'),
     cfg.StrOpt('os_cloud_name'),
-    cfg.StrOpt('os_host_username')
+    cfg.StrOpt('os_host_username'),
+    cfg.StrOpt('os_host_password')
 ]
 
 log_opts = [
@@ -37,6 +38,10 @@ log_opts = [
     cfg.StrOpt('log_file', default='./flyway.log'),
     cfg.StrOpt('log_format', default=None)
 ]
+
+general_opts = {
+    cfg.StrOpt('Duplicates_handle', default='SKIP')
+}
 
 db_opts = [
     cfg.StrOpt('host', default='localhost'),
@@ -61,6 +66,7 @@ target_group = cfg.OptGroup(name='TARGET', title='Target OpenStack Options')
 CONF.register_group(target_group)
 CONF.register_opts(opts, target_group)
 
+CONF.register_opts(general_opts)
 CONF.register_opts(log_opts)
 
 db_group = cfg.OptGroup(name='DATABASE', title='Database Credentials')

@@ -5,6 +5,7 @@ import novaclient.v1_1.client as nvclient
 import logging
 import random
 import smtplib
+import paramiko
 
 from common import config as cfg
 
@@ -125,7 +126,7 @@ def get_nova_client(username=None, password=None,
     project_id is actually not needed.
     See nova client source code comments for more info
     """
-    nova = nvclient.Client(username=username, password=password,
+    nova = nvclient.Client(username=username, api_key=password,
                            project_id=tenant_name, auth_url=auth_url)
     return nova
 
@@ -206,3 +207,40 @@ def send_reset_password_email(email_addr, password):
              'password': cfg.CONF.EMAIL.password
              }
     send_email(**email)
+
+
+def execute_remote_command(host_address, username, password, command):
+
+    # connect to the host
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(host_address, username=username, password=password)
+    stdin, stdout, stderr = ssh.exec_command(command)
+
+    print "Executing %s on host: %s" % (command, host_address)
+
+    # if output and standard error hasn't been read off before
+    # buffer is full the host will hang
+    output = None
+    error = None
+    output_str = ""
+    error_str = ""
+
+    while output != "":
+        output = stdout.readline()
+        # print output while reading
+        if output:
+            print output
+            output_str += output
+
+    while error != "":
+        error = stderr.readline()
+        error_str += error
+
+    # print error at the end
+    print error_str if error else "Execution completed"
+
+    ssh.close()
+
+    return [output_str, error_str]
+

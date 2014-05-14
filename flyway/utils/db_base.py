@@ -57,7 +57,8 @@ def connect_openstack_db(host, db_name):
     db = MySQLdb.connect(**credentials)
     return db
 
-
+#TODO: print table name in exception message for all functions
+#TODO: that handle exceptions
 def read_openstack_record(host, db_name, table_name, columns, where_dict,
                           close):
     # establish connection
@@ -291,11 +292,11 @@ def read_record(table_name, columns, where_dict, close):
     db = connect(True)
     cursor = get_cursor(db)
 
-    filter_str = build_where_string(where_dict)
+    filter_str = build_where_string(where_dict) if where_dict else None
     # build columns list
     columns_str = ', '.join(columns)
 
-    if where_dict and len(where_dict.keys()) > 0:
+    if filter_str:
         query = "SELECT {0} FROM {1} WHERE {2}".format(columns_str, table_name,
                                                        filter_str)
     else:
@@ -308,6 +309,10 @@ def read_record(table_name, columns, where_dict, close):
     except MySQLdb.Error, e:
         print("MySQL error - SELECT: {}".format(e))
         db.rollback()
+
+    if data and len(data) == 0:
+        print("no migration record found for {0} where {1}"
+              .format(table_name, filter_str))
 
     if close:
         db.close()

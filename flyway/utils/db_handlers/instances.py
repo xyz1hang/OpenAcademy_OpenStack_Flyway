@@ -25,12 +25,12 @@ def initialise_vm_mapping():
         return
 
 
-def record_vm_migrated(**instances_details):
+def record_vm_migrated(instances_details):
     """function to insert the detail of instances migration
 
-    :param tenant_details: relevant data of migrated instance
+    :param instances_details: relevant data of migrated instance
     """
-    table_name = "tenants"
+    table_name = "instances"
     values_to_insert = []
     for vm_detail in instances_details:
 
@@ -59,15 +59,22 @@ def get_migrated_vm(**filters):
 
     data = read_record(table_name, columns, filters, True)
 
-    if len(data) == 0:
-        print('no migration record found for '
-              'instance {0} from tenant {1} in cloud {2}'
-              .format(add_quotes(filters['src_server_name']),
-                      add_quotes(filters['src_tenant']),
-                      add_quotes(filters['src_cloud'])))
+    if not data or len(data) == 0:
         return None
 
-    return data
+    # convert data returned to dictionaries list
+    vm_data = []
+    for d in data:
+        vm_data.append({'src_server_name': d[1],
+                        'src_uuid': d[2],
+                        'src_tenant': d[3],
+                        'src_cloud': d[4],
+                        'dst_server_name': d[5],
+                        'dst_uuid': d[6],
+                        'dst_tenant': d[7],
+                        'dst_cloud': d[8],
+                        'migration_state': d[9]})
+    return vm_data
 
 
 def update_migration_record(**instance_details):

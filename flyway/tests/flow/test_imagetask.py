@@ -14,6 +14,8 @@ class ImageTaskTest(TestBase):
     def __init__(self, *args, **kwargs):
         super(ImageTaskTest, self).__init__(*args, **kwargs)
         self.migration_task = ImageMigrationTask('image_migration_task')
+        self.s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
+        self.t_cloud_name = cfg.CONF.TARGET.os_cloud_name
 
     def test_execute(self):
         image_name = "public_image_on_source_cloud"
@@ -32,16 +34,19 @@ class ImageTaskTest(TestBase):
                 images_to_migrate=[image_to_migrate.id], tenant_to_process=None)
 
             # get the image data that has been migrated from src to dst
-            values = [image_name, image_to_migrate.id, image_to_migrate.owner,
-                      cfg.CONF.SOURCE.os_cloud_name,
-                      cfg.CONF.TARGET.os_cloud_name]
-            image_migration_record = images.get_migrated_image(values)
+            filters = {"src_image_name": image_name,
+                       "src_uuid": image_to_migrate.id,
+                       "src_cloud": self.s_cloud_name,
+                       "dst_cloud": self.t_cloud_name}
+
+            image_migration_record = images.get_migrated_image(filters)
             if not image_migration_record:
                 self.assertTrue(False,
                                 "No migration detail recorded "
                                 "for image '%s'" % image_name)
-
-            dest_id = image_migration_record['dst_uuid']
+            m_image = image_migration_record[0] \
+                if image_migration_record else None
+            dest_id = m_image['dst_uuid']
             dest_image = self.migration_task.gl_target.images.get(dest_id)
 
             self.assertEqual(image_to_migrate.name, dest_image.name)

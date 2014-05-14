@@ -69,6 +69,7 @@ def get_migrated_flavor(values):
               .format(add_quotes(values[0]),
                       add_quotes(values[2])))
         return None
+
     elif len(data) > 1:
         print("multiple migration records found for " +
               "flavor {0} from in cloud {1}"

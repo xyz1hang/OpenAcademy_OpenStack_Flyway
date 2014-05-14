@@ -73,7 +73,8 @@ def get_migrated_tenant(values):
               .format(values[0], values[1]))
         return None
     elif len(data) > 1:
-        #TODO: not handled properly
+        #TODO: Move multiple records check from all db_handler outside since the
+        #TODO: validity of multiple matching record depends on application logic
         print("multiple migration record found for tenant '{0}' in cloud '{1}'"
               .format(values[0], values[1]))
         return None

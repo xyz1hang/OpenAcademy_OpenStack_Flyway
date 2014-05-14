@@ -24,6 +24,9 @@ class ImageMigrationTask(task.Task):
         self.gl_source = get_glance_source(self.ks_source)
         self.gl_target = get_glance_target(self.ks_target)
 
+        self.s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
+        self.t_cloud_name = cfg.CONF.TARGET.os_cloud_name
+
         images.initialise_image_mapping()
 
     def get_image(self, image_id):
@@ -49,7 +52,7 @@ class ImageMigrationTask(task.Task):
         :rtype : a tuple of (http response headers, http response body)
         """
 
-        supported_headers = ["name", "id", "store", "disk_format", "owner"
+        supported_headers = ["name", "store", "disk_format", "owner"
                              "properties", "container_format", "size", "data"
                              "checksum", "is_public", "min_ram", "min_disk"]
 
@@ -85,6 +88,7 @@ class ImageMigrationTask(task.Task):
              "state": "unknown"}
 
         m_img_meta = None
+        dest_details = {}
         try:
             #TODO: how to resolve the owner of the image ?
             #TODO: it could be (the ID of) a tenant or user
@@ -96,12 +100,12 @@ class ImageMigrationTask(task.Task):
                                            owner_target_id)
 
             # prepare for database record update
-            dest_details = {"dst_image_name": m_img_meta.name,
-                            "dst_uuid": m_img_meta.id,
-                            "dst_owner_uuid": getattr(m_img_meta, 'owner',
-                                                        'NULL'),
-                            "dst_cloud": cfg.CONF.TARGET.os_cloud_name,
-                            "checksum": m_img_meta.checksum}
+            dest_details.update({"dst_image_name": m_img_meta.name,
+                                 "dst_uuid": m_img_meta.id,
+                                 "dst_owner_uuid": getattr(m_img_meta,
+                                                           'owner', 'NULL'),
+                                 "dst_cloud": cfg.CONF.TARGET.os_cloud_name,
+                                 "checksum": m_img_meta.checksum})
 
             # check checksum if provided. If the checksum is not correct
             # it will still be stored in the database in order
@@ -113,7 +117,7 @@ class ImageMigrationTask(task.Task):
                 else:
                     dest_details.update({"state": "Checksum mismatch"})
 
-            logging.debug("Image '%s' upload completed" % image_meta.name)
+            LOG.info("Image '%s' upload completed" % image_meta.name)
 
         # catch exception thrown by the http_client
         except exc.InvalidEndpoint as e:
@@ -121,18 +125,18 @@ class ImageMigrationTask(task.Task):
                   "while processing image [Name: '{0}' ID: '{1}']\n" \
                   "Details: {2}".format(image_meta.name,
                                         image_meta.id, str(e))
-            dest_details = {"state": "Error"}
+            dest_details.update({"state": "Error"})
 
         except exc.CommunicationError as e:
             print "Problem communicating with glance server,\n" \
                   "while processing image [Name: '{0}' ID: '{1}']\n" \
                   "Details: {2}".format(image_meta.name,
                                         image_meta.id, str(e))
-            dest_details = {"state": "Error"}
+            dest_details.update({"state": "Error"})
 
         except exc.HTTPConflict as e:
             print e.details
-            dest_details = {"state": "Error"}
+            dest_details.update({"state": "Error"})
 
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -141,7 +145,7 @@ class ImageMigrationTask(task.Task):
             print "Fail to processing image [Name: '{0}' ID: '{1}']\n" \
                   "Details: {2}".format(image_meta.name,
                                         image_meta.id, details)
-            dest_details = {"state": "Error"}
+            dest_details.update({"state": "Error"})
 
         image_migration_record.update(dest_details)
 
@@ -199,13 +203,15 @@ class ImageMigrationTask(task.Task):
 
         return new_img_id
 
-    @staticmethod
-    def check_image_migrated(image):
+    def check_image_migrated(self, image):
         # check whether it has been migrated
-        filter_values = [image.name, image.id, image.owner,
-                         cfg.CONF.SOURCE.os_cloud_name,
-                         cfg.CONF.TARGET.os_cloud_name]
-        m_image = images.get_migrated_image(filter_values)
+        filters = {"src_image_name": image.name,
+                   "src_uuid": image.id,
+                   "src_cloud": self.s_cloud_name,
+                   "dst_cloud": self.t_cloud_name}
+
+        migrated_image = images.get_migrated_image(filters)
+        m_image = migrated_image[0] if migrated_image else None
         if m_image and m_image['state'] == 'Completed':
             return True
 
@@ -219,10 +225,8 @@ class ImageMigrationTask(task.Task):
         :param images_to_migrate: list of IDs of images to be migrated
         """
 
-        if type(images_to_migrate) is list and \
-                        len(images_to_migrate) == 0 and \
-                        type(tenant_to_process) is list and \
-                        len(tenant_to_process) == 0:
+        if type(images_to_migrate) is list and len(images_to_migrate) == 0 and \
+           type(tenant_to_process) is list and len(tenant_to_process) == 0:
             return
 
         images_to_move = []

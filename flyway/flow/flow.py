@@ -25,7 +25,6 @@ from roletask import RoleMigrationTask
 from imagetask import ImageMigrationTask
 from instancetask import InstanceMigrationTask
 from keypairtask import KeypairMigrationTask
-from update_keypair_user_task import UpdateKeypairUserTask
 from update_projects_quotas_task import UpdateProjectsQuotasTask
 from update_project_user_role_task import ProjectUserRoleBindingTask
 
@@ -73,8 +72,8 @@ def get_flow(input_data=None):
         uf.Flow('user_tenant_migration_flow').add(
             # Note that creating users, tenants, flavor and role can happen in
             # parallel and hence it is part of unordered flow
-            # task.FunctorTask(user_task.execute, name='user_task',
-            #                  rebind={'users_to_move': "users_to_move"}),
+            task.FunctorTask(user_task.execute, name='user_task',
+                             rebind={'users_to_move': "users_to_move"}),
             task.FunctorTask(tenant_task.execute, name='tenant_task',
                              rebind={'tenants_to_move': "tenants_to_move"}),
             task.FunctorTask(flavor_task.execute, name='flavor_task',
@@ -82,15 +81,6 @@ def get_flow(input_data=None):
                                  'flavors_to_migrate': "flavors_to_migrate"}),
             task.FunctorTask(role_task.execute, name='role_task',
                              rebind={'roles_to_migrate': "roles_to_migrate"})
-            # task.FunctorTask(flavor_task.execute, name='flavor_task',
-            #                  rebind={
-            #                      'flavors_to_migrate': "flavors_to_migrate"}),
-            # task.FunctorTask(role_task.execute, name='role_task',
-            #                  rebind={'roles_to_migrate': "roles_to_migrate"}),
-            # UserMigrationTask('user_migration_task'),
-            # TenantMigrationTask('tenant_migration_task'),
-            # FlavorMigrationTask('flavor_migration_task'),
-            # RoleMigrationTask('role_migration_task')
         ),
         # TODO: Add other tasks to the flow e.g migrate image, private key etc.
         task.FunctorTask(image_task.execute, name='image_task',

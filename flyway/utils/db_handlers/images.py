@@ -49,49 +49,47 @@ def record_image_migrated(image_details):
     insert_record(table_name, values_to_insert, True)
 
 
-def get_migrated_image(values):
+def get_migrated_image(filters):
     """function to return detail of image migration
-    :param values: image id on source cloud and cloud name that
+    :param filters: image id on source cloud and cloud name that
     used to filter data
     :return: image migrate detail
     """
     # parameters for "SELECT"
     table_name = "images"
     columns = ["*"]
-    filters = {"src_image_name": values[0],
-               "src_uuid": values[1],
-               "src_owner_uuid": values[2] if values[2] else 'NULL',
-               "src_cloud": values[3],
-               "dst_cloud": values[4]}
 
     data = read_record(table_name, columns, filters, True)
 
     if not data or len(data) == 0:
-        print("no migration record found for image {0} "
-              "[source_owner_id: {1}] in cloud {2}"
-              .format(add_quotes(values[0]),
-                      add_quotes(values[2]),
-                      add_quotes(values[3])))
-        return None
-    elif len(data) > 1:
-        print("multiple migration record found for image {0} "
-              "[source_owner_id: {1}] in cloud {2}"
-              .format(add_quotes(values[0]),
-                      add_quotes(values[2]),
-                      add_quotes(values[3])))
+        # print("no migration record found for image {0} "
+        #       "[source_owner_id: {1}] in cloud {2}"
+        #       .format(add_quotes(values[0]),
+        #               add_quotes(values[2]),
+        #               add_quotes(values[3])))
         return None
 
-    # should be only one row
-    image_data = {'src_image_name': data[0][1],
-                  'src_uuid': data[0][2],
-                  'src_owner_uuid': data[0][3],
-                  'src_cloud': data[0][4],
-                  'dst_image_name': data[0][5],
-                  'dst_uuid': data[0][6],
-                  'dst_owner_uuid': data[0][7],
-                  'dst_cloud': data[0][8],
-                  'checksum': data[0][9],
-                  'state': data[0][10]}
+    # elif len(data) > 1:
+    #     print("multiple migration record found for image {0} "
+    #           "[source_owner_id: {1}] in cloud {2}"
+    #           .format(add_quotes(values[0]),
+    #                   add_quotes(values[2]),
+    #                   add_quotes(values[3])))
+    #     return None
+
+    # convert data returned to dictionaries list
+    image_data = []
+    for d in data:
+        image_data.append({'src_image_name': d[1],
+                           'src_uuid': d[2],
+                           'src_owner_uuid': d[3],
+                           'src_cloud': d[4],
+                           'dst_image_name': d[5],
+                           'dst_uuid': d[6],
+                           'dst_owner_uuid': d[7],
+                           'dst_cloud': d[8],
+                           'checksum': d[9],
+                           'state': d[10]})
     return image_data
 
 

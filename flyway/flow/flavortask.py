@@ -1,5 +1,3 @@
-import logging
-
 from taskflow import task
 from novaclient import exceptions as nova_exceptions
 
@@ -23,6 +21,8 @@ class FlavorMigrationTask(task.Task):
         # config must be ready at this point
         self.nv_source = get_nova_source()
         self.nv_target = get_nova_target()
+
+        self.duplicates_handle = cfg.CONF.Duplicates_handle
 
         # create new table if not exists
         flavors.initialise_flavor_mapping()
@@ -52,26 +52,20 @@ class FlavorMigrationTask(task.Task):
             # check for tenant name duplication
             new_flavor_name = s_flavor.name
             try:
-                found = self.nv_target.flavors.find(name=new_flavor_name)
-                if found:
-                    print ("Skipping flavor '{0}' duplicates found on cloud '{1}'"
-                           .format(found.name, t_cloud_name))
-                    return
-
-                """found = True
-                while found:
+                if self.duplicates_handle == "SKIP":
                     found = self.nv_target.flavors.find(name=new_flavor_name)
                     if found:
-                        user_input = \
-                            raw_input("duplicated flavor '{0}' found on "
-                                      "cloud '{1}'\nPlease type in a new "
-                                      "name or 'abort':"
-                                      .format(found.name, t_cloud_name))
-                        if user_input is "abort":
-                            # TODO: implement cleaning up and proper exit
-                            return None
-                        elif user_input:
-                            new_flavor_name = user_input"""
+                        print ("Skipping flavor '{0}' duplicates"
+                               "found on cloud '{1}'"
+                               .format(found.name, t_cloud_name))
+                        return
+
+                elif self.duplicates_handle == "AUTO_RENAME":
+                    found = True
+                    while found:
+                        found = self.nv_target.flavors.find(name=new_flavor_name)
+                        if found:
+                            new_flavor_name += "_migrated"
 
             except nova_exceptions.NotFound:
                 # irrelevant exception swallow the exception
@@ -105,8 +99,6 @@ class FlavorMigrationTask(task.Task):
                 flavor_migration_data.update({'dst_uuid': migrated_flavor.id})
 
             except Exception as e:
-            # TODO: not sure what exactly the exception will be thrown
-            # TODO: upon creation failure
                 print "flavor '{}' migration failure\nDetails:"\
                     .format(s_flavor.name, e.message)
                 # update database record
@@ -143,8 +135,8 @@ class FlavorMigrationTask(task.Task):
             return
         else:
             print ("Incorrect parameter '{0}'.\n"
-                   "Expects: a list of flavor names\n"
-                   "Received: '{1}'".format("tenants_to_move", flavors_to_migrate))
+                   "Expects: a list of flavor names\nReceived: '{1}'"
+                   .format("tenants_to_move", flavors_to_migrate))
             return
 
         for flavor in flavors_to_migrate:
