@@ -1,268 +1,323 @@
-from taskflow import task
+from tests.flow.test_base import TestBase
+
+__author__ = 'chengxue'
+
+from flyway.flow.keypairtask import KeypairMigrationTask
 from utils.db_handlers import keypairs as db_handler
-from utils.db_base import *
+from utils.helper import *
 from time import localtime, time, strftime
 
-LOG = logging.getLogger(__name__)
 
-
-class KeypairMigrationTask(task.Task):
-    """
-    Task to migrate all keypairs from the source cloud to the target cloud.
-    """
+class KeypairTaskTest(TestBase):
 
     def __init__(self, *args, **kwargs):
-        super(KeypairMigrationTask, self).__init__(*args, **kwargs)
-        # config must be ready at this point
+        super(KeypairTaskTest, self).__init__(*args, **kwargs)
+        self.migration_task = \
+            KeypairMigrationTask('keypair_migration_task')
+
         self.s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
         self.t_cloud_name = cfg.CONF.TARGET.os_cloud_name
+
         self.s_host = cfg.CONF.SOURCE. \
             os_auth_url.split("http://")[1].split(":")[0]
         self.t_host = cfg.CONF.TARGET. \
             os_auth_url.split("http://")[1].split(":")[0]
 
-    def migrate_one_keypair(self, keypair_fingerprint):
-        values = [keypair_fingerprint, self.s_cloud_name, self.t_cloud_name]
-        keypair_data = db_handler.get_keypairs(values)
+    def test_execute(self):
+        self.migration_task.execute([])
 
-        # check for resource duplication;
-        # ignore the key pair if the same resource (with same fingerprint)
-        # has already existed on the target cloud
-        duplicated = db_handler.\
-            get_info_from_openstack_db(host=self.t_host,
-                                       db_name='nova',
-                                       table_name='key_pairs',
-                                       columns=['name'],
-                                       filters={"deleted": '0',
-                                                "fingerprint":
-                                                keypair_fingerprint})
+        user_admin_s = db_handler.\
+            get_info_from_openstack_db(host=self.s_host,
+                                       db_name='keystone',
+                                       table_name='user',
+                                       columns=['id'],
+                                       filters={"name": "admin"})
+        user_demo_s = db_handler.\
+            get_info_from_openstack_db(host=self.s_host,
+                                       db_name='keystone',
+                                       table_name='user',
+                                       columns=['id'],
+                                       filters={"name": "demo"})
 
-        if len(duplicated) > 0:
-            LOG.info("Key pair {0} has been existed in "
-                     "cloud {1}, skip migrating this key "
-                     "pair.".format(keypair_data["name"],
-                                    keypair_data["dst_cloud"]))
-            # delete the corresponding assertion in the flyway database
-            db_handler.delete_keypairs(values)
-            return
-
-        # check whether the owner (an user) of the key pair has existed on
-        # the target cloud; stop migrating this key pair if the user is not
-        # on the target cloud
-        user_id_on_target = db_handler.\
+        user_admin_t = db_handler.\
             get_info_from_openstack_db(host=self.t_host,
                                        db_name='keystone',
                                        table_name='user',
                                        columns=['id'],
-                                       filters={"name":
-                                                keypair_data['user_name']})
+                                       filters={"name": "admin"})
+        user_demo_t = db_handler.\
+            get_info_from_openstack_db(host=self.t_host,
+                                       db_name='keystone',
+                                       table_name='user',
+                                       columns=['id'],
+                                       filters={"name": "demo"})
 
-        if len(user_id_on_target) < 1:
-            LOG.info("The owner {0} has not been migrated to "
-                     "the target, skip migrating key pair {1}".
-                     format(keypair_data['user_name'], keypair_data['name']))
-            # delete the corresponding assertion in the flyway database
-            db_handler.delete_keypairs(values)
-            return
+        keypair_name_1 = "admin_keypair_test"
+        fingerprint_1 = "1d_2e_3f_4h"
+        user_id_1 = user_admin_s[0][0]
+        public_key_1 = "abcde"
 
-        # check whether the owner of the key pair has the key pair with
-        # the same name; ignore the key pair if its name is duplicated
-        user_ids = db_handler\
-            .get_info_from_openstack_db(table_name="key_pairs",
-                                        db_name='nova', host=self.t_host,
-                                        columns=['user_id'],
-                                        filters={"deleted": '0',
-                                                 "name":
-                                                 keypair_data["name"]})
-        if len(user_ids) > 0:
-            for one_id in user_ids:
-                user_name = db_handler.\
-                    get_info_from_openstack_db(table_name="user",
-                                               db_name='keystone',
-                                               host=self.t_host,
-                                               columns=['name'],
-                                               filters={"id": one_id[0]})
+        insert_value1 = {'created_at': strftime('%Y-%m-%d %H-%M-%S',
+                                                localtime(time())),
+                         'name': keypair_name_1,
+                         'user_id': user_id_1,
+                         'fingerprint': fingerprint_1,
+                         'public_key': public_key_1,
+                         'deleted': '0'}
 
-                if keypair_data["user_name"] == user_name[0][0]:
-                    LOG.info("The user {0} has already own the key pair {1}, "
-                             "skip migrating this key pair.".
-                             format(user_name[0][0], keypair_data["name"]))
-                    # delete the corresponding assertion in the
-                    # flyway database
-                    db_handler.delete_keypairs(values)
-                    return
+        keypair_name_2 = "demo_keypair_test"
+        fingerprint_2 = "3e_4f_5g_6h"
+        user_id_2 = user_demo_s[0][0]
+        public_key_2 = "fghic"
 
-        # create a key pair by inserting the key pair data into the target cloud
-        # 'key_pairs' table
-        try:
-            LOG.info("Creating key pair {0} on cloud {1}.".
-                     format(keypair_data["name"], self.t_cloud_name))
-            insert_values = {'created_at': strftime('%Y-%m-%d %H-%M-%S',
-                                                    localtime(time())),
-                             'name': keypair_data['name'],
-                             'user_id': user_id_on_target[0][0],
-                             'fingerprint': keypair_data['fingerprint'],
-                             'public_key': keypair_data['public_key'],
-                             'deleted': '0'}
+        insert_value2 = {'created_at': strftime('%Y-%m-%d %H-%M-%S',
+                                                localtime(time())),
+                         'name': keypair_name_2,
+                         'user_id': user_id_2,
+                         'fingerprint': fingerprint_2,
+                         'public_key': public_key_2,
+                         'deleted': '0'}
 
-            db_handler.insert_info_to_openstack_db(host=self.t_host,
-                                                   db_name='nova',
-                                                   table_name='key_pairs',
-                                                   values=[insert_values])
+        keypair_name_3 = "admin_keypair_test_2"
+        fingerprint_3 = "1d_2e_3f_4h"
+        user_id_3 = user_admin_t[0][0]
+        public_key_3 = "abcde"
 
-            keypair_data.update({'state': 'completed'})
-            keypair_data.update({'user_id_updated': 1})
-            db_handler.update_keypairs(**keypair_data)
+        insert_value3 = {'created_at': strftime('%Y-%m-%d %H-%M-%S',
+                                                localtime(time())),
+                         'name': keypair_name_3,
+                         'user_id': user_id_3,
+                         'fingerprint': fingerprint_3,
+                         'public_key': public_key_3,
+                         'deleted': '0'}
 
-            LOG.info("Key pair {0} has been migrated to cloud {1} "
-                     "successfully.".format(keypair_data["name"],
-                                            self.t_cloud_name))
+        keypair_name_4 = "admin_keypair_test"
+        fingerprint_4 = "1d_2e_3f_4h_different"
+        user_id_4 = user_admin_t[0][0]
+        public_key_4 = "abcde_different"
 
-        except:
-            LOG.error("tenant {} migration failure"
-                      .format(keypair_data['name']))
-            # update database record
-            keypair_data = keypair_data.update({'state': "error"})
-            db_handler.update_keypairs(**keypair_data)
-            return
+        insert_value4 = {'created_at': strftime('%Y-%m-%d %H-%M-%S',
+                                                localtime(time())),
+                         'name': keypair_name_4,
+                         'user_id': user_id_4,
+                         'fingerprint': fingerprint_4,
+                         'public_key': public_key_4,
+                         'deleted': '0'}
 
-    def execute(self, keypairs_to_move):
-        # no resources need to be migrated
-        if type(keypairs_to_move) is list and len(keypairs_to_move) == 0:
-            LOG.info("No key pair resources to be migrated.")
-            return
-
-        # in case only one string gets passed in
-        if type(keypairs_to_move) is str:
-            keypairs_to_move = [keypairs_to_move]
-
-        # create new table if not exists
-        db_handler.initialise_keypairs_mapping()
-
-        if keypairs_to_move is None:
-            LOG.info("Start to migrate all key pairs ...")
-            keypairs_to_move = []
-
-            # get all keypairs from the table 'key_pairs' in 'nova'
-            fingerprints = db_handler.\
-                get_info_from_openstack_db(table_name="key_pairs",
-                                           db_name='nova',
-                                           host=self.s_host,
-                                           columns=['fingerprint'],
-                                           filters={"deleted": '0'})
-            for one_fingerprint in fingerprints:
-                keypairs_to_move.append(one_fingerprint[0])
-
-        else:
-            LOG.info("Start to migrate given key pairs of size {} ...\n"
-                     .format(len(keypairs_to_move)))
-
-        for keypair_fingerprint in keypairs_to_move:
-            values = [keypair_fingerprint, self.s_cloud_name,
-                      self.t_cloud_name]
-            m_keypair = db_handler.get_keypairs(values)
-
-            # add keypairs that have not been stored in the database
-            if m_keypair is None:
-                # get keypair information from nova using fingerprint
-                result = db_handler.\
-                    get_info_from_openstack_db(table_name="key_pairs",
+        # check 1 - whether a key pair has been migrated successfully
+        db_handler.insert_info_to_openstack_db(host=self.s_host,
                                                db_name='nova',
-                                               host=self.s_host,
-                                               columns=['*'],
-                                               filters={"fingerprint":
-                                                        keypair_fingerprint,
-                                                        "deleted": '0'})
+                                               table_name='key_pairs',
+                                               values=[insert_value1])
 
-                # if the key pair to be migrated exists on the source cloud
-                # and is active
-                if len(result) > 0:
-                    # get the corresponding user_name (in source)
-                    # of the keypair using user_id
-                    user_name = db_handler.\
-                        get_info_from_openstack_db(table_name="user",
-                                                   db_name='keystone',
-                                                   host=self.s_host,
-                                                   columns=['name'],
-                                                   filters={"id":
-                                                            result[0][5]})
+        db_handler.insert_info_to_openstack_db(host=self.s_host,
+                                               db_name='nova',
+                                               table_name='key_pairs',
+                                               values=[insert_value2])
 
-                    keypair_data = {'name': result[0][4],
-                                    'public_key': result[0][7],
-                                    'fingerprint': result[0][6],
-                                    'user_name': user_name[0][0],
-                                    'src_cloud': self.s_cloud_name,
-                                    'dst_cloud': self.t_cloud_name,
-                                    'state': "unknown",
-                                    'user_id_updated': "0",
-                                    'new_name': None}
-                    db_handler.record_keypairs([keypair_data])
+        self.migration_task.execute([fingerprint_1, fingerprint_2])
 
-                    LOG.info("Trying to migrate key pair '{}'\n".
-                             format(result[0][4]))
-                    self.migrate_one_keypair(keypair_fingerprint)
+        value_1 = db_handler.\
+            get_info_from_openstack_db(host=self.t_host,
+                                       db_name='nova',
+                                       table_name='key_pairs',
+                                       columns=['user_id'],
+                                       filters={"deleted": '0',
+                                                "name": keypair_name_1,
+                                                "fingerprint":
+                                                fingerprint_1})
 
-                # the key pair to be migrated does not exist on the source
-                # cloud, skip this key pair migration
-                else:
-                    LOG.info("Source cloud does not have a key pair with "
-                             "fingerprint {0}, skip the migration for this "
-                             "key pair.".format(keypair_fingerprint))
+        self.assertEqual(1, len(value_1))
+        self.assertEqual(user_admin_t[0][0], value_1[0][0])
 
-            else:
-                if m_keypair['state'] == "completed":
-                    LOG.info("Key pair {0} in cloud {1} has already been "
-                             "migrated".
-                             format(m_keypair['name'], self.s_cloud_name))
+        value_2 = db_handler.\
+            get_info_from_openstack_db(host=self.t_host,
+                                       db_name='nova',
+                                       table_name='key_pairs',
+                                       columns=['user_id'],
+                                       filters={"deleted": '0',
+                                                "name": keypair_name_2,
+                                                "fingerprint":
+                                                fingerprint_2})
 
-                else:
-                    LOG.info("Migrating key pair '{}'\n".
-                             format(m_keypair['name']))
-                    self.migrate_one_keypair(keypair_fingerprint)
+        self.assertEqual(1, len(value_2))
+        self.assertEqual(user_demo_t[0][0], value_2[0][0])
 
-    def revert(self, keypairs_to_revert):
-         # no resources need to be migrated
-        if type(keypairs_to_revert) is list and len(keypairs_to_revert) == 0:
-            LOG.info("No key pair resources to be reverted.")
-            return
+        # clear all data created for testing
+        where_value1 = [fingerprint_1, '0']
+        db_handler.delete_info_from_openstack_db(host=self.s_host,
+                                                 db_name="nova",
+                                                 table_name="key_pairs",
+                                                 where_dict=where_value1)
+        db_handler.delete_info_from_openstack_db(host=self.t_host,
+                                                 db_name="nova",
+                                                 table_name="key_pairs",
+                                                 where_dict=where_value1)
 
-        # in case only one string gets passed in
-        if type(keypairs_to_revert) is str:
-            keypairs_to_revert = [keypairs_to_revert]
+        where_value2 = [fingerprint_2, '0']
+        db_handler.delete_info_from_openstack_db(host=self.s_host,
+                                                 db_name="nova",
+                                                 table_name="key_pairs",
+                                                 where_dict=where_value2)
+        db_handler.delete_info_from_openstack_db(host=self.t_host,
+                                                 db_name="nova",
+                                                 table_name="key_pairs",
+                                                 where_dict=where_value2)
 
-        if keypairs_to_revert is None:
-            keypairs_to_revert = []
+        db_handler.delete_keypairs([fingerprint_1, self.s_cloud_name,
+                                    self.t_cloud_name])
+        db_handler.delete_keypairs([fingerprint_2, self.s_cloud_name,
+                                    self.t_cloud_name])
 
-            fingerprints = db_handler.\
-                get_info_from_openstack_db(table_name="key_pairs",
-                                           db_name='nova',
-                                           host=self.s_host,
-                                           columns=['fingerprint'],
-                                           filters={"deleted": '0'})
+        # check 2 - deal with duplicated key pair (with same fingerprint)
+        db_handler.insert_info_to_openstack_db(host=self.s_host,
+                                               db_name='nova',
+                                               table_name='key_pairs',
+                                               values=[insert_value1])
 
-            for one_fingerprint in fingerprints:
-                keypairs_to_revert.append(one_fingerprint[0])
+        db_handler.insert_info_to_openstack_db(host=self.t_host,
+                                               db_name='nova',
+                                               table_name='key_pairs',
+                                               values=[insert_value3])
 
-        for keypair_fingerprint in keypairs_to_revert:
-            values = [keypair_fingerprint, self.s_cloud_name,
-                      self.t_cloud_name]
-            m_keypair = db_handler.get_keypairs(values)
+        self.migration_task.execute([fingerprint_1])
 
-            if m_keypair is not None:
-                if m_keypair["state"] == "completed" and \
-                                m_keypair["user_id_updated"] == 1:
+        value_3 = db_handler.\
+            get_info_from_openstack_db(host=self.t_host,
+                                       db_name='nova',
+                                       table_name='key_pairs',
+                                       columns=['user_id'],
+                                       filters={"deleted": '0',
+                                                "name": keypair_name_1,
+                                                "fingerprint":
+                                                fingerprint_1})
 
-                    # delete key pair on target cloud
-                    LOG.info("Revert: Database openstack - Delete key pair "
-                             "{0}".format(keypair_fingerprint))
-                    where_value = [keypair_fingerprint, '0']
-                    db_handler\
-                        .delete_info_from_openstack_db(host=self.t_host,
-                                                       db_name="nova",
-                                                       table_name="key_pairs",
-                                                       where_dict=where_value)
+        self.assertEqual(0, len(value_3))
 
-                # delete this key pair migration record from flyway
-                LOG.info("Revert: Database flyway - Delete key pair {0}"
-                         .format(keypair_fingerprint))
-                db_handler.delete_keypairs(values)
+        # clear all data created for testing
+        where_value1 = [fingerprint_1, '0']
+        db_handler.delete_info_from_openstack_db(host=self.s_host,
+                                                 db_name="nova",
+                                                 table_name="key_pairs",
+                                                 where_dict=where_value1)
+
+        db_handler.delete_info_from_openstack_db(host=self.t_host,
+                                                 db_name="nova",
+                                                 table_name="key_pairs",
+                                                 where_dict=where_value1)
+
+        # check 3 - deal with key pairs (belongs to one user)
+        #           with duplicated name
+        db_handler.insert_info_to_openstack_db(host=self.s_host,
+                                               db_name='nova',
+                                               table_name='key_pairs',
+                                               values=[insert_value1])
+
+        db_handler.insert_info_to_openstack_db(host=self.t_host,
+                                               db_name='nova',
+                                               table_name='key_pairs',
+                                               values=[insert_value4])
+
+        self.migration_task.execute([fingerprint_1])
+
+        value_4 = db_handler.\
+            get_info_from_openstack_db(host=self.t_host,
+                                       db_name='nova',
+                                       table_name='key_pairs',
+                                       columns=['user_id'],
+                                       filters={"deleted": '0',
+                                                "name": keypair_name_1,
+                                                "fingerprint":
+                                                fingerprint_1})
+
+        self.assertEqual(0, len(value_4))
+
+        # clear all data created for testing
+        where_value1 = [fingerprint_1, '0']
+        db_handler.delete_info_from_openstack_db(host=self.s_host,
+                                                 db_name="nova",
+                                                 table_name="key_pairs",
+                                                 where_dict=where_value1)
+
+        where_value2 = [fingerprint_4, '0']
+        db_handler.delete_info_from_openstack_db(host=self.t_host,
+                                                 db_name="nova",
+                                                 table_name="key_pairs",
+                                                 where_dict=where_value2)
+
+        # check 4 - give a parameter None
+        # (migrate all key pair on source cloud)
+        db_handler.insert_info_to_openstack_db(host=self.s_host,
+                                               db_name='nova',
+                                               table_name='key_pairs',
+                                               values=[insert_value1])
+
+        self.migration_task.execute(None)
+
+        value = db_handler.\
+            get_info_from_openstack_db(host=self.t_host,
+                                       db_name='nova',
+                                       table_name='key_pairs',
+                                       columns=['*'],
+                                       filters={"deleted": '0'})
+        self.assertEqual(1, len(value))
+
+        where_value1 = [fingerprint_1, '0']
+        db_handler.delete_info_from_openstack_db(host=self.s_host,
+                                                 db_name="nova",
+                                                 table_name="key_pairs",
+                                                 where_dict=where_value1)
+
+        db_handler.delete_info_from_openstack_db(host=self.t_host,
+                                                 db_name="nova",
+                                                 table_name="key_pairs",
+                                                 where_dict=where_value1)
+        db_handler.delete_keypairs([fingerprint_1, self.s_cloud_name,
+                                    self.t_cloud_name])
+
+    def test_revert(self):
+        self.migration_task.revert(None)
+        self.migration_task.revert([])
+
+        user_admin_s = db_handler.\
+            get_info_from_openstack_db(host=self.s_host,
+                                       db_name='keystone',
+                                       table_name='user',
+                                       columns=['id'],
+                                       filters={"name": "admin"})
+
+        keypair_name_1 = "admin_keypair_test"
+        fingerprint_1 = "1d_2e_3f_4h"
+        user_id_1 = user_admin_s[0][0]
+        public_key_1 = "abcde"
+
+        insert_value1 = {'created_at': strftime('%Y-%m-%d %H-%M-%S',
+                                                localtime(time())),
+                         'name': keypair_name_1,
+                         'user_id': user_id_1,
+                         'fingerprint': fingerprint_1,
+                         'public_key': public_key_1,
+                         'deleted': '0'}
+
+        db_handler.insert_info_to_openstack_db(host=self.s_host,
+                                               db_name='nova',
+                                               table_name='key_pairs',
+                                               values=[insert_value1])
+
+        self.migration_task.execute([fingerprint_1])
+        self.migration_task.revert([fingerprint_1])
+
+        value = db_handler.\
+            get_info_from_openstack_db(host=self.t_host,
+                                       db_name='nova',
+                                       table_name='key_pairs',
+                                       columns=['*'],
+                                       filters={"deleted": '0',
+                                                "fingerprint": fingerprint_1})
+        self.assertEqual(0, len(value))
+
+        where_value1 = [fingerprint_1, '0']
+        db_handler.delete_info_from_openstack_db(host=self.s_host,
+                                                 db_name="nova",
+                                                 table_name="key_pairs",
+                                                 where_dict=where_value1)
