@@ -451,7 +451,8 @@
         }else{
             data_to_magrate['vm'][key_value].push(value_value)
         }
-        old_counter++
+        old_counter++;
+        totalTime += 10.0;
     }
 
     function unselect_vm_row(rowIndex, rowData){
@@ -459,7 +460,7 @@
         var value_value = rowData.id;
         data_to_magrate['vm'][key_value].splice(data_to_magrate['vm'][key_value].indexOf(value_value), 1)
         old_counter--;
-        // TODO: total time
+        totalTime -= 10.0;
     }
 
     function migrate(){
