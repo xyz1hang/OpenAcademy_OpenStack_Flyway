@@ -171,14 +171,42 @@ def get_cursor(db):
     return db.cursor()
 
 
-def create_database(db_name):
-    # preparing database credentials
+def check_db_existed(db_name):
     db = connect(False)
     cursor = get_cursor(db)
-
     table_name = add_quotes(db_name)
     query_check = "SHOW DATABASES LIKE {}".format(table_name)
     result = cursor.execute(query_check)
+    return True if result else False
+
+
+def delete_database(db_name):
+    db = connect(False)
+    cursor = get_cursor(db)
+
+    result = check_db_existed(db_name)
+
+    if not result:
+        LOG.info("Database {} does not exist".format(db_name))
+        cursor.close()
+        db.close()
+        return
+
+    query_delete = 'DROP DATABASE {} '.format(db_name)
+    try:
+        cursor.execute(query_delete)
+        db.commit()
+        db.close()
+    except MySQLdb.Error, e:
+        print("MySQL error - Database deleting: {}".format(e))
+        db.rollback()
+
+
+def create_database(db_name):
+    db = connect(False)
+    cursor = get_cursor(db)
+
+    result = check_db_existed(db_name)
 
     if result:
         LOG.info("Database {} already exists".format(db_name))
