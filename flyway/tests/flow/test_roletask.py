@@ -106,12 +106,12 @@ class RoleTaskTest(TestBase):
         assert(not self.migration_task.get_roles_to_move())
         self.delete_roles(self.migration_task.ks_source)
         self.delete_roles(self.migration_task.ks_target)
+        delete_all_data('roles')
 
         # Test Case 2:
         # create five new roles in source: role1, role2, .... role5
         # use execution with specified list to migrate role1, 2 and 3
         # delete all new roles in both cloud after test
-        delete_all_data('roles')
 
         self.create_roles(self.migration_task.ks_source, 5)
         roles_to_migrate = ['role0', 'role1', 'role2']
@@ -121,6 +121,7 @@ class RoleTaskTest(TestBase):
         self.contains_list(roles_in_target, roles_to_migrate)
         self.assertNotIn('role3', roles_in_target)
         self.assertNotIn('role4', roles_in_target)
+        delete_all_data('roles')
 
 
 
