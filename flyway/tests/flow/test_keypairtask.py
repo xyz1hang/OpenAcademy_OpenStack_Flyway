@@ -24,6 +24,8 @@ class KeypairTaskTest(TestBase):
             os_auth_url.split("http://")[1].split(":")[0]
 
     def test_execute(self):
+        self.migration_task.execute([])
+
         user_admin_s = db_handler.\
             get_info_from_openstack_db(host=self.s_host,
                                        db_name='keystone',
@@ -242,3 +244,80 @@ class KeypairTaskTest(TestBase):
                                                  db_name="nova",
                                                  table_name="key_pairs",
                                                  where_dict=where_value2)
+
+        # check 4 - give a parameter None
+        # (migrate all key pair on source cloud)
+        db_handler.insert_info_to_openstack_db(host=self.s_host,
+                                               db_name='nova',
+                                               table_name='key_pairs',
+                                               values=[insert_value1])
+
+        self.migration_task.execute(None)
+
+        value = db_handler.\
+            get_info_from_openstack_db(host=self.t_host,
+                                       db_name='nova',
+                                       table_name='key_pairs',
+                                       columns=['*'],
+                                       filters={"deleted": '0'})
+        self.assertEqual(1, len(value))
+
+        where_value1 = [fingerprint_1, '0']
+        db_handler.delete_info_from_openstack_db(host=self.s_host,
+                                                 db_name="nova",
+                                                 table_name="key_pairs",
+                                                 where_dict=where_value1)
+
+        db_handler.delete_info_from_openstack_db(host=self.t_host,
+                                                 db_name="nova",
+                                                 table_name="key_pairs",
+                                                 where_dict=where_value1)
+        db_handler.delete_keypairs([fingerprint_1, self.s_cloud_name,
+                                    self.t_cloud_name])
+
+    def test_revert(self):
+        self.migration_task.revert(None)
+        self.migration_task.revert([])
+
+        user_admin_s = db_handler.\
+            get_info_from_openstack_db(host=self.s_host,
+                                       db_name='keystone',
+                                       table_name='user',
+                                       columns=['id'],
+                                       filters={"name": "admin"})
+
+        keypair_name_1 = "admin_keypair_test"
+        fingerprint_1 = "1d_2e_3f_4h"
+        user_id_1 = user_admin_s[0][0]
+        public_key_1 = "abcde"
+
+        insert_value1 = {'created_at': strftime('%Y-%m-%d %H-%M-%S',
+                                                localtime(time())),
+                         'name': keypair_name_1,
+                         'user_id': user_id_1,
+                         'fingerprint': fingerprint_1,
+                         'public_key': public_key_1,
+                         'deleted': '0'}
+
+        db_handler.insert_info_to_openstack_db(host=self.s_host,
+                                               db_name='nova',
+                                               table_name='key_pairs',
+                                               values=[insert_value1])
+
+        self.migration_task.execute([fingerprint_1])
+        self.migration_task.revert([fingerprint_1])
+
+        value = db_handler.\
+            get_info_from_openstack_db(host=self.t_host,
+                                       db_name='nova',
+                                       table_name='key_pairs',
+                                       columns=['*'],
+                                       filters={"deleted": '0',
+                                                "fingerprint": fingerprint_1})
+        self.assertEqual(0, len(value))
+
+        where_value1 = [fingerprint_1, '0']
+        db_handler.delete_info_from_openstack_db(host=self.s_host,
+                                                 db_name="nova",
+                                                 table_name="key_pairs",
+                                                 where_dict=where_value1)
