@@ -58,7 +58,7 @@ class UpdateProjectsQuotasTest(TestBase):
             self.assertEqual(src_quota.cores, dest_quota.cores)
 
         except keystone_exceptions.NotFound as e:
-            print str(e)
+            self.fail(e.message)
         finally:
             self.clean_up(tenant_to_migrate, migrated_tenant)
 

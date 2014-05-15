@@ -70,8 +70,7 @@ class UpdateProjectUserRoleTest(TestBase):
                                                migrated_tenant))
 
         except keystone_exceptions.NotFound as e:
-            print str(e.message)
-            self.fail()
+            self.fail(e.message)
         finally:
             self.clean_up(tenant_to_migrate, migrated_tenant,
                           user_to_migrate, migrated_user,
@@ -109,7 +108,6 @@ class UpdateProjectUserRoleTest(TestBase):
 
         for user in self.tenant_migration_task.ks_target.users.list():
             if user.name == 'user_name':
-                print user.name
                 self.tenant_migration_task.ks_target.users.delete(user)
         for role in self.tenant_migration_task.ks_target.roles.list():
             if role.name == 'role_name':
