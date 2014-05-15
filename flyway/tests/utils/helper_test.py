@@ -1,4 +1,4 @@
-from tests.utils.db_handlers.test_base import TestBase
+from tests.utils.test_base import TestBase
 
 __author__ = 'chengxue'
 

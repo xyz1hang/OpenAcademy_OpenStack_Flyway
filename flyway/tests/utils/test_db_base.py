@@ -3,7 +3,6 @@ from tests.utils.test_base import TestBase
 from utils.db_base import create_db_pool, create_database, connect, check_db_exist, delete_database, check_table_exist, \
     create_table, delete_table, read_record, insert_record, delete_record, update_table, build_where_string, add_quotes, \
     check_record_exist, delete_all_data, release_db_pool
-from common import config
 
 __author__ = 'Sherlock'
 
@@ -11,7 +10,6 @@ __author__ = 'Sherlock'
 class DBBaseTest(TestBase):
     def __init__(self, *args, **kwargs):
         super(DBBaseTest, self).__init__(*args, **kwargs)
-        config.parse(['--config-file', './etc/flyway.conf'])
 
     def test_create_db_pool(self):
 
