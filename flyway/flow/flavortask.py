@@ -62,9 +62,9 @@ class FlavorMigrationTask(task.Task):
                 if self.duplicates_handle == "SKIP":
                     found = self.nv_target.flavors.find(name=new_flavor_name)
                     if found:
-                        print ("Skipping flavor '{0}' duplicates"
-                               "found on cloud '{1}'"
-                               .format(found.name, t_cloud_name))
+                        LOG.info("Skipping flavor '{0}' duplicates"
+                                 "found on cloud '{1}'"
+                                 .format(found.name, t_cloud_name))
                         return
 
                 elif self.duplicates_handle == "AUTO_RENAME":
@@ -111,8 +111,8 @@ class FlavorMigrationTask(task.Task):
             flavour_data.update({'dst_uuid': migrated_flavor.id})
 
         except Exception as e:
-            print "flavor '{}' migration failure\nDetails:"\
-                .format(s_flavor.name, e.message)
+            LOG.error("flavor '{}' migration failure\nDetails:"
+                      .format(s_flavor.name, e.message))
             # update database record
             flavour_data.update({'state': "error"})
             flavors.update_migration_record(**flavour_data)

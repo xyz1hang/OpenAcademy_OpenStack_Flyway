@@ -1,4 +1,3 @@
-import logging
 from utils.db_base import *
 
 TABLE_NAME = 'users'

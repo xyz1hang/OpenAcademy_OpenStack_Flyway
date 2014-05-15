@@ -1,4 +1,3 @@
-import logging
 import sys
 
 from taskflow import task
@@ -34,9 +33,9 @@ class TenantMigrationTask(task.Task):
         except keystone_exceptions.NotFound:
             # encapsulate exceptions to make it more understandable
             # to user. Other exception handling mechanism can be added later
-            raise exceptions.ResourceNotFoundException(
+            LOG.error(exceptions.ResourceNotFoundException(
                 ResourceType.tenant, tenant_name,
-                cfg.CONF.SOURCE.os_cloud_name)
+                cfg.CONF.SOURCE.os_cloud_name))
 
         s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
         t_cloud_name = cfg.CONF.TARGET.os_cloud_name
@@ -48,8 +47,8 @@ class TenantMigrationTask(task.Task):
         # this task is intent to create proxy tenant only. Tenant related
         # resource can be migrated in separated task. Open to suggestions.
         if m_tenant is not None and m_tenant['state'] == "proxy_created":
-            print("tenant {0} in cloud {1} has already been migrated"
-                  .format(m_tenant["project_name"], s_cloud_name))
+            LOG.info("tenant {0} in cloud {1} has already been migrated"
+                     .format(m_tenant["project_name"], s_cloud_name))
             return
 
         # check for tenant name duplication
@@ -57,8 +56,8 @@ class TenantMigrationTask(task.Task):
         try:
             found = self.ks_target.tenants.find(name=new_tenant_name)
             if found:
-                print ("Skipping Tenant '{0}' duplicates found on cloud '{1}'"
-                       .format(found.name, t_cloud_name))
+                LOG.info("Skipping Tenant '{0}' duplicates found on cloud '{1}'"
+                         .format(found.name, t_cloud_name))
                 return
 
             """found = True
@@ -97,15 +96,15 @@ class TenantMigrationTask(task.Task):
                 s_tenant.description,
                 s_tenant.enabled)
         except IOError as (err_no, strerror):
-            print "I/O error({0}): {1}".format(err_no, strerror)
+            LOG.error("I/O error({0}): {1}".format(err_no, strerror))
         except Exception as e:
             # TODO: not sure what exactly the exception will be thrown
             # TODO: upon creation failure
             exc_type, exc_obj, exc_tb = sys.exc_info()
             details = str(str(exc_type) + ": " + e.message
                           + " [line: " + str(exc_tb.tb_lineno) + "]")
-            print "tenant '{}' migration failure\nDetails:"\
-                .format(s_tenant.name, details)
+            LOG.error("tenant '{}' migration failure\nDetails:"\
+                      .format(s_tenant.name, details))
             # update database record
             tenant_data.update({'state': "error"})
             tenants.record_tenant_migrated([tenant_data])
@@ -150,9 +149,9 @@ class TenantMigrationTask(task.Task):
             LOG.info("No tenant resources to be migrated.\n")
             return
         else:
-            print ("Incorrect parameter '{0}'.\n"
-                   "Expects: a list of tenants names\n"
-                   "Received: '{1}'".format("tenants_to_move", tenants_to_move))
+            LOG.info("Incorrect parameter '{0}'.\n"
+                     "Expects: a list of tenants names\n"
+                     "Received: '{1}'".format("tenants_to_move", tenants_to_move))
             return
 
         for source_tenant in tenants_to_move:
