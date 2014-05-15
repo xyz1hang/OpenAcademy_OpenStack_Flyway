@@ -10,3 +10,6 @@ requests==2.2.1
 Fabric==1.8.2
 kombu==3.0.12
 oslo.config==1.2.1
+paramiko==1.14.0
+DBUtils==1.1
+
