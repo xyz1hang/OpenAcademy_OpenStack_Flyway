@@ -69,14 +69,14 @@ def get_migrated_tenant(values):
     data = read_record(table_name, columns, filters, True)
 
     if not data or len(data) == 0:
-        print("no migration record found for tenant '{0}' in cloud '{1}'"
-              .format(values[0], values[1]))
+        LOG.info("no migration record found for tenant '{0}' in cloud '{1}'"
+                 .format(values[0], values[1]))
         return None
     elif len(data) > 1:
         #TODO: Move multiple records check from all db_handler outside since the
         #TODO: validity of multiple matching record depends on application logic
-        print("multiple migration record found for tenant '{0}' in cloud '{1}'"
-              .format(values[0], values[1]))
+        LOG.info("multiple migration record found for tenant '{0}' in cloud '{1}'"
+                 .format(values[0], values[1]))
         return None
 
     # should be only one row

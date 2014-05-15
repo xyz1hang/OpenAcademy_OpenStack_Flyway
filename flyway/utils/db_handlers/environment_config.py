@@ -19,11 +19,9 @@ def read_environment(*value):
     filters = {'cloud_name': value[0]}
 
     data = read_record(table_name, columns, filters, True)
-    print data
-    print '*********************************************'
 
     if len(data) == 0:
-        print('no record found for cloud %s' % value)
+        LOG.info('no record found for cloud %s' % value)
         return None
 
     # should be only one row
