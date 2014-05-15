@@ -26,6 +26,16 @@ def create_db_pool(db_name=None):
     mutex.release()
 
 
+def release_db_pool():
+    global db_pool
+    mutex = threading.Lock()
+    mutex.acquire()
+    if db_pool is not None:
+        db_pool.close()
+        db_pool = None
+    mutex.release()
+
+
 def get_db_credentials():
     password = cfg.CONF.DATABASE.mysql_password
     password = base64.b64decode(password)
@@ -171,14 +181,42 @@ def get_cursor(db):
     return db.cursor()
 
 
-def create_database(db_name):
-    # preparing database credentials
+def check_db_exist(db_name):
     db = connect(False)
     cursor = get_cursor(db)
-
     table_name = add_quotes(db_name)
     query_check = "SHOW DATABASES LIKE {}".format(table_name)
     result = cursor.execute(query_check)
+    return True if result else False
+
+
+def delete_database(db_name):
+    db = connect(False)
+    cursor = get_cursor(db)
+
+    result = check_db_exist(db_name)
+
+    if not result:
+        LOG.info("Database {} does not exist".format(db_name))
+        cursor.close()
+        db.close()
+        return
+
+    query_delete = 'DROP DATABASE {} '.format(db_name)
+    try:
+        cursor.execute(query_delete)
+        db.commit()
+        db.close()
+    except MySQLdb.Error, e:
+        print("MySQL error - Database deleting: {}".format(e))
+        db.rollback()
+
+
+def create_database(db_name):
+    db = connect(False)
+    cursor = get_cursor(db)
+
+    result = check_db_exist(db_name)
 
     if result:
         LOG.info("Database {} already exists".format(db_name))
@@ -196,6 +234,25 @@ def create_database(db_name):
         db.rollback()
 
 
+def delete_table(table_name):
+    if not check_table_exist(table_name):
+        return
+
+    db = connect(True)
+    cursor = get_cursor(db)
+
+    query = "DROP TABLE {0} ".format(table_name)
+
+    try:
+        cursor.execute(query)
+        db.commit()
+    except MySQLdb.Error, e:
+        LOG.error("MySql error - Table creation: {}".format(e))
+        db.rollback()
+    finally:
+        db.close()
+
+
 def create_table(table_name, columns, close):
     """
     function to create database table
@@ -208,7 +265,6 @@ def create_table(table_name, columns, close):
     cursor = get_cursor(db)
 
     query = "CREATE TABLE IF NOT EXISTS {0} ({1}) ".format(table_name, columns)
-
     try:
         cursor.execute(query)
         db.commit()
@@ -367,9 +423,9 @@ def delete_record(table_name, where_dict):
     # establish connection
     db = connect(True)
     cursor = get_cursor(db)
-    where_string = build_where_string(where_dict)
 
     if where_dict and len(where_dict.keys()) > 0:
+        where_string = build_where_string(where_dict)
         query = "DELETE FROM {0} WHERE {1}".format(table_name, where_string)
     else:
         query = "DELETE FROM {}".format(table_name)
@@ -388,7 +444,6 @@ def check_table_exist(table_name):
     """
     function that checks whether a table exists
     """
-    # establish connection
     db = connect(True)
     cursor = get_cursor(db)
 
@@ -413,10 +468,8 @@ def check_record_exist(table_name, where_dict):
     result = cursor.execute(query)
 
     db.close()
-    if result:
-        return True
 
-    return False
+    return True if result else False
 
 
 def add_quotes(string):

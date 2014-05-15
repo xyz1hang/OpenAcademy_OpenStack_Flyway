@@ -111,10 +111,6 @@ def get_info_from_openstack_db(host, db_name, table_name, columns, filters):
     return info_return
 
 
-def update_info_on_openstack_db(host, db_name, table_name, sets, filters):
-    update_openstack_record(host, db_name, table_name, sets, filters, True)
-
-
 def insert_info_to_openstack_db(host, db_name, table_name, values):
     values_to_insert = []
     for details in values:

@@ -86,3 +86,31 @@ class UserTaskTest(TestBase):
             for user in self.migration_task.ks_target.users.list():
                 if user.name in [new_user_name, new_user_name2, new_user_name3]:
                     self.migration_task.ks_target.users.delete(user)
+
+    def test_revert(self):
+        new_user_name = "user_that_should_not_exist2"
+        new_user_password = "password"
+        new_user_email = "liang.shang13@imperial.ac.uk"
+
+        new_user = None
+
+        try:
+            new_user = self.migration_task.ks_source.users.create(
+                new_user_name, new_user_password, email=new_user_email)
+            self.migration_task.execute(None)
+            target_user_names = [user.name for user in
+                                 self.migration_task.ks_target.users.list()]
+            self.assertIn(new_user_name, target_user_names)
+            self.migration_task.revert()
+            target_user_names = [user.name for user in
+                                 self.migration_task.ks_target.users.list()]
+            self.assertNotIn(new_user_name, target_user_names)
+        except Exception, e:
+            self.fail(e)
+        finally:
+            delete_migrated_users()
+            if new_user is not None:
+                self.migration_task.ks_source.users.delete(new_user)
+            for user in self.migration_task.ks_target.users.list():
+                if user.name in [new_user_name]:
+                    self.migration_task.ks_target.users.delete(user)

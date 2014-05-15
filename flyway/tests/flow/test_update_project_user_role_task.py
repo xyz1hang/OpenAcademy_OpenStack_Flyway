@@ -3,6 +3,9 @@ from flow.usertask import UserMigrationTask
 from tests.flow.test_base import TestBase
 from flyway.common import config
 from utils.db_handlers import tenants as db_handler
+from utils.db_handlers.roles import delete_all_roles_mapping
+from utils.db_handlers.tenants import delete_migration_record
+from utils.db_handlers.users import delete_all_users_mapping
 import utils.helper
 from flow.update_project_user_role_task import ProjectUserRoleBindingTask
 from flow.tenanttask import TenantMigrationTask
@@ -70,8 +73,7 @@ class UpdateProjectUserRoleTest(TestBase):
                                                migrated_tenant))
 
         except keystone_exceptions.NotFound as e:
-            print str(e.message)
-            self.fail()
+            self.fail(e.message)
         finally:
             self.clean_up(tenant_to_migrate, migrated_tenant,
                           user_to_migrate, migrated_user,
@@ -94,9 +96,18 @@ class UpdateProjectUserRoleTest(TestBase):
             self.tenant_migration_task.ks_target.users. \
                 delete(migrated_user)
 
+        #clean database record
+        delete_all_users_mapping([user_to_migrate])
+        delete_all_roles_mapping([role_to_migrate])
+        filter_values = [tenant_to_migrate.name,
+                         tenant_to_migrate.id,
+                         utils.helper.cfg.CONF.SOURCE.os_cloud_name,
+                         utils.helper.cfg.CONF.TARGET.os_cloud_name]
+        delete_migration_record(filter_values)  # delete migrated tenant in DB
+
     def clean_all_data(self):
-        '''This function is used to delete all corresponding data
-           in case of duplication'''
+        """This function is used to delete all corresponding data
+           in case of duplication"""
         for user in self.tenant_migration_task.ks_source.users.list():
             if user.name == 'user_name':
                 self.tenant_migration_task.ks_source.users.delete(user)
@@ -109,7 +120,6 @@ class UpdateProjectUserRoleTest(TestBase):
 
         for user in self.tenant_migration_task.ks_target.users.list():
             if user.name == 'user_name':
-                print user.name
                 self.tenant_migration_task.ks_target.users.delete(user)
         for role in self.tenant_migration_task.ks_target.roles.list():
             if role.name == 'role_name':

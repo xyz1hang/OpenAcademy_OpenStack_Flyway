@@ -80,6 +80,13 @@ def existed(role_name):
     return data
 
 
+def delete_all_roles_mapping(roles):
+    for role in roles:
+        delete_record(TABLE_NAME, {"src_cloud": cfg.CONF.SOURCE.os_cloud_name,
+                                   "dst_cloud": cfg.CONF.TARGET.os_cloud_name,
+                                   "roleName": role.name})
+
+
 if __name__ == '__main__':
     print 'empty roles table'
     LOG.info('make roles table empty')

@@ -3,9 +3,7 @@ from utils.db_base import read_record
 __author__ = 'liangshang'
 
 from taskflow import task
-import logging
 from utils.helper import *
-from keystoneclient import exceptions
 
 LOG = logging.getLogger(__name__)
 
