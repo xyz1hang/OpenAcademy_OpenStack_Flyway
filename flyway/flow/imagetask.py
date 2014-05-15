@@ -112,10 +112,9 @@ class ImageMigrationTask(task.Task):
             # it will still be stored in the database in order
             # to be later loaded for further checking
             # (improvement is possible)
+            dest_details.update({"state": "Completed"})
             if getattr(image_meta, 'checksum', None):
-                if image_meta.checksum == m_img_meta.checksum:
-                    dest_details.update({"state": "Completed"})
-                else:
+                if image_meta.checksum != m_img_meta.checksum:
                     dest_details.update({"state": "Checksum mismatch"})
 
             LOG.info("Image '%s' upload completed" % image_meta.name)
