@@ -26,6 +26,16 @@ def create_db_pool(db_name=None):
     mutex.release()
 
 
+def release_db_pool():
+    global db_pool
+    mutex = threading.Lock()
+    mutex.acquire()
+    if db_pool is not None:
+        db_pool.close()
+        db_pool = None
+    mutex.release()
+
+
 def get_db_credentials():
     password = cfg.CONF.DATABASE.mysql_password
     password = base64.b64decode(password)

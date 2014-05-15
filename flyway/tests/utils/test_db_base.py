@@ -2,7 +2,7 @@ from DBUtils.PooledDB import PooledDB, PooledDedicatedDBConnection
 from tests.utils.test_base import TestBase
 from utils.db_base import create_db_pool, create_database, connect, check_db_exist, delete_database, check_table_exist, \
     create_table, delete_table, read_record, insert_record, delete_record, update_table, build_where_string, add_quotes, \
-    check_record_exist, delete_all_data
+    check_record_exist, delete_all_data, release_db_pool
 from common import config
 
 __author__ = 'Sherlock'
@@ -11,7 +11,7 @@ __author__ = 'Sherlock'
 class DBBaseTest(TestBase):
     def __init__(self, *args, **kwargs):
         super(DBBaseTest, self).__init__(*args, **kwargs)
-        config.parse(['--config-file', '../../etc/flyway.conf'])
+        config.parse(['--config-file', './etc/flyway.conf'])
 
     def test_create_db_pool(self):
 
@@ -57,6 +57,7 @@ class DBBaseTest(TestBase):
 
     def test_check_table_exist(self):
         db_name = 'mysql'
+        release_db_pool()
         create_db_pool(db_name)
         not_existed_table_name = 'table_name_should_not_exist'
         self.assertFalse(check_table_exist(not_existed_table_name))
@@ -65,6 +66,7 @@ class DBBaseTest(TestBase):
 
     def test_delete_table(self):
         db_name = 'test'
+        release_db_pool()
         create_db_pool(db_name)
         table_name = 'table_name_test'
         delete_table(table_name)
@@ -72,6 +74,7 @@ class DBBaseTest(TestBase):
 
     def test_create_table(self):
         db_name = 'test'
+        release_db_pool()
         create_db_pool(db_name)
         table_name = 'test_table_name'
         try:
@@ -85,6 +88,7 @@ class DBBaseTest(TestBase):
 
     def test_read_record(self):
         db_name = 'mysql'
+        release_db_pool()
         create_db_pool(db_name)
         table_name = 'user'
         data = read_record(table_name,
@@ -96,6 +100,7 @@ class DBBaseTest(TestBase):
 
     def test_check_record_exist(self):
         db_name = 'mysql'
+        release_db_pool()
         create_db_pool(db_name)
         table_name = 'user'
         result = check_record_exist(table_name,
@@ -108,6 +113,7 @@ class DBBaseTest(TestBase):
 
     def test_insert_record(self):
         db_name = 'test'
+        release_db_pool()
         create_db_pool(db_name)
         table_name = 'test_table_name'
         create_table(table_name, 'id varchar(20)', True)
@@ -123,6 +129,7 @@ class DBBaseTest(TestBase):
 
     def test_delete_some_record(self):
         db_name = 'test'
+        release_db_pool()
         create_db_pool(db_name)
         table_name = 'test_table_name'
         create_table(table_name, 'id varchar(20)', True)
@@ -143,6 +150,7 @@ class DBBaseTest(TestBase):
 
     def test_delete_all_record(self):
         db_name = 'test'
+        release_db_pool()
         create_db_pool(db_name)
         table_name = 'test_table_name'
         create_table(table_name, 'id varchar(20)', True)
@@ -163,6 +171,7 @@ class DBBaseTest(TestBase):
 
     def test_update_table(self):
         db_name = 'test'
+        release_db_pool()
         create_db_pool(db_name)
         table_name = 'test_table_name'
         create_table(table_name, 'id varchar(20)', True)
@@ -196,6 +205,7 @@ class DBBaseTest(TestBase):
 
     def test_delete_all_data(self):
         db_name = 'test'
+        release_db_pool()
         create_db_pool(db_name)
         table_name = 'test_table_name'
         create_table(table_name, 'id varchar(20)', True)
