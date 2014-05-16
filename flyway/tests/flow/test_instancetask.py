@@ -81,9 +81,9 @@ class InstanceTaskTest(TestBase):
     def test_migrate_tenant(self):
         server_name = "instance_name"
         vm_migrated = self.nv_source_tenant.servers.create(name=server_name,
-                                                    image=self.image_source,
-                                                    flavor=self.flavor_source,
-                                                    keypairs=self.key_source)
+                                                           image=self.image_source,
+                                                           flavor=self.flavor_source,
+                                                           keypairs=self.key_source)
 
         # migrate tenant, flavor, image and key pair at first
         values = {'users_to_move': [],
@@ -110,10 +110,22 @@ class InstanceTaskTest(TestBase):
             flavor_target = self.nv_target.flavors.find(name=self.flavor_name)
             key_target = self.nv_target.keypairs.find(name=self.key_name)
             image_target = self.gl_target.images.find(name=self.image_name)
+
+            filters = {"src_image_name": self.image_name,
+                       "src_uuid": self.image_source.id,
+                       "src_cloud": cfg.CONF.SOURCE.os_cloud_name,
+                       "dst_cloud": cfg.CONF.TARGET.os_cloud_name}
+
+            image_migration_record = images.get_migrated_image(filters)
+
+            m_image = image_migration_record[0]
+            dest_id = m_image['dst_uuid']
+            image_target = self.migration_task.gl_target.images.get(dest_id)
+
             tenant_target = self.ks_target.tenants.find(name=self.tenant_name)
 
-        except:
-            self.fail()
+        except Exception, e:
+            self.fail(e)
 
         finally:
             values = [server_name,
