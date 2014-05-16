@@ -3,7 +3,6 @@ from utils.db_base import delete_all_data
 __author__ = 'chengxue'
 
 from tests.flow.test_base import TestBase
-from flyway.common import config
 from flyway.flow import flow
 from flyway.utils.helper import *
 from keystoneclient import exceptions as ks_exceptions

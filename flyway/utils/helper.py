@@ -238,7 +238,7 @@ def execute_remote_command(host_address, username, password, command):
         error_str += error
 
     # print error at the end
-    print error_str if error else "Execution completed"
+    print error_str if error_str else "Execution completed"
 
     ssh.close()
 
