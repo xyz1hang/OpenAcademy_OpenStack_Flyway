@@ -652,6 +652,10 @@ class InstanceMigrationTask(task.Task):
         ----  ...}
         """
 
+        if type(tenant_vm_dicts) is dict and len(tenant_vm_dicts) == 0:
+            LOG.info("No VMs to be migrated.")
+            return
+
         # collect servers from each given or existing tenant
         # vm_to_migrate is a <nova_client, vm_list> dictionary
         vm_to_migrate = {}

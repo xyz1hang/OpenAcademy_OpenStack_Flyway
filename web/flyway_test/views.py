@@ -140,6 +140,8 @@ def migrate(request):
                     'tenant_vm_dicts': vms,
                     'tenant_to_process': []}
 
+    print refined_data
+
     result = flow.execute(refined_data)
     return HttpResponse(json.dumps(result, ensure_ascii=False))
 
