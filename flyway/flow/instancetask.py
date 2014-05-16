@@ -65,9 +65,14 @@ class InstanceMigrationTask(task.Task):
 
         if not m_flavor:
             LOG.info("Flavor '{0}' required by instance [ID: {1}, Name: {2}] "
-                     "hasn't been migrated yet."
+                     "has been migrated yet, use default solution."
                      .format(s_flavor.name, server.id, server.name))
-            return None
+            try:
+                m_flavor = t_nova_client.flavors.find(id=server.flavor['id'])
+            except Exception, e:
+                return None
+
+            return m_flavor
 
         # try to get its corresponding flavor on destination cloud
         dst_flavor_id = m_flavor['dst_uuid']
@@ -284,7 +289,7 @@ class InstanceMigrationTask(task.Task):
         if server.key_name:
             keypair_to_use = self.retrieve_keypair(server, s_nova_client,
                                                    t_nova_client)
-
+        print 'flavor to use:', flavor_to_use
         proxy_vm = t_nova_client.servers.create(name=server.name,
                                                 image=image_to_use,
                                                 flavor=flavor_to_use,
