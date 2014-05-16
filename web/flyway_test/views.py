@@ -90,7 +90,7 @@ def get_vms(request):
                                       host=s_host,
                                       columns=['project_id', 'uuid',
                                                'hostname'],
-                                      filters={})
+                                      filters={'deleted': 0})
     tenant_vms = []
     for one_data in data:
         tenant_name = get_info_from_openstack_db(table_name="project",
@@ -98,6 +98,8 @@ def get_vms(request):
                                                  host=s_host,
                                                  columns=['name'],
                                                  filters={'id': one_data[0]})
+        if not tenant_name:
+            continue
         tenant_vms.append({"name": tenant_name[0], "id": one_data[1],
                            "host_name": one_data[2]})
 
@@ -105,6 +107,7 @@ def get_vms(request):
                    'id': tenant_vm["id"],
                    'host_name':
                    tenant_vm["host_name"]} for tenant_vm in tenant_vms]
+    print return_vms
     return HttpResponse(json.dumps(return_vms, ensure_ascii=False))
 
 

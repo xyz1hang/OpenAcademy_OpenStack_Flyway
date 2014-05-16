@@ -392,13 +392,13 @@
             data_to_magrate['image'].push(rowData.id)
         }
         old_counter++;
-        totalTime += 18.0;
+        totalTime += 20.0;
     }
 
     function unselect_image_row(rowIndex, rowData){
         data_to_magrate['image'].splice(data_to_magrate['image'].indexOf(rowData.id), 1)
         old_counter--;
-        totalTime -= 18.0;
+        totalTime -= 20.0;
     }
 
     function select_tenant_row(rowIndex, rowData){
@@ -479,12 +479,7 @@
                     window.clearInterval(intvalue);
                     $('#waiting').html("");
                     setBarValue("migration finished.  ", 100)
-                })
-                    .fail(function() {
-                    window.clearInterval(intvalue);
-                    $('#waiting').html("");
-                    setBarValue("migration failed.  ", 100)
-                    });
+                });
         }
     }
 
