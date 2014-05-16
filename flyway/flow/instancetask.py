@@ -63,13 +63,6 @@ class InstanceMigrationTask(task.Task):
                          self.t_cloud_name]
         m_flavor = flavors.get_migrated_flavor(filter_values)
 
-        # check for duplicated record
-        if m_flavor and len(m_flavor) > 1:
-            LOG.error("Error - Multiple migration records found for "
-                      "flavor '{0}' in cloud '{1}'"
-                      .format(filter_values[0], filter_values[2]))
-            return None
-
         if not m_flavor:
             LOG.info("Flavor '{0}' required by instance [ID: {1}, Name: {2}] "
                      "hasn't been migrated yet."
@@ -117,7 +110,7 @@ class InstanceMigrationTask(task.Task):
         m_image = migrated_images[0] if migrated_images else None
 
         # check for duplicated records
-        if m_image and len(m_image) > 1:
+        if migrated_images and len(migrated_images) > 1:
             LOG.error("Error - Multiple migration records found for "
                       "image '{0}' in cloud '{1}'"
                       .format(filters['src_image_name'], filters['src_cloud']))
@@ -641,17 +634,17 @@ class InstanceMigrationTask(task.Task):
 
         return instance_to_process
 
-    def execute(self, tenant_vm_dicts=None):
+    def execute(self, tenant_vm_dicts):
 
         """execute instance migration task
 
         :param tenant_vm_dicts: a dictionary which provides the tenant and
         particular instances of the tenant desired to migrate
 
-        'tenant_vm_dicts' list structure:
-        ---- {tenant_name: list of vm ids}
-        ---- {tenant_name: list of vm ids}
-        ---- ...
+        'tenant_vm_dicts' structure:
+        ---- {tenant_name: list of vm ids,
+        ----  tenant_name: list of vm ids,
+        ----  ...}
         """
 
         # collect servers from each given or existing tenant
@@ -705,9 +698,8 @@ class InstanceMigrationTask(task.Task):
                 dst_tenant = self.ks_target.tenants.find(id=dst_uuid)
             except keystone_exceptions.NotFound:
                 LOG.error(
-                    "Migrated tenant '{0}' required by instance [ID: {1}, "
-                    "Name: {2}]  does not exist on destination "
-                    "cloud {1}".format(tenant_name, target_cloud))
+                    "Migrated tenant '{0}' required does not exist on "
+                    "destination cloud {1}".format(tenant_name, target_cloud))
                 # encapsulate exceptions to make it more understandable
                 # to user. Other exception handling mechanism can be added later
                 raise exceptions.ResourceNotFoundException(
