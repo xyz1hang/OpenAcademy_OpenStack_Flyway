@@ -491,7 +491,7 @@
     function migrate_all(){
         bar_counter = 0.0;
         setBarValue("start migrating ", 0);
-        intvalue = setInterval("barAction(60.0)", 300);
+        intvalue = setInterval("barAction(120.0)", 300);
         $('#waiting').html("<img src='../static/css/images/waiting.gif'>");
         $.ajax({
             url: "/flyway_test/migrate_all"
