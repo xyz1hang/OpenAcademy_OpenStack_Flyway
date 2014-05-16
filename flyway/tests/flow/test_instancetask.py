@@ -4,15 +4,8 @@ from flow import flow
 __author__ = 'chengxue'
 
 from tests.flow.test_base import TestBase
-from flow.instancetask import InstanceMigrationTask
-from flow.imagetask import ImageMigrationTask
-from flow.keypairtask import KeypairMigrationTask
-from flow.flavortask import FlavorMigrationTask
-from flow.tenanttask import TenantMigrationTask
 from utils.db_handlers import instances
-from utils.db_handlers import images
-from utils.db_handlers import flavors
-from utils.db_handlers import keypairs
+from utils.db_handlers import images as image_db_handler
 from utils.db_handlers import tenants
 from utils.helper import *
 from oslo.config import cfg
@@ -114,12 +107,10 @@ class InstanceTaskTest(TestBase):
                       self.tenant_source.id,
                       cfg.CONF.SOURCE.os_cloud_name,
                       cfg.CONF.TARGET.os_cloud_name]
-            images.delete_migration_record(values)
+            image_db_handler.delete_migration_record(values)
 
             self.nv_source_tenant.servers.delete(vm_migrated)
-            #self.nv_source.flavors.delete(self.flavor_source)
-            #self.nv_source.keypairs.delete(self.key_source)
-            #self.gl_source.images.delete(self.image_source)
+
             self.ks_source.tenants.delete(self.tenant_source)
 
             if server_target:
