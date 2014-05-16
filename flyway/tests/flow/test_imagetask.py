@@ -73,7 +73,10 @@ class ImageTaskTest(TestBase):
         self.clean_up(image_to_migrate, dest_image)
 
     def test_get_image(self):
+        image_to_migrate = self.create_images()
         print self.migration_task.get_image(self.image_id)
+        self.clean_up(image_to_migrate)
+
 
     def test_upload_image(self):
         image_to_migrate = self.create_images()
