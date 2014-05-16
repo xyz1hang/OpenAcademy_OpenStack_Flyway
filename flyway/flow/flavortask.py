@@ -91,13 +91,19 @@ class FlavorMigrationTask(task.Task):
 
             LOG.info("Start migrating flavour '{}'\n".format(s_flavor.name))
 
+        swap = getattr(s_flavor, 'swap', 0)
+        if not swap:
+            swap = 0
+        else:
+            swap = int(swap)
+
         new_flavor_details = {
             'name': new_flavor_name,
             'ram': s_flavor.ram,
             'vcpus': s_flavor.vcpus,
             'disk': s_flavor.disk,
-            'ephemeral': s_flavor.ephemera if s_flavor.ephemeral else 0,
-            'swap': s_flavor.swap if s_flavor.swap else 0,
+            'ephemeral': getattr(s_flavor, 'ephemeral', 0),
+            'swap': swap,
             'rxtx_factor': s_flavor.rxtx_factor,
             'is_public': getattr(s_flavor,
                                  'os-flavor-access:is_public', False)}
@@ -112,7 +118,7 @@ class FlavorMigrationTask(task.Task):
 
         except Exception as e:
             LOG.error("flavor '{}' migration failure\nDetails:"
-                      .format(s_flavor.name, e.message))
+                      .format(s_flavor.name, e.args))
             # update database record
             flavour_data.update({'state': "error"})
             flavors.update_migration_record(**flavour_data)
