@@ -38,8 +38,6 @@ def main():
                      ' does not exist in the database, '
                      'please configure flyway.conf!')
 
-        #TODO: Is there a solution to load config data from database
-        #TODO: directly into config object here ?
         write_to_file('etc/flyway.conf', config_content(src_config, dst_config))
         args.append('./etc/flyway.conf')
         config.parse(args)

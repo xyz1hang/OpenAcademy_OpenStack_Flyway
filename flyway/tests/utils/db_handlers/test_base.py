@@ -1,6 +1,6 @@
 from testtools import TestCase
+
 from utils.db_base import create_database, create_db_pool
-from utils.db_handlers import environment_config
 from common import config
 
 

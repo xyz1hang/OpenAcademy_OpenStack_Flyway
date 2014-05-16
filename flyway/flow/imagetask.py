@@ -33,7 +33,7 @@ class ImageMigrationTask(task.Task):
     def get_image(self, image_id):
         """Fetch image data from glance server directly via http request.
 
-        :rtype : a httplib Response object with image as body
+        :rtype : a httplib Response object with image data as body
         :param image_id: the uuid of an image
         """
         url = '/v1/images/%s' % image_id
@@ -45,7 +45,6 @@ class ImageMigrationTask(task.Task):
     def upload_image(self, image_meta, image_data, owner_target_id):
         """Upload an image to target glance server.
 
-        the target cloud
         :param image_meta: metadata of the image as a dictionary
         :param image_data: actual image data
         :param owner_target_id: id of the owner of this image at target cloud
@@ -312,8 +311,6 @@ class ImageMigrationTask(task.Task):
 
             self.migrate_one_image(image_owner_pair['img'],
                                    image_owner_pair['owner'])
-
-            #TODO: update image migration state of corresponding project
 
     def revert(self, images_to_migrate, tenant_to_process):
 

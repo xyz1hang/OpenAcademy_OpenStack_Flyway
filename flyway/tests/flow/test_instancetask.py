@@ -51,7 +51,8 @@ class InstanceTaskTest(TestBase):
                 image = self.nv_source.images.find(name=one_image.name)
                 self.image_source = image
                 flavor = self.nv_source.flavors.find(name="m1.micro")
-                vm_migrated = self.nv_source_tenant.servers.create(name=server_name, image=image, flavor=flavor)
+                vm_migrated = self.nv_source_tenant.servers.create(
+                    name=server_name, image=image, flavor=flavor)
 
         status = vm_migrated.status
         while status == 'BUILD':

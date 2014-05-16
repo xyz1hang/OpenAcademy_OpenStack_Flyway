@@ -1,9 +1,8 @@
-from utils.db_handlers.users import set_user_complete, \
-    delete_migrated_users, initialise_users_mapping, delete_all_users_mapping
-
-from utils.helper import *
-
 from taskflow import task
+
+from utils.db_handlers.users import set_user_complete, \
+    initialise_users_mapping, delete_all_users_mapping
+from utils.helper import *
 
 LOG = logging.getLogger(__name__)
 

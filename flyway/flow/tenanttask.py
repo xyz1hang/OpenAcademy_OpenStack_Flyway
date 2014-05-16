@@ -36,6 +36,7 @@ class TenantMigrationTask(task.Task):
             LOG.error(exceptions.ResourceNotFoundException(
                 ResourceType.tenant, tenant_name,
                 cfg.CONF.SOURCE.os_cloud_name))
+            return
 
         s_cloud_name = cfg.CONF.SOURCE.os_cloud_name
         t_cloud_name = cfg.CONF.TARGET.os_cloud_name
@@ -60,19 +61,6 @@ class TenantMigrationTask(task.Task):
                          .format(found.name, t_cloud_name))
                 return
 
-            """found = True
-            while found:
-                found = self.ks_target.tenants.find(name=new_tenant_name)
-                if found:
-                    user_input = \
-                        raw_input("Tenant of same name '{0}' found on cloud '{"
-                                  "1}'\nPlease enter a new name or 'skip':"
-                                  .format(found.name, t_cloud_name))
-                    if user_input == "skip":
-                        # TODO: implement cleaning up and proper exit
-                        return None
-                    elif user_input:
-                        new_tenant_name = user_input"""
         except keystone_exceptions.NotFound:
             # irrelevant exception - swallow
             pass

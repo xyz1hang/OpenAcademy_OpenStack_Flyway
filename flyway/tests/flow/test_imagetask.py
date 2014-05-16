@@ -2,10 +2,11 @@ __author__ = 'hydezhang'
 
 from oslo.config import cfg
 from glanceclient import exc
+
 from tests.flow.test_base import TestBase
 from flow.imagetask import ImageMigrationTask
-from common import config
 from utils.db_handlers import images
+
 
 # testing inputs
 owner_target_id = '2ddc4b6528f24b039cf4ec093ae8a214'

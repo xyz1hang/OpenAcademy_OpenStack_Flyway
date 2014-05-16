@@ -19,6 +19,6 @@ setup(name='flyway',
           'requests==2.2.1',
           'Fabric==1.8.2',
           'kombu==3.0.12',
-          'oslo.config==1.2.1'
+          'oslo.config==1.2.1', 'django'
       ]
 )

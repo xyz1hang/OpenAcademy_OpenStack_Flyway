@@ -69,7 +69,7 @@ class InstanceMigrationTask(task.Task):
                      .format(s_flavor.name, server.id, server.name))
             try:
                 m_flavor = t_nova_client.flavors.find(id=server.flavor['id'])
-            except Exception, e:
+            except Exception:
                 return None
 
             return m_flavor

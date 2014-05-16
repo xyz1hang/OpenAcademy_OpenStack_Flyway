@@ -1,7 +1,9 @@
 from DBUtils.PooledDB import PooledDB, PooledDedicatedDBConnection
 from tests.utils.test_base import TestBase
-from utils.db_base import create_db_pool, create_database, connect, check_db_exist, delete_database, check_table_exist, \
-    create_table, delete_table, read_record, insert_record, delete_record, update_table, build_where_string, add_quotes, \
+from utils.db_base import create_db_pool, create_database, connect, \
+    check_db_exist, delete_database, check_table_exist, \
+    create_table, delete_table, read_record, insert_record, delete_record, \
+    update_table, build_where_string, add_quotes, \
     check_record_exist, delete_all_data, release_db_pool
 
 __author__ = 'Sherlock'

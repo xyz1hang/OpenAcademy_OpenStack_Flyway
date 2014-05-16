@@ -70,8 +70,7 @@ def connect_openstack_db(host, db_name):
     db = MySQLdb.connect(**credentials)
     return db
 
-#TODO: print table name in exception message for all functions
-#TODO: that handle exceptions
+
 def read_openstack_record(host, db_name, table_name, columns, where_dict,
                           close):
     # establish connection
@@ -347,7 +346,6 @@ def update_table(table_name, set_dict, where_dict, close):
 
 def build_where_string(where_dict):
     # build "WHERE" string
-    # TODO: needs to allow more complicated filter string e.g with OR, != etc.
     filter_str = ''
     for key in where_dict.keys():
         if key != where_dict.keys()[0]:
