@@ -35,6 +35,7 @@ class InstanceTaskTest(TestBase):
 
         # create a tenant on the source cloud for instance migration
         self.tenant_name = 'tenant_tenant'
+        self.image_name = 'cirros-0.3.1-x86_64-uec-kernel'
         self.tenant_source = self.ks_source.tenants.create(self.tenant_name,
                                                            "", True)
         self.nv_source_tenant = get_nova_source(self.tenant_name)
@@ -52,7 +53,7 @@ class InstanceTaskTest(TestBase):
 
         images = self.gl_source.images.list()
         for one_image in images:
-            if one_image.name.find('cirros-0.3.1-x86_64-uec-kernel') > -1:
+            if one_image.name.find(self.image_name) > -1:
                 print one_image.name
                 image = self.nv_source.images.find(name=one_image.name)
                 self.image_source = image
@@ -108,6 +109,13 @@ class InstanceTaskTest(TestBase):
                       cfg.CONF.TARGET.os_cloud_name]
             tenants.delete_migration_record(values)
 
+            values = [self.image_name,
+                      self.image_source.id,
+                      self.tenant_source.id,
+                      cfg.CONF.SOURCE.os_cloud_name,
+                      cfg.CONF.TARGET.os_cloud_name]
+            images.delete_migration_record(values)
+
             self.nv_source_tenant.servers.delete(vm_migrated)
             #self.nv_source.flavors.delete(self.flavor_source)
             #self.nv_source.keypairs.delete(self.key_source)
@@ -116,6 +124,9 @@ class InstanceTaskTest(TestBase):
 
             if server_target:
                 self.nv_target_tenant.servers.delete(server_target)
+
+            if image_target:
+                self.gl_target.images.delete(image_target)
 
             if tenant_target:
                 self.ks_target.tenants.delete(tenant_target)
