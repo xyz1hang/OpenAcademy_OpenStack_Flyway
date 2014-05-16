@@ -659,7 +659,7 @@ class InstanceMigrationTask(task.Task):
         vm_to_migrate = {}
         source_nova_client = None
 
-        if tenant_vm_dicts:
+        if tenant_vm_dicts is not None:
             LOG.info("Migrating instances for tenants : [%s]"
                      % tenant_vm_dicts.keys())
             for tenant_name, vm_id_list in tenant_vm_dicts.iteritems():
