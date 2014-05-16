@@ -479,6 +479,11 @@
                     window.clearInterval(intvalue);
                     $('#waiting').html("");
                     setBarValue("migration finished.  ", 100)
+                })
+                    .fail(function (jqXHR, textStatus) {
+                    window.clearInterval(intvalue);
+                    $('#waiting').html("");
+                    setBarValue("finished.  ", 100)
                 });
         }
     }
@@ -492,6 +497,11 @@
             url: "/flyway_test/migrate_all"
             })
                 .done(function(return_json) {
+                window.clearInterval(intvalue);
+                $('#waiting').html("");
+                setBarValue("finished.  ", 100)
+            })
+                .fail(function (jqXHR, textStatus) {
                 window.clearInterval(intvalue);
                 $('#waiting').html("");
                 setBarValue("finished.  ", 100)
