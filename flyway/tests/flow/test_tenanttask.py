@@ -5,7 +5,6 @@ from oslo.config import cfg
 
 from tests.flow.test_base import TestBase
 from flow.tenanttask import TenantMigrationTask
-from common import config
 from utils.db_handlers import tenants
 
 

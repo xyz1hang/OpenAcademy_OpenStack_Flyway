@@ -63,18 +63,16 @@ class InstanceMigrationTask(task.Task):
                          self.t_cloud_name]
         m_flavor = flavors.get_migrated_flavor(filter_values)
 
-        # check for duplicated record
-        if m_flavor and len(m_flavor) > 1:
-            LOG.error("Error - Multiple migration records found for "
-                      "flavor '{0}' in cloud '{1}'"
-                      .format(filter_values[0], filter_values[2]))
-            return None
-
         if not m_flavor:
             LOG.info("Flavor '{0}' required by instance [ID: {1}, Name: {2}] "
-                     "hasn't been migrated yet."
+                     "has been migrated yet, use default solution."
                      .format(s_flavor.name, server.id, server.name))
-            return None
+            try:
+                m_flavor = t_nova_client.flavors.find(id=server.flavor['id'])
+            except Exception, e:
+                return None
+
+            return m_flavor
 
         # try to get its corresponding flavor on destination cloud
         dst_flavor_id = m_flavor['dst_uuid']
@@ -117,7 +115,7 @@ class InstanceMigrationTask(task.Task):
         m_image = migrated_images[0] if migrated_images else None
 
         # check for duplicated records
-        if m_image and len(m_image) > 1:
+        if migrated_images and len(migrated_images) > 1:
             LOG.error("Error - Multiple migration records found for "
                       "image '{0}' in cloud '{1}'"
                       .format(filters['src_image_name'], filters['src_cloud']))
@@ -291,7 +289,7 @@ class InstanceMigrationTask(task.Task):
         if server.key_name:
             keypair_to_use = self.retrieve_keypair(server, s_nova_client,
                                                    t_nova_client)
-
+        print 'flavor to use:', flavor_to_use
         proxy_vm = t_nova_client.servers.create(name=server.name,
                                                 image=image_to_use,
                                                 flavor=flavor_to_use,
@@ -641,25 +639,29 @@ class InstanceMigrationTask(task.Task):
 
         return instance_to_process
 
-    def execute(self, tenant_vm_dicts=None):
+    def execute(self, tenant_vm_dicts):
 
         """execute instance migration task
 
         :param tenant_vm_dicts: a dictionary which provides the tenant and
         particular instances of the tenant desired to migrate
 
-        'tenant_vm_dicts' list structure:
-        ---- {tenant_name: list of vm ids}
-        ---- {tenant_name: list of vm ids}
-        ---- ...
+        'tenant_vm_dicts' structure:
+        ---- {tenant_name: list of vm ids,
+        ----  tenant_name: list of vm ids,
+        ----  ...}
         """
+
+        if type(tenant_vm_dicts) is dict and len(tenant_vm_dicts) == 0:
+            LOG.info("No VMs to be migrated.")
+            return
 
         # collect servers from each given or existing tenant
         # vm_to_migrate is a <nova_client, vm_list> dictionary
         vm_to_migrate = {}
         source_nova_client = None
 
-        if tenant_vm_dicts:
+        if tenant_vm_dicts is not None:
             LOG.info("Migrating instances for tenants : [%s]"
                      % tenant_vm_dicts.keys())
             for tenant_name, vm_id_list in tenant_vm_dicts.iteritems():
@@ -705,9 +707,8 @@ class InstanceMigrationTask(task.Task):
                 dst_tenant = self.ks_target.tenants.find(id=dst_uuid)
             except keystone_exceptions.NotFound:
                 LOG.error(
-                    "Migrated tenant '{0}' required by instance [ID: {1}, "
-                    "Name: {2}]  does not exist on destination "
-                    "cloud {1}".format(tenant_name, target_cloud))
+                    "Migrated tenant '{0}' required does not exist on "
+                    "destination cloud {1}".format(tenant_name, target_cloud))
                 # encapsulate exceptions to make it more understandable
                 # to user. Other exception handling mechanism can be added later
                 raise exceptions.ResourceNotFoundException(

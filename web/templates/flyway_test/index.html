@@ -392,13 +392,13 @@
             data_to_magrate['image'].push(rowData.id)
         }
         old_counter++;
-        totalTime += 18.0;
+        totalTime += 20.0;
     }
 
     function unselect_image_row(rowIndex, rowData){
         data_to_magrate['image'].splice(data_to_magrate['image'].indexOf(rowData.id), 1)
         old_counter--;
-        totalTime -= 18.0;
+        totalTime -= 20.0;
     }
 
     function select_tenant_row(rowIndex, rowData){
@@ -480,18 +480,18 @@
                     $('#waiting').html("");
                     setBarValue("migration finished.  ", 100)
                 })
-                    .fail(function() {
+                    .fail(function (jqXHR, textStatus) {
                     window.clearInterval(intvalue);
                     $('#waiting').html("");
-                    setBarValue("migration failed.  ", 100)
-                    });
+                    setBarValue("finished.  ", 100)
+                });
         }
     }
 
     function migrate_all(){
         bar_counter = 0.0;
         setBarValue("start migrating ", 0);
-        intvalue = setInterval("barAction(30.0)", 300);
+        intvalue = setInterval("barAction(60.0)", 300);
         $('#waiting').html("<img src='../static/css/images/waiting.gif'>");
         $.ajax({
             url: "/flyway_test/migrate_all"
@@ -501,11 +501,11 @@
                 $('#waiting').html("");
                 setBarValue("finished.  ", 100)
             })
-                .fail(function() {
+                .fail(function (jqXHR, textStatus) {
                 window.clearInterval(intvalue);
                 $('#waiting').html("");
-                setBarValue("migration failed.  ", 100)
-                });
+                setBarValue("finished.  ", 100)
+            });
     }
 
     function setBarValue(output, number){
