@@ -93,7 +93,7 @@ class RoleMigrationTask(task.Task):
         return [role for role in roles_in_source
                 if role.name not in target_role_names]
 
-    def execute(self, roles_to_migrate):
+    def execute(self, roles_to_migrate=None):
         """
         migrate specified roles to the target cloud
         :param roles_to_migrate: roles to be migrated to the target cloud.
@@ -111,19 +111,21 @@ class RoleMigrationTask(task.Task):
         flow = uf.Flow('migrate_roles')
         store = {'target': self.ks_target}
 
-        if roles_to_migrate is None:
-            for role in roles_to_move:
-                store[role.name] = role
-                flow.add(MigrateOneRole(role.name, rebind=[role.name]))
+        if roles_to_move:
 
-        else:
-            for role in roles_to_move:
-                if role.name in roles_to_migrate:
+            if roles_to_migrate is None:
+                for role in roles_to_move:
                     store[role.name] = role
                     flow.add(MigrateOneRole(role.name, rebind=[role.name]))
 
-        engine = taskflow.engines.load(flow, store)
-        engine.run()
+            else:
+                for role in roles_to_move:
+                    if role.name in roles_to_migrate:
+                        store[role.name] = role
+                        flow.add(MigrateOneRole(role.name, rebind=[role.name]))
+
+            engine = taskflow.engines.load(flow, store)
+            engine.run()
 
         LOG.info('Migration Complete.')
 

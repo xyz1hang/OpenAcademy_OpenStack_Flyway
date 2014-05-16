@@ -123,8 +123,7 @@ class RoleTaskTest(TestBase):
         self.assertNotIn('role4', roles_in_target)
         delete_all_data('roles')
 
-
-
-
+        # Test Case 3:No roles migrated
+        self.migration_task.execute()
 
 
