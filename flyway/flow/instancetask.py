@@ -133,9 +133,8 @@ class InstanceMigrationTask(task.Task):
         try:
             image_to_use = gl_target.images.get(dst_image_id)
         except glance_exceptions.HTTPNotFound:
-            LOG.info("Migrated image required by instance [ID: {1}, Name: {2}] "
-                     "'{0}' does not exist on destination cloud '{1}'"
-                     .format(s_image.name, self.t_cloud_name))
+            LOG.info("Migrated image '{0}' does not exist on destination "
+                     "cloud '{1}'".format(s_image.name, self.t_cloud_name))
             raise exceptions.ResourceNotFoundException(
                 ResourceType.vm, s_image_id, self.s_cloud_name)
 
