@@ -165,7 +165,7 @@ class InstanceMigrationTask(task.Task):
         filter_values = [s_keypair.fingerprint, self.s_cloud_name,
                          self.t_cloud_name]
         migrated_keypairs = keypairs.get_keypairs(filter_values)
-        m_keypair = migrated_keypairs[0] if migrated_keypairs else None
+        m_keypair = migrated_keypairs if migrated_keypairs else None
         if not m_keypair:
             LOG.info("keypair '{0}' required by instance [ID: {1}, Name: {2}] "
                      "hasn't been migrated yet."
@@ -173,13 +173,13 @@ class InstanceMigrationTask(task.Task):
             return None
 
         # try to get its corresponding keypair on destination cloud
-        dst_keypair_name = m_keypair['new_name']
+        dst_keypair_name = m_keypair['name']
         try:
             keypair_to_use = t_nova_client.keypairs.find(name=dst_keypair_name)
         except nova_exceptions.NotFound:
             LOG.info(
-                "Migrated keypair required by instance [ID: {1}, Name: {2}] "
-                "'{0}' does not exist on destination cloud '{1}'"
+                "Migrated keypair ['{0}'] does not"
+                " exist on destination cloud '{1}'"
                 .format(s_keypair.name, self.t_cloud_name))
             raise exceptions.ResourceNotFoundException(
                 ResourceType.vm, s_keypair_name, self.s_cloud_name)
@@ -293,7 +293,7 @@ class InstanceMigrationTask(task.Task):
         proxy_vm = t_nova_client.servers.create(name=server.name,
                                                 image=image_to_use,
                                                 flavor=flavor_to_use,
-                                                keypairs=keypair_to_use)
+                                                key_name=keypair_to_use.name)
         return proxy_vm
 
     def create_proxy_vm(self, server, s_nova_client, t_nova_client,
