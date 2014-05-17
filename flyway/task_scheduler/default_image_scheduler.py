@@ -1,4 +1,4 @@
-from utils.helper import get_nova_target, get_nova_source, get_glance_source
+from utils.helper import get_nova_source, get_glance_source
 
 __author__ = 'Sherlock'
 

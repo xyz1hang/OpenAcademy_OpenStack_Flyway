@@ -69,7 +69,7 @@ class InstanceMigrationTask(task.Task):
                      .format(s_flavor.name, server.id, server.name))
             try:
                 m_flavor = t_nova_client.flavors.find(id=server.flavor['id'])
-            except Exception, e:
+            except Exception:
                 return None
 
             return m_flavor
@@ -235,7 +235,7 @@ class InstanceMigrationTask(task.Task):
                         "Maximum number of poll({0}) has been exceeded for "
                         "instance [Name: {1}, ID: {2}]".
                         format(max_polls, vm.name, vm.id))
-                    call_back(result="ERROR", status="unknown", vm=vm)
+                    call_back(result="ERROR", vm=vm)
                     vms_to_poll.remove(vm)
                     del num_of_poll[index]
                     continue

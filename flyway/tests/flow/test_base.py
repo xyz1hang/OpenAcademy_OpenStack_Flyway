@@ -1,7 +1,7 @@
 from testtools import TestCase
+
 from task_scheduler.scheduler import setup_scheduler
 from utils.db_base import create_database, create_db_pool, release_db_pool
-from utils.db_handlers import environment_config
 from common import config
 
 

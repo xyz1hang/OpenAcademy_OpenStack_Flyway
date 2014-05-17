@@ -141,8 +141,7 @@ class FlavorMigrationTask(task.Task):
             flavors_to_migrate = []
             for flavor in self.nv_source.flavors.list():
                 flavors_to_migrate.append(flavor.name)
-        # convert tenants_to_move to list in case only
-        # one string gets passed in
+
         elif type(flavors_to_migrate) is str:
             flavors_to_migrate = [flavors_to_migrate]
         elif type(flavors_to_migrate) is list and len(flavors_to_migrate) > 0:
@@ -168,8 +167,7 @@ class FlavorMigrationTask(task.Task):
             flavors_to_migrate = []
             for flavor in self.nv_source.flavors.list():
                 flavors_to_migrate.append(flavor.name)
-        # convert tenants_to_move to list in case only
-        # one string gets passed in
+
         elif type(flavors_to_migrate) is str:
             flavors_to_migrate = [flavors_to_migrate]
         elif type(flavors_to_migrate) is list \

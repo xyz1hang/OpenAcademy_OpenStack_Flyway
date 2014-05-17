@@ -39,23 +39,6 @@ class ProjectUserRoleBindingTask(task.Task):
         source_project = project_pair[0]
         target_project = project_pair[1]
 
-        """
-        users = self.ks_source.users.list(tenant_id=source_project.id)
-        delete_admin = True
-        for user in users:
-            if user.name == 'admin':
-                delete_admin = False
-
-        if delete_admin is True:
-            print "++++++++++++++++"
-            the_user = self.ks_target.users.find(name='admin')
-            the_role = self.ks_target.roles.find(name='admin')
-            self.ks_target.tenants.remove_user(target_project,
-                                               the_user, the_role)
-        """
-
-        #TODO: The catched exception too borad
-        #TODO: How to catch the exception called 'no user found'
         for source_user in self.ks_source.tenants. \
                 list_users(source_project):
             try:

@@ -100,10 +100,6 @@ def get_keystone_client(username=None, password=None,
                         auth_url=None, tenant_name=None):
     """Get keystone client
     """
-    #TODO: handle connection exception
-    # keystoneclient.apiclient.exceptions.AuthorizationFailure:
-    # Authorization Failed: Unable to establish connection to
-    # http://xxx.xxx.xxx.xxx:5000/v2.0/tokens
     return ksclient.Client(username=username, password=password,
                            auth_url=auth_url, tenant_name=tenant_name)
 

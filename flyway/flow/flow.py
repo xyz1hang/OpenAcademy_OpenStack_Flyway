@@ -91,9 +91,6 @@ def execute(input_data=None):
     print "input Data" + str(input_data) if input_data else "nothing"
     flow = get_flow(input_data)
 
-    #TODO: need to figure out a better way to allow user to specify
-    #TODO: specific resource to migrate
-
     eng = engines.load(flow, engine_conf='parallel')
     result = eng.run()
     return result

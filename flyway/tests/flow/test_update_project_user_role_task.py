@@ -1,7 +1,8 @@
+from keystoneclient import exceptions as keystone_exceptions
+
 from flow.roletask import RoleMigrationTask
 from flow.usertask import UserMigrationTask
 from tests.flow.test_base import TestBase
-from flyway.common import config
 from utils.db_handlers import tenants as db_handler
 from utils.db_handlers.roles import delete_all_roles_mapping
 from utils.db_handlers.tenants import delete_migration_record
@@ -9,7 +10,6 @@ from utils.db_handlers.users import delete_all_users_mapping
 import utils.helper
 from flow.update_project_user_role_task import ProjectUserRoleBindingTask
 from flow.tenanttask import TenantMigrationTask
-from keystoneclient import exceptions as keystone_exceptions
 
 
 class UpdateProjectUserRoleTest(TestBase):
