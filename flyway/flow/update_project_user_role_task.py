@@ -18,10 +18,12 @@ class ProjectUserRoleBindingTask(task.Task):
                                     ['project_name, new_project_name'],
                                     where_dict, True)
 
-        project_pairs = [(self.ks_source.tenants.find(name=name[0]),
-                          self.ks_target.tenants.find(name=name[1]))
-                         for name in project_names]
-
+        try:
+            project_pairs = [(self.ks_source.tenants.find(name=name[0]),
+                              self.ks_target.tenants.find(name=name[1]))
+                             for name in project_names]
+        except Exception, e:
+            return None
         return project_pairs
 
     def __init__(self, *args, **kwargs):
@@ -68,5 +70,6 @@ class ProjectUserRoleBindingTask(task.Task):
             self.get_project_pairs({"src_cloud": self.s_cloud_name,
                                     "dst_cloud": self.t_cloud_name,
                                     "state": "proxy_created"})
-        for project_pair in migrated_project_pairs:
-            self.bind_roles_users(project_pair)
+        if migrated_project_pairs is not None:
+            for project_pair in migrated_project_pairs:
+                self.bind_roles_users(project_pair)
