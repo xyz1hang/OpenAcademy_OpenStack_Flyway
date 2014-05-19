@@ -268,7 +268,9 @@ class InstanceMigrationTask(task.Task):
                         except Exception:
                             traceback.print_exc()
                             pass
-                    return
+
+                    if len(num_of_poll) < 1:
+                        return
 
                 num_of_poll[index] += 1
                 time.sleep(poll_interval)
@@ -412,19 +414,23 @@ class InstanceMigrationTask(task.Task):
                                          InstanceMigrationState.error})
             instances.update_migration_record(**migration_record)
 
-    def start_vms(self, nova_client, servers):
+    def start_vms(self, nova_client_target, nova_client_source, servers):
 
         """function to boots instances
 
-        :param nova_client: the nova client that used to locate the instance
+        :param nova_client_target: the target nova client that used to locate the instance
+        :param nova_client_source: the source nova client that used to locate the instance
         :param servers: migration record of instances that needs to boot
         """
-        LOG.info("Attempting to boot %d instance(s)" % len(servers))
+        LOG.info("Attempting to boot source and target "
+                 "for %d instance(s)" % len(servers))
 
-        vms_to_poll = []
+        source_vms_to_poll = []
+        target_vms_to_poll = []
         for server in servers:
             try:
-                vm = nova_client.servers.get(server['dst_uuid'])
+                vm_target = nova_client_target.servers.get(server['dst_uuid'])
+                vm_source = nova_client_source.servers.get(server['src_uuid'])
             except nova_exceptions.NotFound:
                 LOG.error("Server instance [Name: '{0}' ID: '{1}'] does not "
                           "exist on cloud '{2}'"
@@ -438,22 +444,37 @@ class InstanceMigrationTask(task.Task):
 
             # store source vm id, source cloud name destination cloud name in
             # this target vm object in order to update database records
-            setattr(vm, 'src_uuid', server['src_uuid'])
-            setattr(vm, 'src_cloud', server['src_cloud'])
-            setattr(vm, 'dst_cloud', server['dst_cloud'])
+            setattr(vm_target, 'src_uuid', server['src_uuid'])
+            setattr(vm_target, 'src_cloud', server['src_cloud'])
+            setattr(vm_target, 'dst_cloud', server['dst_cloud'])
 
-            status = getattr(vm, 'status')
-            if status == 'SHUTOFF':
-                vm.start()
-                vms_to_poll.append(vm)
+            target_status = getattr(vm_target, 'status')
+            source_status = getattr(vm_source, 'status')
+            if target_status == 'SHUTOFF':
+                vm_target.start()
+                target_vms_to_poll.append(vm_target)
+            if source_status == 'SHUTOFF':
+                vm_source.start()
+                source_vms_to_poll.append(vm_source)
 
+        #TODO : ... change later
         self.poll_vms_status(
-            nova_client, vms_to_poll=vms_to_poll,
+            nova_client_target, vms_to_poll=target_vms_to_poll,
             ok_status=self.valid_states,
             ok_m_state=InstanceMigrationState.completed,
             break_m_state=InstanceMigrationState.instance_booting_failed,
             call_back=self.save_status,
             max_polls=12, verbose=True)  # 1 min
+
+        self.poll_vms_status(
+            nova_client_source, vms_to_poll=source_vms_to_poll,
+            ok_status=self.valid_states,
+            ok_m_state=InstanceMigrationState.completed,
+            break_m_state=InstanceMigrationState.instance_booting_failed,
+            call_back=None,
+            max_polls=12, verbose=True)  # 1 min
+
+        LOG.info("Restart the VM on the target cloud. status: 'ACTIVE'.")
 
     def stop_vms(self, nova_client, servers):
 
@@ -583,16 +604,27 @@ class InstanceMigrationTask(task.Task):
             instances.update_migration_record(**data_update)
             return
 
-        # LOG.info("Shutting down source instance[%s]" % source_server.name)
+        LOG.info("Suspending the source instance[%s]" % source_server.name)
 
-        # try:
-        #     source_server.stop()
-        # except Exception as e:
-        #     print "Fail to stop source server instance: %s" % str(e.message)
-        #     # update record
-        #     data_update.update({'migration_state': 'Stop_source_failed'})
-        #     instances.update_migration_record(**data_update)
-        #     return
+        try:
+            source_server.stop()
+            #TODO:
+            while source_server.status != 'SHUTOFF':
+                time.sleep(5)
+                source_server = s_nova_client.servers.get(source_server.id)
+                print "polling status of instance [%s]" % source_server.name
+                if source_server.status == 'ERROR':
+                    raise Exception
+                elif source_server.status == 'SHUTOFF':
+                    break
+
+        except Exception as e:
+            LOG.error("Fail to stop source server instance: %s" %
+                      str(e.args))
+            # update record
+            data_update.update({'migration_state': 'Stop_source_failed'})
+            instances.update_migration_record(**data_update)
+            return
 
         self.copy_vm(source_server.id, target_server.id)
 
@@ -750,4 +782,5 @@ class InstanceMigrationTask(task.Task):
                            InstanceMigrationState.instance_booting_failed]
             servers_to_boot = self.load_instances(boot_states)
             if servers_to_boot:
-                self.start_vms(target_nova_client, servers_to_boot)
+                self.start_vms(target_nova_client, source_nova_client,
+                               servers_to_boot)
